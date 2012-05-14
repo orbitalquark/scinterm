@@ -1,0 +1,71 @@
+diff -r 2faf55888eeb include/Platform.h
+--- a/include/Platform.h	Tue Mar 06 10:24:52 2012 +1100
++++ b/include/Platform.h	Mon May 14 16:33:51 2012 -0400
+@@ -21,6 +21,7 @@
+ #define PLAT_WIN 0
+ #define PLAT_WX  0
+ #define PLAT_FOX 0
++#define PLAT_TERM 0
+ 
+ #if defined(FOX)
+ #undef PLAT_FOX
+@@ -30,6 +31,10 @@
+ #undef PLAT_WX
+ #define PLAT_WX  1
+ 
++#elif defined(NCURSES)
++#undef PLAT_TERM
++#define PLAT_TERM 1
++
+ #elif defined(GTK)
+ #undef PLAT_GTK
+ #define PLAT_GTK 1
+@@ -359,7 +364,7 @@
+ 	void SetPosition(PRectangle rc);
+ 	void SetPositionRelative(PRectangle rc, Window relativeTo);
+ 	PRectangle GetClientPosition();
+-	void Show(bool show=true);
++	virtual void Show(bool show=true);
+ 	void InvalidateAll();
+ 	void InvalidateRectangle(PRectangle rc);
+ 	virtual void SetFont(Font &font);
+diff -r 2faf55888eeb src/Editor.cxx
+--- a/src/Editor.cxx	Tue Mar 06 10:24:52 2012 +1100
++++ b/src/Editor.cxx	Mon May 14 16:33:51 2012 -0400
+@@ -1948,7 +1948,7 @@
+ 					PRectangle rcNumber = rcMarker;
+ 					// Right justify
+ 					XYPOSITION width = surface->WidthText(vs.styles[STYLE_LINENUMBER].font, number, istrlen(number));
+-					XYPOSITION xpos = rcNumber.right - width - 3;
++					XYPOSITION xpos = rcNumber.right - width;// - 3;
+ 					rcNumber.left = xpos;
+ 					surface->DrawTextNoClip(rcNumber, vs.styles[STYLE_LINENUMBER].font,
+ 					        rcNumber.top + vs.maxAscent, number, istrlen(number),
+diff -r 2faf55888eeb src/LineMarker.cxx
+--- a/src/LineMarker.cxx	Tue Mar 06 10:24:52 2012 +1100
++++ b/src/LineMarker.cxx	Mon May 14 16:33:51 2012 -0400
+@@ -108,8 +108,8 @@
+ 	}
+ 	// Restrict most shapes a bit
+ 	PRectangle rc = rcWhole;
+-	rc.top++;
+-	rc.bottom--;
++	//rc.top++;
++	//rc.bottom--;
+ 	int minDim = Platform::Minimum(rc.Width(), rc.Height());
+ 	minDim--;	// Ensure does not go beyond edge
+ 	int centreX = (rc.right + rc.left) / 2;
+diff -r 2faf55888eeb src/ScintillaBase.cxx
+--- a/src/ScintillaBase.cxx	Tue Mar 06 10:24:52 2012 +1100
++++ b/src/ScintillaBase.cxx	Mon May 14 16:33:51 2012 -0400
+@@ -225,8 +225,8 @@
+ 	if (rcPopupBounds.Height() == 0)
+ 		rcPopupBounds = rcClient;
+ 
+-	int heightLB = 100;
+-	int widthLB = 100;
++	int heightLB = 10;
++	int widthLB = 10;
+ 	if (pt.x >= rcClient.right - widthLB) {
+ 		HorizontalScrollTo(xOffset + pt.x - rcClient.right + widthLB);
+ 		Redraw();
