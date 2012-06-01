@@ -658,20 +658,15 @@ int Platform::Clamp(int val, int minVal, int maxVal) {
 class ScintillaTerm : public ScintillaBase {
   Surface *sur;
   bool painting;
-  void (*callback)(Scintilla *, SCNotification *);
+  void (*callback)(Scintilla *, int, void *, void *);
 public:
   /**
-   * Creates a new Scintilla instance using the given parameters to create an
-   * ncurses `WINDOW`.
-   * @param nlines The number of lines in the ncurses `WINDOW`.
-   * @param ncols The number of columns in the ncurses `WINDOW`.
-   * @param begin_y The position of the top of the ncurses `WINDOW`.
-   * @param begin_x The position of the left of the ncurses `WINDOW`.
+   * Creates a new Scintilla instance in an ncurses `WINDOW`.
+   * The `WINDOW` is initially full-screen.
    * @param callback_ Callback function for Scintilla notifications.
    */
-  ScintillaTerm(int nlines, int ncols, int begin_y, int begin_x,
-                void (*callback_)(Scintilla *, SCNotification *)) {
-    wMain = newwin(nlines, ncols, begin_y, begin_x);
+  ScintillaTerm(void (*callback_)(Scintilla *, int, void *, void *)) {
+    wMain = newwin(0, 0, 0, 0);
     callback = callback_;
     if ((sur = Surface::Allocate(SC_TECHNOLOGY_DEFAULT)))
       sur->Init(GetWINDOW());
@@ -754,7 +749,8 @@ public:
       Refresh();
       painting = false;
     }
-    if (callback) (*callback)(reinterpret_cast<Scintilla *>(this), &scn);
+    if (callback)
+      (*callback)(reinterpret_cast<Scintilla *>(this), 0, (void *)&scn, 0);
   }
   /**
    * Handles an unconsumed key.
@@ -826,19 +822,12 @@ public:
 // Link with C.
 extern "C" {
 /**
- * Creates a new Scintilla window using the given parameters to create an
- * ncurses `WINDOW`.
- * @param nlines The number of lines in the ncurses `WINDOW`.
- * @param ncols The number of columns in the ncurses `WINDOW`.
- * @param begin_y The position of the top of the ncurses `WINDOW`.
- * @param begin_x The position of the left of the ncurses `WINDOW`.
+ * Creates a new Scintilla window.
  * @param callback A callback function for Scintilla notifications.
  */
-Scintilla *scintilla_new(int nlines, int ncols, int begin_y, int begin_x,
-                         void (*callback)(Scintilla *, SCNotification *)) {
+Scintilla *scintilla_new(void (*callback)(Scintilla *, int, void *, void *)) {
   init_colors();
-  return reinterpret_cast<Scintilla *>(new ScintillaTerm(nlines, ncols, begin_y,
-                                       begin_x, callback));
+  return reinterpret_cast<Scintilla *>(new ScintillaTerm(callback));
 }
 /**
  * Returns the ncurses `WINDOW` associated with the given Scintilla window.

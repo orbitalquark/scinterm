@@ -4,17 +4,12 @@
 #ifndef SCINTILLATERM_H
 #define SCINTILLATERM_H
 
-#include <ncurses.h>
-
-#include "Scintilla.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef void *Scintilla;
-Scintilla *scintilla_new(int, int, int, int, void (*)(Scintilla *,
-                                                      struct SCNotification *));
+Scintilla *scintilla_new(void (*)(Scintilla *, int, void *, void *));
 WINDOW *scintilla_get_window(Scintilla *);
 sptr_t scintilla_send_message(Scintilla *, unsigned int, uptr_t, sptr_t);
 void scintilla_send_key(Scintilla *, int, bool, bool, bool);
