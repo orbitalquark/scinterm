@@ -13,6 +13,7 @@ Scintilla *scintilla_new(void (*)(Scintilla *, int, void *, void *));
 WINDOW *scintilla_get_window(Scintilla *);
 sptr_t scintilla_send_message(Scintilla *, unsigned int, uptr_t, sptr_t);
 void scintilla_send_key(Scintilla *, int, bool, bool, bool);
+void scintilla_refresh(Scintilla *);
 void scintilla_delete(Scintilla *);
 
 #ifdef __cplusplus

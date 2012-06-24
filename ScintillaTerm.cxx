@@ -268,7 +268,9 @@ public:
                       const char *s, int len, ColourDesired fore,
                       ColourDesired back) {
     wattrset(win, COLOR_PAIR(term_color_pair(fore, back)) |
-                  reinterpret_cast<int>(font_.GetID()));
+                  reinterpret_cast<long>(font_.GetID()));
+    // Note: assume that long and int are the same size so this code compiles on
+    // x86_64.
     mvwaddnstr(win, rc.top, rc.left, s, len);
   }
   /**
@@ -737,18 +739,8 @@ public:
   virtual void Paste() {}
   virtual void ClaimSelection() {}
   virtual void NotifyChange() {}
-  /** Repaint the Scintilla window if anything changed. */
+  /** Send Scintilla notifications to the parent. */
   virtual void NotifyParent(SCNotification scn) {
-    if (!painting &&
-        scn.nmhdr.code & (SC_MOD_INSERTTEXT | SC_MOD_DELETETEXT |
-                          SC_MOD_CHANGESTYLE | SC_MOD_CHANGEFOLD |
-                          SC_MOD_CHANGEMARKER | SC_MOD_CHANGEINDICATOR |
-                          SC_MOD_CHANGELINESTATE | SC_MOD_LEXERSTATE |
-                          SC_MOD_CHANGEMARGIN | SC_MOD_CHANGEANNOTATION)) {
-      painting = true;
-      Refresh();
-      painting = false;
-    }
     if (callback)
       (*callback)(reinterpret_cast<Scintilla *>(this), 0, (void *)&scn, 0);
   }
@@ -792,6 +784,7 @@ public:
   WINDOW *GetWINDOW() { return _WINDOW(wMain.GetID()); }
   /** Repaints the Scintilla window. */
   void Refresh() {
+    if (ac.Active()) return; // do not repaint over an active autocomplete list
     WINDOW *w = GetWINDOW();
     rcPaint.top = 0, rcPaint.left = 0; // paint from (0, 0), not (begy, begx)
     getmaxyx(w, rcPaint.bottom, rcPaint.right);
@@ -815,7 +808,6 @@ public:
   void KeyPress(int key, bool shift, bool ctrl, bool alt) {
     bool consumed = false;
     KeyDown(key, shift, ctrl, alt, &consumed);
-    if (consumed && !ac.Active()) Refresh();
   }
 };
 
@@ -864,6 +856,14 @@ sptr_t scintilla_send_message(Scintilla *sci, unsigned int iMessage,
 void scintilla_send_key(Scintilla *sci, int key, bool shift, bool ctrl,
                         bool alt) {
   reinterpret_cast<ScintillaTerm *>(sci)->KeyPress(key, shift, ctrl, alt);
+}
+/**
+ * Refreshes the Scintilla window.
+ * This should be done along with the normal ncurses `refresh()`.
+ * @param sci The Scintilla window returned by `scintilla_new()`.
+ */
+void scintilla_refresh(Scintilla *sci) {
+  reinterpret_cast<ScintillaTerm *>(sci)->Refresh();
 }
 /**
  * Deletes the given Scintilla window.
