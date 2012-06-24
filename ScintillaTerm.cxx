@@ -2,6 +2,8 @@
 // Scintilla implemented in a UNIX terminal environment.
 // Contains platform facilities and a terminal-specific subclass of
 // ScintillaBase.
+// Note: setlocale(LC_CTYPE, "") must be called before initializing ncurses in
+// order to display UTF-8 characters properly.
 
 #include <stdio.h>
 #include <stdlib.h>
