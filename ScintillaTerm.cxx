@@ -273,7 +273,7 @@ public:
                   reinterpret_cast<long>(font_.GetID()));
     // Note: assume that long and int are the same size so this code compiles on
     // x86_64.
-    mvwaddnstr(win, rc.top, rc.left, s, len);
+    mvwaddnstr(win, rc.top, rc.left, s, Platform::Minimum(len, COLS - rc.left));
   }
   /**
    * Identical to `DrawTextNoClip()`.
@@ -661,7 +661,6 @@ int Platform::Clamp(int val, int minVal, int maxVal) {
 /** Implementation of Scintilla for the Terminal. */
 class ScintillaTerm : public ScintillaBase {
   Surface *sur;
-  bool painting;
   void (*callback)(Scintilla *, int, void *, void *);
 public:
   /**
@@ -674,7 +673,6 @@ public:
     callback = callback_;
     if ((sur = Surface::Allocate(SC_TECHNOLOGY_DEFAULT)))
       sur->Init(GetWINDOW());
-    painting = false;
 
     // Defaults for terminals.
     bufferedDraw = false; // draw directly to the screen
