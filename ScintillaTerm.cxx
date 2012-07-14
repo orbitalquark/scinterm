@@ -289,7 +289,8 @@ public:
                            const char *s, int len, ColourDesired fore) {}
   /**
    * Measures the width of characters in the given string.
-   * Terminal font characters always have a width of 1.
+   * Terminal font characters always have a width of 1 if they are not UTF-8
+   * trailing bytes.
    * @param font_ Unused.
    * @param s The string to measure.
    * @param len The length of the string.
@@ -297,7 +298,10 @@ public:
    */
   void MeasureWidths(Font &font_, const char *s, int len,
                      XYPOSITION *positions) {
-    for (int i = 0; i < len; i++) positions[i] = i + 1;
+    for (int i = 0, j = 0; i < len; i++) {
+      if (!UTF8IsTrailByte((unsigned char)s[i])) j++;
+      positions[i] = j;
+    }
   }
   /**
    * Returns the length of the string since terminal font characters always have
