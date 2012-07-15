@@ -788,12 +788,12 @@ public:
   WINDOW *GetWINDOW() { return _WINDOW(wMain.GetID()); }
   /** Repaints the Scintilla window. */
   void Refresh() {
-    if (ac.Active()) return; // do not repaint over an active autocomplete list
     WINDOW *w = GetWINDOW();
     rcPaint.top = 0, rcPaint.left = 0; // paint from (0, 0), not (begy, begx)
     getmaxyx(w, rcPaint.bottom, rcPaint.right);
     Paint(sur, rcPaint);
     wrefresh(w);
+    if (ac.Active()) ac.lb->Select(ac.lb->GetSelection()); // redraw
   }
   /**
    * Sends a key to Scintilla.
