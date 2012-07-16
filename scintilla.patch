@@ -1,15 +1,15 @@
-diff -r 2faf55888eeb include/Platform.h
---- a/include/Platform.h	Tue Mar 06 10:24:52 2012 +1100
-+++ b/include/Platform.h	Mon May 14 16:33:51 2012 -0400
-@@ -21,6 +21,7 @@
- #define PLAT_WIN 0
+diff -r 3f9b065c4401 include/Platform.h
+--- a/include/Platform.h	Wed Jul 11 12:43:34 2012 +1000
++++ b/include/Platform.h	Mon Jul 16 12:53:10 2012 -0400
+@@ -22,6 +22,7 @@
  #define PLAT_WX  0
+ #define PLAT_QT 0
  #define PLAT_FOX 0
 +#define PLAT_TERM 0
  
  #if defined(FOX)
  #undef PLAT_FOX
-@@ -30,6 +31,10 @@
+@@ -31,6 +32,10 @@
  #undef PLAT_WX
  #define PLAT_WX  1
  
@@ -17,10 +17,10 @@ diff -r 2faf55888eeb include/Platform.h
 +#undef PLAT_TERM
 +#define PLAT_TERM 1
 +
- #elif defined(GTK)
- #undef PLAT_GTK
- #define PLAT_GTK 1
-@@ -359,7 +364,7 @@
+ #elif defined(SCINTILLA_QT)
+ #undef PLAT_QT
+ #define PLAT_QT 1
+@@ -364,7 +369,7 @@
  	void SetPosition(PRectangle rc);
  	void SetPositionRelative(PRectangle rc, Window relativeTo);
  	PRectangle GetClientPosition();
@@ -29,21 +29,30 @@ diff -r 2faf55888eeb include/Platform.h
  	void InvalidateAll();
  	void InvalidateRectangle(PRectangle rc);
  	virtual void SetFont(Font &font);
-diff -r 2faf55888eeb src/Editor.cxx
---- a/src/Editor.cxx	Tue Mar 06 10:24:52 2012 +1100
-+++ b/src/Editor.cxx	Mon May 14 16:33:51 2012 -0400
-@@ -1948,7 +1948,7 @@
- 					PRectangle rcNumber = rcMarker;
- 					// Right justify
- 					XYPOSITION width = surface->WidthText(vs.styles[STYLE_LINENUMBER].font, number, istrlen(number));
--					XYPOSITION xpos = rcNumber.right - width - 3;
-+					XYPOSITION xpos = rcNumber.right - width;// - 3;
- 					rcNumber.left = xpos;
- 					surface->DrawTextNoClip(rcNumber, vs.styles[STYLE_LINENUMBER].font,
- 					        rcNumber.top + vs.maxAscent, number, istrlen(number),
-diff -r 2faf55888eeb src/LineMarker.cxx
---- a/src/LineMarker.cxx	Tue Mar 06 10:24:52 2012 +1100
-+++ b/src/LineMarker.cxx	Mon May 14 16:33:51 2012 -0400
+diff -r 3f9b065c4401 src/Editor.cxx
+--- a/src/Editor.cxx	Wed Jul 11 12:43:34 2012 +1000
++++ b/src/Editor.cxx	Mon Jul 16 12:53:10 2012 -0400
+@@ -1956,7 +1956,7 @@
+ 						PRectangle rcNumber = rcMarker;
+ 						// Right justify
+ 						XYPOSITION width = surface->WidthText(vs.styles[STYLE_LINENUMBER].font, number, istrlen(number));
+-						XYPOSITION xpos = rcNumber.right - width - 3;
++						XYPOSITION xpos = rcNumber.right - width;// - 3;
+ 						rcNumber.left = xpos;
+ 						surface->DrawTextNoClip(rcNumber, vs.styles[STYLE_LINENUMBER].font,
+ 								rcNumber.top + vs.maxAscent, number, istrlen(number),
+@@ -2200,7 +2200,7 @@
+ 								const char *ctrlChar = ControlCharacterString(ll->chars[charInLine]);
+ 								// +3 For a blank on front and rounded edge each side:
+ 								ctrlCharWidth[ll->chars[charInLine]] =
+-								    surface->WidthText(ctrlCharsFont, ctrlChar, istrlen(ctrlChar)) + 3;
++								    surface->WidthText(ctrlCharsFont, ctrlChar, istrlen(ctrlChar));// + 3;
+ 							}
+ 							ll->positions[charInLine + 1] = ctrlCharWidth[ll->chars[charInLine]];
+ 						} else {
+diff -r 3f9b065c4401 src/LineMarker.cxx
+--- a/src/LineMarker.cxx	Wed Jul 11 12:43:34 2012 +1000
++++ b/src/LineMarker.cxx	Mon Jul 16 12:53:10 2012 -0400
 @@ -108,8 +108,8 @@
  	}
  	// Restrict most shapes a bit
@@ -55,10 +64,10 @@ diff -r 2faf55888eeb src/LineMarker.cxx
  	int minDim = Platform::Minimum(rc.Width(), rc.Height());
  	minDim--;	// Ensure does not go beyond edge
  	int centreX = (rc.right + rc.left) / 2;
-diff -r 2faf55888eeb src/ScintillaBase.cxx
---- a/src/ScintillaBase.cxx	Tue Mar 06 10:24:52 2012 +1100
-+++ b/src/ScintillaBase.cxx	Mon May 14 16:33:51 2012 -0400
-@@ -225,8 +225,8 @@
+diff -r 3f9b065c4401 src/ScintillaBase.cxx
+--- a/src/ScintillaBase.cxx	Wed Jul 11 12:43:34 2012 +1000
++++ b/src/ScintillaBase.cxx	Mon Jul 16 12:53:10 2012 -0400
+@@ -226,8 +226,8 @@
  	if (rcPopupBounds.Height() == 0)
  		rcPopupBounds = rcClient;
  

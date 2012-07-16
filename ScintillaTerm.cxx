@@ -5,6 +5,7 @@
 // Note: setlocale(LC_CTYPE, "") must be called before initializing ncurses in
 // order to display UTF-8 characters properly.
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -222,14 +223,23 @@ public:
   void RectangleDraw(PRectangle rc, ColourDesired fore, ColourDesired back) {}
   /**
    * Clears the given portion of the screen with the given background color.
+   * In some cases, it can be determined that whitespace is being drawn. If so,
+   * draw it appropriately instead of clearing the given portion of the screen.
    * @param rc The portion of the screen to clear.
    * @param back The background color to use.
    */
   void FillRectangle(PRectangle rc, ColourDesired back) {
     wcolor_set(win, term_color_pair(COLOR_WHITE, back), NULL);
+    chtype ch = ' ';
+    if (fabs(rc.left - (int)rc.left) > 0.1) {
+      // If rc.left is a fractional value (e.g. 4.5) then whitespace dots are
+      // being drawn. Draw them appropriately.
+      wcolor_set(win, term_color_pair(COLOR_BLACK, COLOR_BLACK), NULL);
+      rc.right = (int)rc.right, ch = ACS_BULLET | A_BOLD;
+    }
     for (int y = rc.top; y < rc.bottom; y++)
       for (int x = rc.left; x < rc.right; x++)
-        mvwaddch(win, y, x, ' ');
+        mvwaddch(win, y, x, ch);
   }
   /**
    * Instead of filling a portion of the screen with a surface pixmap, fills the
@@ -276,12 +286,16 @@ public:
     mvwaddnstr(win, rc.top, rc.left, s, Platform::Minimum(len, COLS - rc.left));
   }
   /**
-   * Identical to `DrawTextNoClip()`.
+   * Identical to `DrawTextNoClip()`, except when drawing control characters.
+   * When drawing control characters, the rectangle to draw characters in needs
+   * to have its pixel padding removed since ncurses has smaller resolution.
    * @see DrawTextNoClip
    */
   void DrawTextClipped(PRectangle rc, Font &font_, XYPOSITION ybase,
                        const char *s, int len, ColourDesired fore,
                        ColourDesired back) {
+    if (len == 2 && (isupper(s[0]) && isupper(s[1])))
+      rc.left -= 2, rc.right -= 2, rc.top -= 1, rc.bottom -= 1;
     DrawTextNoClip(rc, font_, ybase, s, len, fore, back);
   }
   /** Drawing transparent text for double-buffering is not implemented. */
