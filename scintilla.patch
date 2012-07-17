@@ -1,6 +1,6 @@
 diff -r 3f9b065c4401 include/Platform.h
 --- a/include/Platform.h	Wed Jul 11 12:43:34 2012 +1000
-+++ b/include/Platform.h	Mon Jul 16 12:53:10 2012 -0400
++++ b/include/Platform.h	Tue Jul 17 13:25:38 2012 -0400
 @@ -22,6 +22,7 @@
  #define PLAT_WX  0
  #define PLAT_QT 0
@@ -31,7 +31,7 @@ diff -r 3f9b065c4401 include/Platform.h
  	virtual void SetFont(Font &font);
 diff -r 3f9b065c4401 src/Editor.cxx
 --- a/src/Editor.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/Editor.cxx	Mon Jul 16 12:53:10 2012 -0400
++++ b/src/Editor.cxx	Tue Jul 17 13:25:38 2012 -0400
 @@ -1956,7 +1956,7 @@
  						PRectangle rcNumber = rcMarker;
  						// Right justify
@@ -50,23 +50,9 @@ diff -r 3f9b065c4401 src/Editor.cxx
  							}
  							ll->positions[charInLine + 1] = ctrlCharWidth[ll->chars[charInLine]];
  						} else {
-diff -r 3f9b065c4401 src/LineMarker.cxx
---- a/src/LineMarker.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/LineMarker.cxx	Mon Jul 16 12:53:10 2012 -0400
-@@ -108,8 +108,8 @@
- 	}
- 	// Restrict most shapes a bit
- 	PRectangle rc = rcWhole;
--	rc.top++;
--	rc.bottom--;
-+	//rc.top++;
-+	//rc.bottom--;
- 	int minDim = Platform::Minimum(rc.Width(), rc.Height());
- 	minDim--;	// Ensure does not go beyond edge
- 	int centreX = (rc.right + rc.left) / 2;
 diff -r 3f9b065c4401 src/ScintillaBase.cxx
 --- a/src/ScintillaBase.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/ScintillaBase.cxx	Mon Jul 16 12:53:10 2012 -0400
++++ b/src/ScintillaBase.cxx	Tue Jul 17 13:25:38 2012 -0400
 @@ -226,8 +226,8 @@
  	if (rcPopupBounds.Height() == 0)
  		rcPopupBounds = rcClient;

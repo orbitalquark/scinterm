@@ -286,9 +286,11 @@ public:
     mvwaddnstr(win, rc.top, rc.left, s, Platform::Minimum(len, COLS - rc.left));
   }
   /**
-   * Identical to `DrawTextNoClip()`, except when drawing control characters.
-   * When drawing control characters, the rectangle to draw characters in needs
-   * to have its pixel padding removed since ncurses has smaller resolution.
+   * Similar to `DrawTextNoClip()`.
+   * Called for drawing the caret, control characters, and line markers.
+   * When drawing control characters, `rc` needs to have its pixel padding
+   * removed since ncurses has smaller resolution. Similarly when drawing line
+   * markers, `rc` needs to be reshaped.
    * @see DrawTextNoClip
    */
   void DrawTextClipped(PRectangle rc, Font &font_, XYPOSITION ybase,
@@ -296,6 +298,8 @@ public:
                        ColourDesired back) {
     if (len == 2 && (isupper(s[0]) && isupper(s[1])))
       rc.left -= 2, rc.right -= 2, rc.top -= 1, rc.bottom -= 1;
+    else if (rc.top > rc.bottom)
+      rc.top -= 1, rc.bottom += 1;
     DrawTextNoClip(rc, font_, ybase, s, len, fore, back);
   }
   /** Drawing transparent text for double-buffering is not implemented. */
