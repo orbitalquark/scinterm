@@ -684,6 +684,7 @@ int Platform::Clamp(int val, int minVal, int maxVal) {
 class ScintillaTerm : public ScintillaBase {
   Surface *sur;
   void (*callback)(Scintilla *, int, void *, void *);
+  SelectionText clipboard;
 public:
   /**
    * Creates a new Scintilla instance in an ncurses `WINDOW`.
@@ -755,11 +756,30 @@ public:
   virtual void SetHorizontalScrollPos() {}
   /** Modifying scrollbars is not implemented. */
   virtual bool ModifyScrollBars(int nMax, int nPage) { return false; }
-  /** Copying text to clipboard is not implemented because of X selection. */
-  virtual void Copy() {}
-  /** Pasting text from clipboard is not implmented because of X selection. */
-  virtual void Paste() {}
+  /**
+   * Copies the selected text to the internal clipboard.
+   * The primary and secondary X selections are unaffected.
+   */
+  virtual void Copy() {
+    if (!sel.Empty()) CopySelectionRange(&clipboard);
+  }
+  /**
+   * Pastes text from the internal clipboard, not from primary or secondary X
+   * selections.
+   */
+  virtual void Paste() {
+    ClearSelection(multiPasteMode == SC_MULTIPASTE_EACH);
+    SelectionPosition sp = !sel.IsRectangular() ? sel.Range(sel.Main()).Start()
+                                                : sel.Rectangular().Start();
+    if (!clipboard.rectangular)
+      InsertPaste(sp, clipboard.s, clipboard.len - 1);
+    else
+      PasteRectangular(sp, clipboard.s, clipboard.len - 1);
+    EnsureCaretVisible();
+  }
+  /** Setting of the primary and/or secondary X selections is not supported. */
   virtual void ClaimSelection() {}
+  /** Notifying the parent of text changes is not yet supported. */
   virtual void NotifyChange() {}
   /** Send Scintilla notifications to the parent. */
   virtual void NotifyParent(SCNotification scn) {
@@ -786,7 +806,14 @@ public:
       return 0;
     }
   }
-  virtual void CopyToClipboard(const SelectionText &selectedText) {}
+  /**
+   * Copies the given text to the internal clipboard.
+   * Like `Copy()`, does not affect the primary and secondary X selections.
+   * @param selectedText The text to copy.
+   */
+  virtual void CopyToClipboard(const SelectionText &selectedText) {
+    clipboard.Copy(selectedText);
+  }
   /** A ticking caret is not implemented. */
   virtual void SetTicking(bool on) {}
   /** Mouse capture is not implemented. */
@@ -830,6 +857,17 @@ public:
   void KeyPress(int key, bool shift, bool ctrl, bool alt) {
     bool consumed = false;
     KeyDown(key, shift, ctrl, alt, &consumed);
+  }
+  /**
+   * Copies the text of the internal clipboard, not the primary and/or secondary
+   * X selections, into the given buffer and returns the size of the clipboard
+   * text.
+   * @param text The buffer to copy clipboard text to.
+   * @return size of the clipboard text
+   */
+  int GetClipboard(char *buffer) {
+    if (buffer) memcpy(buffer, clipboard.s, clipboard.len);
+    return clipboard.len;
   }
 };
 
@@ -878,6 +916,19 @@ sptr_t scintilla_send_message(Scintilla *sci, unsigned int iMessage,
 void scintilla_send_key(Scintilla *sci, int key, bool shift, bool ctrl,
                         bool alt) {
   reinterpret_cast<ScintillaTerm *>(sci)->KeyPress(key, shift, ctrl, alt);
+}
+/**
+ * Copies the text of Scintilla's internal clipboard, not the primary and/or
+ * secondary X selections, into the given buffer and returns the size of the
+ * clipboard text.
+ * Call with a `null` buffer first to get the size of the buffer needed to store
+ * clipboard text.
+ * Keep in mind clipboard text may contain null bytes.
+ * @param text The buffer to copy clipboard text to.
+ * @return size of the clipboard text.
+ */
+int scintilla_get_clipboard(Scintilla *sci, char *buffer) {
+  return reinterpret_cast<ScintillaTerm *>(sci)->GetClipboard(buffer);
 }
 /**
  * Refreshes the Scintilla window.
