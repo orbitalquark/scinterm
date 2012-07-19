@@ -1,6 +1,6 @@
 diff -r 3f9b065c4401 include/Platform.h
 --- a/include/Platform.h	Wed Jul 11 12:43:34 2012 +1000
-+++ b/include/Platform.h	Thu Jul 19 12:57:20 2012 -0400
++++ b/include/Platform.h	Thu Jul 19 16:00:52 2012 -0400
 @@ -22,6 +22,7 @@
  #define PLAT_WX  0
  #define PLAT_QT 0
@@ -20,18 +20,9 @@ diff -r 3f9b065c4401 include/Platform.h
  #elif defined(SCINTILLA_QT)
  #undef PLAT_QT
  #define PLAT_QT 1
-@@ -364,7 +369,7 @@
- 	void SetPosition(PRectangle rc);
- 	void SetPositionRelative(PRectangle rc, Window relativeTo);
- 	PRectangle GetClientPosition();
--	void Show(bool show=true);
-+	virtual void Show(bool show=true);
- 	void InvalidateAll();
- 	void InvalidateRectangle(PRectangle rc);
- 	virtual void SetFont(Font &font);
 diff -r 3f9b065c4401 src/CallTip.cxx
 --- a/src/CallTip.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/CallTip.cxx	Thu Jul 19 12:57:20 2012 -0400
++++ b/src/CallTip.cxx	Thu Jul 19 16:00:52 2012 -0400
 @@ -18,8 +18,8 @@
  using namespace Scintilla;
  #endif
@@ -61,7 +52,7 @@ diff -r 3f9b065c4401 src/CallTip.cxx
  
 diff -r 3f9b065c4401 src/Editor.cxx
 --- a/src/Editor.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/Editor.cxx	Thu Jul 19 12:57:20 2012 -0400
++++ b/src/Editor.cxx	Thu Jul 19 16:00:52 2012 -0400
 @@ -1956,7 +1956,7 @@
  						PRectangle rcNumber = rcMarker;
  						// Right justify
@@ -82,7 +73,7 @@ diff -r 3f9b065c4401 src/Editor.cxx
  						} else {
 diff -r 3f9b065c4401 src/ScintillaBase.cxx
 --- a/src/ScintillaBase.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/ScintillaBase.cxx	Thu Jul 19 12:57:20 2012 -0400
++++ b/src/ScintillaBase.cxx	Thu Jul 19 16:00:52 2012 -0400
 @@ -226,8 +226,8 @@
  	if (rcPopupBounds.Height() == 0)
  		rcPopupBounds = rcClient;

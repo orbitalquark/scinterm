@@ -450,18 +450,6 @@ public:
   /** Deletes the ListBox. */
   virtual ~ListBoxImpl() {}
 
-  /**
-   * Resizes the listbox for showing.
-   * Uses the default listbox height and a width based on the the list's
-   * contents (via `ListBox::Append()`).
-   * After this is called, Scintilla calls `ListBox::Select()`, which paints the
-   * listbox.
-   */
-  virtual void Show(bool show) {
-    // TODO: ensure width and height do not go off screen.
-    wresize(_WINDOW(wid), height + 2, width + 2);
-  }
-
   /** Setting the font is not implemented. */
   virtual void SetFont(Font &font) {}
   /**
@@ -487,7 +475,10 @@ public:
    * Sets the number of visible rows in the listbox.
    * @param rows The number of rows.
    */
-  virtual void SetVisibleRows(int rows) { height = rows; }
+  virtual void SetVisibleRows(int rows) {
+    height = rows;
+    wresize(_WINDOW(wid), height + 2, width + 2);
+  }
   /**
    * Gets the number of visible rows in the listbox.
    * @return int number of rows.
@@ -521,7 +512,10 @@ public:
     char chtype = (type >= 0 && type <= 9) ? types[type] : ' ';
     list.push_back(std::string(&chtype, 1) + std::string(s));
     int len = strlen(s);
-    if (width < len) width = len + 1; // include type character len
+    if (width < len) {
+      width = len + 1; // include type character len
+      wresize(_WINDOW(wid), height + 2, width + 2);
+    }
   }
   /**
    * Returns the number of items in the listbox.
