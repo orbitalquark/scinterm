@@ -831,6 +831,11 @@ public:
   /** A Scintilla direct pointer is not implemented. */
   virtual sptr_t DefWndProc(unsigned int iMessage, uptr_t wParam,
                             sptr_t lParam) { return 0; }
+  /**
+   * Draws a CallTip, creating the ncurses window for it if necessary.
+   * @param rc The bounds of the CallTip window. Ignored when redrawing the
+   * CallTip.
+   */
   virtual void CreateCallTipWindow(PRectangle rc) {
     if (!ct.wCallTip.Created()) {
       rc.right -= 1; // remove right-side padding
