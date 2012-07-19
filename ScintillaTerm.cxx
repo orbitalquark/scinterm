@@ -302,9 +302,15 @@ public:
       rc.top -= 1, rc.bottom += 1;
     DrawTextNoClip(rc, font_, ybase, s, len, fore, back);
   }
-  /** Drawing transparent text for double-buffering is not implemented. */
+  /**
+   * Similar to `DrawTextNoClip()`.
+   * Called for drawing CallTip text.
+   * This would also be called for two-phase drawing, but that is not supported.
+   */
   void DrawTextTransparent(PRectangle rc, Font &font_, XYPOSITION ybase,
-                           const char *s, int len, ColourDesired fore) {}
+                           const char *s, int len, ColourDesired fore) {
+    DrawTextNoClip(rc, font_, ybase, s, len, fore, BLACK);
+  }
   /**
    * Measures the width of characters in the given string.
    * Terminal font characters always have a width of 1 if they are not UTF-8
@@ -336,8 +342,8 @@ public:
   XYPOSITION InternalLeading(Font &font_) { return 0; }
   /** Returns 0 since terminal font characters have no leading. */
   XYPOSITION ExternalLeading(Font &font_) { return 0; }
-  /** Returns 0 since terminal font characters have no additional height. */
-  XYPOSITION Height(Font &font_) { return 0; }
+  /** Returns 1 since terminal font characters always have a height of 1. */
+  XYPOSITION Height(Font &font_) { return 1; }
   /** Returns 1 since terminal font characters always have a width of 1. */
   XYPOSITION AverageCharWidth(Font &font_) { return 1; }
 
@@ -396,8 +402,10 @@ void Window::SetPositionRelative(PRectangle rc, Window relativeTo) {
   y += rc.top;
   if (y < 0) y = 0;
   // Correct to fit the parent if necessary.
-  int sizex = rc.right - rc.left + 2; // add border widths
-  int sizey = rc.bottom - rc.top + 2; // add border widths
+  int sizex = rc.right - rc.left;
+  if (x > 0) sizex -= 1; // in ncurses, x pos counts as "1" width
+  int sizey = rc.bottom - rc.top;
+  if (y > 0) sizey -= 1; // in ncurses, y pos counts as "1" height
   int screen_width = getmaxx(_WINDOW(relativeTo.GetID()));
   int screen_height = getmaxy(_WINDOW(relativeTo.GetID()));
   if (sizex > screen_width)
@@ -823,7 +831,27 @@ public:
   /** A Scintilla direct pointer is not implemented. */
   virtual sptr_t DefWndProc(unsigned int iMessage, uptr_t wParam,
                             sptr_t lParam) { return 0; }
-  virtual void CreateCallTipWindow(PRectangle rc) {}
+  virtual void CreateCallTipWindow(PRectangle rc) {
+    if (!ct.wCallTip.Created()) {
+      rc.right -= 1; // remove right-side padding
+      int xoffset = 0 - rc.left, yoffset = 0 - rc.top;
+      if (xoffset > 0) rc.left += xoffset, rc.right += xoffset;
+      if (yoffset > 0) rc.top += yoffset, rc.bottom += yoffset;
+      if (rc.Width() > COLS) rc.right = rc.left + COLS;
+      if (rc.Height() > LINES) rc.bottom = rc.top + LINES;
+      ct.wCallTip = newwin(rc.Height(), rc.Width(), rc.top, rc.left);
+    }
+    WindowID wid = ct.wCallTip.GetID();
+    box(_WINDOW(wid), '|', '-');
+    Surface *sur = Surface::Allocate(SC_TECHNOLOGY_DEFAULT);
+    if (sur) {
+      sur->Init(wid);
+      ct.PaintCT(sur);
+      wrefresh(_WINDOW(wid));
+      sur->Release();
+      delete sur;
+    }
+  }
   virtual void AddToPopUp(const char *label, int cmd=0, bool enabled=true) {}
 
   /**
@@ -838,7 +866,10 @@ public:
     getmaxyx(w, rcPaint.bottom, rcPaint.right);
     Paint(sur, rcPaint);
     wrefresh(w);
-    if (ac.Active()) ac.lb->Select(ac.lb->GetSelection()); // redraw
+    if (ac.Active())
+      ac.lb->Select(ac.lb->GetSelection()); // redraw
+    else if (ct.inCallTipMode)
+      CreateCallTipWindow(PRectangle(0, 0, 0, 0)); // redraw
   }
   /**
    * Sends a key to Scintilla.

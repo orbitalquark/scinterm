@@ -1,6 +1,6 @@
 diff -r 3f9b065c4401 include/Platform.h
 --- a/include/Platform.h	Wed Jul 11 12:43:34 2012 +1000
-+++ b/include/Platform.h	Tue Jul 17 13:25:38 2012 -0400
++++ b/include/Platform.h	Thu Jul 19 12:57:20 2012 -0400
 @@ -22,6 +22,7 @@
  #define PLAT_WX  0
  #define PLAT_QT 0
@@ -29,9 +29,39 @@ diff -r 3f9b065c4401 include/Platform.h
  	void InvalidateAll();
  	void InvalidateRectangle(PRectangle rc);
  	virtual void SetFont(Font &font);
+diff -r 3f9b065c4401 src/CallTip.cxx
+--- a/src/CallTip.cxx	Wed Jul 11 12:43:34 2012 +1000
++++ b/src/CallTip.cxx	Thu Jul 19 12:57:20 2012 -0400
+@@ -18,8 +18,8 @@
+ using namespace Scintilla;
+ #endif
+ 
+-static const int insetX = 5;    // text inset in x from calltip border
+-static const int widthArrow = 14;
++static const int insetX = 2;//5;    // text inset in x from calltip border
++static const int widthArrow = 1;//14;
+ 
+ CallTip::CallTip() {
+ 	wCallTip = 0;
+@@ -287,12 +287,12 @@
+ 	// Extra line for border and an empty line at top and bottom. The returned
+ 	// rectangle is aligned to the right edge of the last arrow encountered in
+ 	// the tip text, else to the tip text left edge.
+-	int height = lineHeight * numLines - surfaceMeasure->InternalLeading(font) + 2 + 2;
++	int height = lineHeight * numLines - surfaceMeasure->InternalLeading(font) + 2;// + 2;
+ 	delete surfaceMeasure;
+ 	if (above) {
+-		return PRectangle(pt.x - offsetMain, pt.y - 1 - height, pt.x + width - offsetMain, pt.y - 1);
++		return PRectangle(pt.x - offsetMain, pt.y - height, pt.x + width - offsetMain, pt.y);
+ 	} else {
+-		return PRectangle(pt.x - offsetMain, pt.y + 1 + textHeight, pt.x + width - offsetMain, pt.y + 1 + textHeight + height);
++		return PRectangle(pt.x - offsetMain, pt.y + textHeight, pt.x + width - offsetMain, pt.y + textHeight + height);
+ 	}
+ }
+ 
 diff -r 3f9b065c4401 src/Editor.cxx
 --- a/src/Editor.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/Editor.cxx	Tue Jul 17 13:25:38 2012 -0400
++++ b/src/Editor.cxx	Thu Jul 19 12:57:20 2012 -0400
 @@ -1956,7 +1956,7 @@
  						PRectangle rcNumber = rcMarker;
  						// Right justify
@@ -52,7 +82,7 @@ diff -r 3f9b065c4401 src/Editor.cxx
  						} else {
 diff -r 3f9b065c4401 src/ScintillaBase.cxx
 --- a/src/ScintillaBase.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/ScintillaBase.cxx	Tue Jul 17 13:25:38 2012 -0400
++++ b/src/ScintillaBase.cxx	Thu Jul 19 12:57:20 2012 -0400
 @@ -226,8 +226,8 @@
  	if (rcPopupBounds.Height() == 0)
  		rcPopupBounds = rcClient;
