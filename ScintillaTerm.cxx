@@ -722,6 +722,14 @@ public:
     vs.markers[SC_MARKNUM_FOLDER].fore = ColourDesired(0xFF, 0xFF, 0xFF);
     vs.markers[SC_MARKNUM_FOLDER].back = ColourDesired(0, 0, 0);
     displayPopupMenu = false; // no context menu
+    marginNumberPadding = 0; // no number margin padding
+    ctrlCharPadding = 0; // no ctrl character text blob padding
+    ac.widthLB = 10; // more sane bound for autocomplete width
+    ac.heightLB = 10; // more sane bound for autocomplete  height
+    ct.insetX = 2; // border and arrow widths are 1 each
+    ct.widthArrow = 1; // arrow width is 1 character
+    ct.borderHeight = 1; // no extra empty lines in border height
+    ct.verticalOffset = 0; // no extra offset of calltip from line
   }
   /**
    * Deletes the Scintilla instance.

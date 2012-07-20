@@ -1,6 +1,6 @@
 diff -r 3f9b065c4401 include/Platform.h
 --- a/include/Platform.h	Wed Jul 11 12:43:34 2012 +1000
-+++ b/include/Platform.h	Thu Jul 19 16:00:52 2012 -0400
++++ b/include/Platform.h	Fri Jul 20 11:14:24 2012 -0400
 @@ -22,6 +22,7 @@
  #define PLAT_WX  0
  #define PLAT_QT 0
@@ -20,68 +20,189 @@ diff -r 3f9b065c4401 include/Platform.h
  #elif defined(SCINTILLA_QT)
  #undef PLAT_QT
  #define PLAT_QT 1
+diff -r 3f9b065c4401 src/AutoComplete.cxx
+--- a/src/AutoComplete.cxx	Wed Jul 11 12:43:34 2012 +1000
++++ b/src/AutoComplete.cxx	Fri Jul 20 11:14:24 2012 -0400
+@@ -34,7 +34,9 @@
+ 	cancelAtStartPos(true),
+ 	autoHide(true),
+ 	dropRestOfWord(false),
+-	ignoreCaseBehaviour(SC_CASEINSENSITIVEBEHAVIOUR_RESPECTCASE) {
++	ignoreCaseBehaviour(SC_CASEINSENSITIVEBEHAVIOUR_RESPECTCASE),
++	widthLB(100),
++	heightLB(100) {
+ 	lb = ListBox::Allocate();
+ 	stopChars[0] = '\0';
+ 	fillUpChars[0] = '\0';
+diff -r 3f9b065c4401 src/AutoComplete.h
+--- a/src/AutoComplete.h	Wed Jul 11 12:43:34 2012 +1000
++++ b/src/AutoComplete.h	Fri Jul 20 11:14:24 2012 -0400
+@@ -34,6 +34,8 @@
+ 	bool autoHide;
+ 	bool dropRestOfWord;
+ 	unsigned int ignoreCaseBehaviour;
++	int widthLB;
++	int heightLB;
+ 
+ 	AutoComplete();
+ 	~AutoComplete();
 diff -r 3f9b065c4401 src/CallTip.cxx
 --- a/src/CallTip.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/CallTip.cxx	Thu Jul 19 16:00:52 2012 -0400
-@@ -18,8 +18,8 @@
++++ b/src/CallTip.cxx	Fri Jul 20 11:14:24 2012 -0400
+@@ -18,9 +18,6 @@
  using namespace Scintilla;
  #endif
  
 -static const int insetX = 5;    // text inset in x from calltip border
 -static const int widthArrow = 14;
-+static const int insetX = 2;//5;    // text inset in x from calltip border
-+static const int widthArrow = 1;//14;
- 
+-
  CallTip::CallTip() {
  	wCallTip = 0;
-@@ -287,12 +287,12 @@
- 	// Extra line for border and an empty line at top and bottom. The returned
+ 	inCallTipMode = false;
+@@ -36,6 +33,11 @@
+ 	above = false;
+ 	useStyleCallTip = false;    // for backwards compatibility
+ 
++	insetX = 5;
++	widthArrow = 14;
++	borderHeight = 2; // Extra line for border and an empty line at top and bottom.
++	verticalOffset = 1;
++
+ #ifdef __APPLE__
+ 	// proper apple colours for the default
+ 	colourBG = ColourDesired(0xff, 0xff, 0xc6);
+@@ -284,15 +286,15 @@
+ 	}
+ 	lineHeight = surfaceMeasure->Height(font);
+ 
+-	// Extra line for border and an empty line at top and bottom. The returned
++	// The returned
  	// rectangle is aligned to the right edge of the last arrow encountered in
  	// the tip text, else to the tip text left edge.
 -	int height = lineHeight * numLines - surfaceMeasure->InternalLeading(font) + 2 + 2;
-+	int height = lineHeight * numLines - surfaceMeasure->InternalLeading(font) + 2;// + 2;
++	int height = lineHeight * numLines - surfaceMeasure->InternalLeading(font) + borderHeight * 2;
  	delete surfaceMeasure;
  	if (above) {
 -		return PRectangle(pt.x - offsetMain, pt.y - 1 - height, pt.x + width - offsetMain, pt.y - 1);
-+		return PRectangle(pt.x - offsetMain, pt.y - height, pt.x + width - offsetMain, pt.y);
++		return PRectangle(pt.x - offsetMain, pt.y - verticalOffset - height, pt.x + width - offsetMain, pt.y - verticalOffset);
  	} else {
 -		return PRectangle(pt.x - offsetMain, pt.y + 1 + textHeight, pt.x + width - offsetMain, pt.y + 1 + textHeight + height);
-+		return PRectangle(pt.x - offsetMain, pt.y + textHeight, pt.x + width - offsetMain, pt.y + textHeight + height);
++		return PRectangle(pt.x - offsetMain, pt.y + verticalOffset + textHeight, pt.x + width - offsetMain, pt.y + verticalOffset + textHeight + height);
  	}
  }
  
+diff -r 3f9b065c4401 src/CallTip.h
+--- a/src/CallTip.h	Wed Jul 11 12:43:34 2012 +1000
++++ b/src/CallTip.h	Fri Jul 20 11:14:24 2012 -0400
+@@ -50,6 +50,11 @@
+ 	int codePage;
+ 	int clickPlace;
+ 
++	int insetX; // text inset in x from calltip border
++	int widthArrow;
++	int borderHeight;
++	int verticalOffset; // pixel offset up or down of the calltip with respect to the line
++
+ 	CallTip();
+ 	~CallTip();
+ 
 diff -r 3f9b065c4401 src/Editor.cxx
 --- a/src/Editor.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/Editor.cxx	Thu Jul 19 16:00:52 2012 -0400
-@@ -1956,7 +1956,7 @@
++++ b/src/Editor.cxx	Fri Jul 20 11:14:24 2012 -0400
+@@ -217,6 +217,9 @@
+ 
+ 	convertPastes = true;
+ 
++	marginNumberPadding = 3;
++	ctrlCharPadding = 3; // +3 For a blank on front and rounded edge each side
++
+ 	hsStart = -1;
+ 	hsEnd = -1;
+ 
+@@ -1956,7 +1959,7 @@
  						PRectangle rcNumber = rcMarker;
  						// Right justify
  						XYPOSITION width = surface->WidthText(vs.styles[STYLE_LINENUMBER].font, number, istrlen(number));
 -						XYPOSITION xpos = rcNumber.right - width - 3;
-+						XYPOSITION xpos = rcNumber.right - width;// - 3;
++						XYPOSITION xpos = rcNumber.right - width - marginNumberPadding;
  						rcNumber.left = xpos;
  						surface->DrawTextNoClip(rcNumber, vs.styles[STYLE_LINENUMBER].font,
  								rcNumber.top + vs.maxAscent, number, istrlen(number),
-@@ -2200,7 +2200,7 @@
+@@ -2198,9 +2201,8 @@
+ 						} else if (controlCharSymbol < 32) {
+ 							if (ctrlCharWidth[ll->chars[charInLine]] == 0) {
  								const char *ctrlChar = ControlCharacterString(ll->chars[charInLine]);
- 								// +3 For a blank on front and rounded edge each side:
+-								// +3 For a blank on front and rounded edge each side:
  								ctrlCharWidth[ll->chars[charInLine]] =
 -								    surface->WidthText(ctrlCharsFont, ctrlChar, istrlen(ctrlChar)) + 3;
-+								    surface->WidthText(ctrlCharsFont, ctrlChar, istrlen(ctrlChar));// + 3;
++								    surface->WidthText(ctrlCharsFont, ctrlChar, istrlen(ctrlChar)) + ctrlCharPadding;
  							}
  							ll->positions[charInLine + 1] = ctrlCharWidth[ll->chars[charInLine]];
  						} else {
+diff -r 3f9b065c4401 src/Editor.h
+--- a/src/Editor.h	Wed Jul 11 12:43:34 2012 +1000
++++ b/src/Editor.h	Fri Jul 20 11:14:24 2012 -0400
+@@ -268,6 +268,9 @@
+ 
+ 	bool convertPastes;
+ 
++	bool marginNumberPadding; // the right-side padding of the number margin
++	bool ctrlCharPadding; // the padding around control character text blobs
++
+ 	Document *pdoc;
+ 
+ 	Editor();
 diff -r 3f9b065c4401 src/ScintillaBase.cxx
 --- a/src/ScintillaBase.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/ScintillaBase.cxx	Thu Jul 19 16:00:52 2012 -0400
-@@ -226,8 +226,8 @@
++++ b/src/ScintillaBase.cxx	Fri Jul 20 11:14:24 2012 -0400
+@@ -226,27 +226,25 @@
  	if (rcPopupBounds.Height() == 0)
  		rcPopupBounds = rcClient;
  
 -	int heightLB = 100;
 -	int widthLB = 100;
-+	int heightLB = 10;
-+	int widthLB = 10;
- 	if (pt.x >= rcClient.right - widthLB) {
- 		HorizontalScrollTo(xOffset + pt.x - rcClient.right + widthLB);
+-	if (pt.x >= rcClient.right - widthLB) {
+-		HorizontalScrollTo(xOffset + pt.x - rcClient.right + widthLB);
++	if (pt.x >= rcClient.right - ac.widthLB) {
++		HorizontalScrollTo(xOffset + pt.x - rcClient.right + ac.widthLB);
  		Redraw();
+ 		pt = PointMainCaret();
+ 	}
+ 	PRectangle rcac;
+ 	rcac.left = pt.x - ac.lb->CaretFromEdge();
+-	if (pt.y >= rcPopupBounds.bottom - heightLB &&  // Wont fit below.
++	if (pt.y >= rcPopupBounds.bottom - ac.heightLB &&  // Wont fit below.
+ 	        pt.y >= (rcPopupBounds.bottom + rcPopupBounds.top) / 2) { // and there is more room above.
+-		rcac.top = pt.y - heightLB;
++		rcac.top = pt.y - ac.heightLB;
+ 		if (rcac.top < rcPopupBounds.top) {
+-			heightLB -= (rcPopupBounds.top - rcac.top);
++			ac.heightLB -= (rcPopupBounds.top - rcac.top);
+ 			rcac.top = rcPopupBounds.top;
+ 		}
+ 	} else {
+ 		rcac.top = pt.y + vs.lineHeight;
+ 	}
+-	rcac.right = rcac.left + widthLB;
+-	rcac.bottom = Platform::Minimum(rcac.top + heightLB, rcPopupBounds.bottom);
++	rcac.right = rcac.left + ac.widthLB;
++	rcac.bottom = Platform::Minimum(rcac.top + ac.heightLB, rcPopupBounds.bottom);
+ 	ac.lb->SetPositionRelative(rcac, wMain);
+ 	ac.lb->SetFont(vs.styles[STYLE_DEFAULT].font);
+ 	unsigned int aveCharWidth = vs.styles[STYLE_DEFAULT].aveCharWidth;
+@@ -258,12 +256,12 @@
+ 	// Fiddle the position of the list so it is right next to the target and wide enough for all its strings
+ 	PRectangle rcList = ac.lb->GetDesiredRect();
+ 	int heightAlloced = rcList.bottom - rcList.top;
+-	widthLB = Platform::Maximum(widthLB, rcList.right - rcList.left);
++	ac.widthLB = Platform::Maximum(ac.widthLB, rcList.right - rcList.left);
+ 	if (maxListWidth != 0)
+-		widthLB = Platform::Minimum(widthLB, aveCharWidth*maxListWidth);
++		ac.widthLB = Platform::Minimum(ac.widthLB, aveCharWidth*maxListWidth);
+ 	// Make an allowance for large strings in list
+ 	rcList.left = pt.x - ac.lb->CaretFromEdge();
+-	rcList.right = rcList.left + widthLB;
++	rcList.right = rcList.left + ac.widthLB;
+ 	if (((pt.y + vs.lineHeight) >= (rcPopupBounds.bottom - heightAlloced)) &&  // Wont fit below.
+ 	        ((pt.y + vs.lineHeight / 2) >= (rcPopupBounds.bottom + rcPopupBounds.top) / 2)) { // and there is more room above.
+ 		rcList.top = pt.y - heightAlloced;
