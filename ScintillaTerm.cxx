@@ -394,13 +394,13 @@ PRectangle Window::GetPosition() {
  * @param relativeTo the parent window.
  */
 void Window::SetPositionRelative(PRectangle rc, Window relativeTo) {
-  int x = 0, y = 0;
+  int begx = 0, begy = 0, x = 0, y = 0;
   // Determine the relative position.
-  getbegyx(_WINDOW(relativeTo.GetID()), y, x);
-  x += rc.left;
-  if (x < 0) x = 0;
-  y += rc.top;
-  if (y < 0) y = 0;
+  getbegyx(_WINDOW(relativeTo.GetID()), begy, begx);
+  x = begx + rc.left;
+  if (x < begx) x = begx;
+  y = begy + rc.top;
+  if (y < begy) y = begy;
   // Correct to fit the parent if necessary.
   int sizex = rc.right - rc.left;
   if (x > 0) sizex -= 1; // in ncurses, x pos counts as "1" width
@@ -409,11 +409,11 @@ void Window::SetPositionRelative(PRectangle rc, Window relativeTo) {
   int screen_width = getmaxx(_WINDOW(relativeTo.GetID()));
   int screen_height = getmaxy(_WINDOW(relativeTo.GetID()));
   if (sizex > screen_width)
-    x = 0;
+    x = begx;
   else if (x + sizex > screen_width)
     x = screen_width - sizex;
   if (sizey > screen_height)
-    y = 0;
+    y = begy;
   else if (y + sizey > screen_height)
     y = screen_height - sizey;
   // Update the location.
@@ -833,11 +833,14 @@ public:
   virtual void CreateCallTipWindow(PRectangle rc) {
     if (!ct.wCallTip.Created()) {
       rc.right -= 1; // remove right-side padding
-      int xoffset = 0 - rc.left, yoffset = 0 - rc.top;
+      int begx = 0, begy = 0, maxx = 0, maxy = 0;
+      getbegyx(GetWINDOW(), begy, begx);
+      int xoffset = begx - rc.left, yoffset = begy - rc.top;
       if (xoffset > 0) rc.left += xoffset, rc.right += xoffset;
       if (yoffset > 0) rc.top += yoffset, rc.bottom += yoffset;
-      if (rc.Width() > COLS) rc.right = rc.left + COLS;
-      if (rc.Height() > LINES) rc.bottom = rc.top + LINES;
+      getmaxyx(GetWINDOW(), maxy, maxx);
+      if (rc.Width() > maxx) rc.right = rc.left + maxx;
+      if (rc.Height() > maxy) rc.bottom = rc.top + maxy;
       ct.wCallTip = newwin(rc.Height(), rc.Width(), rc.top, rc.left);
     }
     WindowID wid = ct.wCallTip.GetID();
