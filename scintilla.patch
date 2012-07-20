@@ -1,6 +1,6 @@
 diff -r 3f9b065c4401 include/Platform.h
 --- a/include/Platform.h	Wed Jul 11 12:43:34 2012 +1000
-+++ b/include/Platform.h	Fri Jul 20 11:14:24 2012 -0400
++++ b/include/Platform.h	Fri Jul 20 14:12:05 2012 -0400
 @@ -22,6 +22,7 @@
  #define PLAT_WX  0
  #define PLAT_QT 0
@@ -22,7 +22,7 @@ diff -r 3f9b065c4401 include/Platform.h
  #define PLAT_QT 1
 diff -r 3f9b065c4401 src/AutoComplete.cxx
 --- a/src/AutoComplete.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/AutoComplete.cxx	Fri Jul 20 11:14:24 2012 -0400
++++ b/src/AutoComplete.cxx	Fri Jul 20 14:12:05 2012 -0400
 @@ -34,7 +34,9 @@
  	cancelAtStartPos(true),
  	autoHide(true),
@@ -36,7 +36,7 @@ diff -r 3f9b065c4401 src/AutoComplete.cxx
  	fillUpChars[0] = '\0';
 diff -r 3f9b065c4401 src/AutoComplete.h
 --- a/src/AutoComplete.h	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/AutoComplete.h	Fri Jul 20 11:14:24 2012 -0400
++++ b/src/AutoComplete.h	Fri Jul 20 14:12:05 2012 -0400
 @@ -34,6 +34,8 @@
  	bool autoHide;
  	bool dropRestOfWord;
@@ -48,7 +48,7 @@ diff -r 3f9b065c4401 src/AutoComplete.h
  	~AutoComplete();
 diff -r 3f9b065c4401 src/CallTip.cxx
 --- a/src/CallTip.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/CallTip.cxx	Fri Jul 20 11:14:24 2012 -0400
++++ b/src/CallTip.cxx	Fri Jul 20 14:12:05 2012 -0400
 @@ -18,9 +18,6 @@
  using namespace Scintilla;
  #endif
@@ -93,7 +93,7 @@ diff -r 3f9b065c4401 src/CallTip.cxx
  
 diff -r 3f9b065c4401 src/CallTip.h
 --- a/src/CallTip.h	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/CallTip.h	Fri Jul 20 11:14:24 2012 -0400
++++ b/src/CallTip.h	Fri Jul 20 14:12:05 2012 -0400
 @@ -50,6 +50,11 @@
  	int codePage;
  	int clickPlace;
@@ -108,7 +108,7 @@ diff -r 3f9b065c4401 src/CallTip.h
  
 diff -r 3f9b065c4401 src/Editor.cxx
 --- a/src/Editor.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/Editor.cxx	Fri Jul 20 11:14:24 2012 -0400
++++ b/src/Editor.cxx	Fri Jul 20 14:12:05 2012 -0400
 @@ -217,6 +217,9 @@
  
  	convertPastes = true;
@@ -141,20 +141,20 @@ diff -r 3f9b065c4401 src/Editor.cxx
  						} else {
 diff -r 3f9b065c4401 src/Editor.h
 --- a/src/Editor.h	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/Editor.h	Fri Jul 20 11:14:24 2012 -0400
++++ b/src/Editor.h	Fri Jul 20 14:12:05 2012 -0400
 @@ -268,6 +268,9 @@
  
  	bool convertPastes;
  
-+	bool marginNumberPadding; // the right-side padding of the number margin
-+	bool ctrlCharPadding; // the padding around control character text blobs
++	int marginNumberPadding; // the right-side padding of the number margin
++	int ctrlCharPadding; // the padding around control character text blobs
 +
  	Document *pdoc;
  
  	Editor();
 diff -r 3f9b065c4401 src/ScintillaBase.cxx
 --- a/src/ScintillaBase.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/ScintillaBase.cxx	Fri Jul 20 11:14:24 2012 -0400
++++ b/src/ScintillaBase.cxx	Fri Jul 20 14:12:05 2012 -0400
 @@ -226,27 +226,25 @@
  	if (rcPopupBounds.Height() == 0)
  		rcPopupBounds = rcClient;
