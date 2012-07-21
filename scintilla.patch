@@ -1,6 +1,6 @@
-diff -r 3f9b065c4401 include/Platform.h
---- a/include/Platform.h	Wed Jul 11 12:43:34 2012 +1000
-+++ b/include/Platform.h	Fri Jul 20 14:12:05 2012 -0400
+diff -r 41bdec833d4a include/Platform.h
+--- a/include/Platform.h	Fri Jul 13 14:23:14 2012 +1000
++++ b/include/Platform.h	Sat Jul 21 08:26:29 2012 -0400
 @@ -22,6 +22,7 @@
  #define PLAT_WX  0
  #define PLAT_QT 0
@@ -20,9 +20,9 @@ diff -r 3f9b065c4401 include/Platform.h
  #elif defined(SCINTILLA_QT)
  #undef PLAT_QT
  #define PLAT_QT 1
-diff -r 3f9b065c4401 src/AutoComplete.cxx
---- a/src/AutoComplete.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/AutoComplete.cxx	Fri Jul 20 14:12:05 2012 -0400
+diff -r 41bdec833d4a src/AutoComplete.cxx
+--- a/src/AutoComplete.cxx	Fri Jul 13 14:23:14 2012 +1000
++++ b/src/AutoComplete.cxx	Sat Jul 21 08:26:29 2012 -0400
 @@ -34,7 +34,9 @@
  	cancelAtStartPos(true),
  	autoHide(true),
@@ -34,9 +34,9 @@ diff -r 3f9b065c4401 src/AutoComplete.cxx
  	lb = ListBox::Allocate();
  	stopChars[0] = '\0';
  	fillUpChars[0] = '\0';
-diff -r 3f9b065c4401 src/AutoComplete.h
---- a/src/AutoComplete.h	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/AutoComplete.h	Fri Jul 20 14:12:05 2012 -0400
+diff -r 41bdec833d4a src/AutoComplete.h
+--- a/src/AutoComplete.h	Fri Jul 13 14:23:14 2012 +1000
++++ b/src/AutoComplete.h	Sat Jul 21 08:26:29 2012 -0400
 @@ -34,6 +34,8 @@
  	bool autoHide;
  	bool dropRestOfWord;
@@ -46,9 +46,9 @@ diff -r 3f9b065c4401 src/AutoComplete.h
  
  	AutoComplete();
  	~AutoComplete();
-diff -r 3f9b065c4401 src/CallTip.cxx
---- a/src/CallTip.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/CallTip.cxx	Fri Jul 20 14:12:05 2012 -0400
+diff -r 41bdec833d4a src/CallTip.cxx
+--- a/src/CallTip.cxx	Fri Jul 13 14:23:14 2012 +1000
++++ b/src/CallTip.cxx	Sat Jul 21 08:26:29 2012 -0400
 @@ -18,9 +18,6 @@
  using namespace Scintilla;
  #endif
@@ -91,9 +91,9 @@ diff -r 3f9b065c4401 src/CallTip.cxx
  	}
  }
  
-diff -r 3f9b065c4401 src/CallTip.h
---- a/src/CallTip.h	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/CallTip.h	Fri Jul 20 14:12:05 2012 -0400
+diff -r 41bdec833d4a src/CallTip.h
+--- a/src/CallTip.h	Fri Jul 13 14:23:14 2012 +1000
++++ b/src/CallTip.h	Sat Jul 21 08:26:29 2012 -0400
 @@ -50,6 +50,11 @@
  	int codePage;
  	int clickPlace;
@@ -106,9 +106,9 @@ diff -r 3f9b065c4401 src/CallTip.h
  	CallTip();
  	~CallTip();
  
-diff -r 3f9b065c4401 src/Editor.cxx
---- a/src/Editor.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/Editor.cxx	Fri Jul 20 14:12:05 2012 -0400
+diff -r 41bdec833d4a src/Editor.cxx
+--- a/src/Editor.cxx	Fri Jul 13 14:23:14 2012 +1000
++++ b/src/Editor.cxx	Sat Jul 21 08:26:29 2012 -0400
 @@ -217,6 +217,9 @@
  
  	convertPastes = true;
@@ -139,9 +139,9 @@ diff -r 3f9b065c4401 src/Editor.cxx
  							}
  							ll->positions[charInLine + 1] = ctrlCharWidth[ll->chars[charInLine]];
  						} else {
-diff -r 3f9b065c4401 src/Editor.h
---- a/src/Editor.h	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/Editor.h	Fri Jul 20 14:12:05 2012 -0400
+diff -r 41bdec833d4a src/Editor.h
+--- a/src/Editor.h	Fri Jul 13 14:23:14 2012 +1000
++++ b/src/Editor.h	Sat Jul 21 08:26:29 2012 -0400
 @@ -268,6 +268,9 @@
  
  	bool convertPastes;
@@ -152,57 +152,17 @@ diff -r 3f9b065c4401 src/Editor.h
  	Document *pdoc;
  
  	Editor();
-diff -r 3f9b065c4401 src/ScintillaBase.cxx
---- a/src/ScintillaBase.cxx	Wed Jul 11 12:43:34 2012 +1000
-+++ b/src/ScintillaBase.cxx	Fri Jul 20 14:12:05 2012 -0400
-@@ -226,27 +226,25 @@
+diff -r 41bdec833d4a src/ScintillaBase.cxx
+--- a/src/ScintillaBase.cxx	Fri Jul 13 14:23:14 2012 +1000
++++ b/src/ScintillaBase.cxx	Sat Jul 21 08:26:29 2012 -0400
+@@ -226,8 +226,8 @@
  	if (rcPopupBounds.Height() == 0)
  		rcPopupBounds = rcClient;
  
 -	int heightLB = 100;
 -	int widthLB = 100;
--	if (pt.x >= rcClient.right - widthLB) {
--		HorizontalScrollTo(xOffset + pt.x - rcClient.right + widthLB);
-+	if (pt.x >= rcClient.right - ac.widthLB) {
-+		HorizontalScrollTo(xOffset + pt.x - rcClient.right + ac.widthLB);
++	int heightLB = ac.heightLB;
++	int widthLB = ac.widthLB;
+ 	if (pt.x >= rcClient.right - widthLB) {
+ 		HorizontalScrollTo(xOffset + pt.x - rcClient.right + widthLB);
  		Redraw();
- 		pt = PointMainCaret();
- 	}
- 	PRectangle rcac;
- 	rcac.left = pt.x - ac.lb->CaretFromEdge();
--	if (pt.y >= rcPopupBounds.bottom - heightLB &&  // Wont fit below.
-+	if (pt.y >= rcPopupBounds.bottom - ac.heightLB &&  // Wont fit below.
- 	        pt.y >= (rcPopupBounds.bottom + rcPopupBounds.top) / 2) { // and there is more room above.
--		rcac.top = pt.y - heightLB;
-+		rcac.top = pt.y - ac.heightLB;
- 		if (rcac.top < rcPopupBounds.top) {
--			heightLB -= (rcPopupBounds.top - rcac.top);
-+			ac.heightLB -= (rcPopupBounds.top - rcac.top);
- 			rcac.top = rcPopupBounds.top;
- 		}
- 	} else {
- 		rcac.top = pt.y + vs.lineHeight;
- 	}
--	rcac.right = rcac.left + widthLB;
--	rcac.bottom = Platform::Minimum(rcac.top + heightLB, rcPopupBounds.bottom);
-+	rcac.right = rcac.left + ac.widthLB;
-+	rcac.bottom = Platform::Minimum(rcac.top + ac.heightLB, rcPopupBounds.bottom);
- 	ac.lb->SetPositionRelative(rcac, wMain);
- 	ac.lb->SetFont(vs.styles[STYLE_DEFAULT].font);
- 	unsigned int aveCharWidth = vs.styles[STYLE_DEFAULT].aveCharWidth;
-@@ -258,12 +256,12 @@
- 	// Fiddle the position of the list so it is right next to the target and wide enough for all its strings
- 	PRectangle rcList = ac.lb->GetDesiredRect();
- 	int heightAlloced = rcList.bottom - rcList.top;
--	widthLB = Platform::Maximum(widthLB, rcList.right - rcList.left);
-+	ac.widthLB = Platform::Maximum(ac.widthLB, rcList.right - rcList.left);
- 	if (maxListWidth != 0)
--		widthLB = Platform::Minimum(widthLB, aveCharWidth*maxListWidth);
-+		ac.widthLB = Platform::Minimum(ac.widthLB, aveCharWidth*maxListWidth);
- 	// Make an allowance for large strings in list
- 	rcList.left = pt.x - ac.lb->CaretFromEdge();
--	rcList.right = rcList.left + widthLB;
-+	rcList.right = rcList.left + ac.widthLB;
- 	if (((pt.y + vs.lineHeight) >= (rcPopupBounds.bottom - heightAlloced)) &&  // Wont fit below.
- 	        ((pt.y + vs.lineHeight / 2) >= (rcPopupBounds.bottom + rcPopupBounds.top) / 2)) { // and there is more room above.
- 		rcList.top = pt.y - heightAlloced;
