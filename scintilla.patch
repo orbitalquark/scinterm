@@ -1,11 +1,11 @@
-diff -r 41bdec833d4a include/Platform.h
---- a/include/Platform.h	Fri Jul 13 14:23:14 2012 +1000
-+++ b/include/Platform.h	Sat Jul 21 08:26:29 2012 -0400
+diff -r 3f9b065c4401 include/Platform.h
+--- a/include/Platform.h	Wed Jul 11 12:43:34 2012 +1000
++++ b/include/Platform.h	Mon Jul 23 12:22:51 2012 -0400
 @@ -22,6 +22,7 @@
  #define PLAT_WX  0
  #define PLAT_QT 0
  #define PLAT_FOX 0
-+#define PLAT_TERM 0
++#define PLAT_NCURSES 0
  
  #if defined(FOX)
  #undef PLAT_FOX
@@ -14,41 +14,41 @@ diff -r 41bdec833d4a include/Platform.h
  #define PLAT_WX  1
  
 +#elif defined(NCURSES)
-+#undef PLAT_TERM
-+#define PLAT_TERM 1
++#undef PLAT_NCURSES
++#define PLAT_NCURSES 1
 +
  #elif defined(SCINTILLA_QT)
  #undef PLAT_QT
  #define PLAT_QT 1
-diff -r 41bdec833d4a src/AutoComplete.cxx
---- a/src/AutoComplete.cxx	Fri Jul 13 14:23:14 2012 +1000
-+++ b/src/AutoComplete.cxx	Sat Jul 21 08:26:29 2012 -0400
+diff -r 3f9b065c4401 src/AutoComplete.cxx
+--- a/src/AutoComplete.cxx	Wed Jul 11 12:43:34 2012 +1000
++++ b/src/AutoComplete.cxx	Mon Jul 23 12:22:51 2012 -0400
 @@ -34,7 +34,9 @@
  	cancelAtStartPos(true),
  	autoHide(true),
  	dropRestOfWord(false),
 -	ignoreCaseBehaviour(SC_CASEINSENSITIVEBEHAVIOUR_RESPECTCASE) {
 +	ignoreCaseBehaviour(SC_CASEINSENSITIVEBEHAVIOUR_RESPECTCASE),
-+	widthLB(100),
-+	heightLB(100) {
++	widthLBDefault(100),
++	heightLBDefault(100) {
  	lb = ListBox::Allocate();
  	stopChars[0] = '\0';
  	fillUpChars[0] = '\0';
-diff -r 41bdec833d4a src/AutoComplete.h
---- a/src/AutoComplete.h	Fri Jul 13 14:23:14 2012 +1000
-+++ b/src/AutoComplete.h	Sat Jul 21 08:26:29 2012 -0400
+diff -r 3f9b065c4401 src/AutoComplete.h
+--- a/src/AutoComplete.h	Wed Jul 11 12:43:34 2012 +1000
++++ b/src/AutoComplete.h	Mon Jul 23 12:22:51 2012 -0400
 @@ -34,6 +34,8 @@
  	bool autoHide;
  	bool dropRestOfWord;
  	unsigned int ignoreCaseBehaviour;
-+	int widthLB;
-+	int heightLB;
++	int widthLBDefault;
++	int heightLBDefault;
  
  	AutoComplete();
  	~AutoComplete();
-diff -r 41bdec833d4a src/CallTip.cxx
---- a/src/CallTip.cxx	Fri Jul 13 14:23:14 2012 +1000
-+++ b/src/CallTip.cxx	Sat Jul 21 08:26:29 2012 -0400
+diff -r 3f9b065c4401 src/CallTip.cxx
+--- a/src/CallTip.cxx	Wed Jul 11 12:43:34 2012 +1000
++++ b/src/CallTip.cxx	Mon Jul 23 12:22:51 2012 -0400
 @@ -18,9 +18,6 @@
  using namespace Scintilla;
  #endif
@@ -91,9 +91,9 @@ diff -r 41bdec833d4a src/CallTip.cxx
  	}
  }
  
-diff -r 41bdec833d4a src/CallTip.h
---- a/src/CallTip.h	Fri Jul 13 14:23:14 2012 +1000
-+++ b/src/CallTip.h	Sat Jul 21 08:26:29 2012 -0400
+diff -r 3f9b065c4401 src/CallTip.h
+--- a/src/CallTip.h	Wed Jul 11 12:43:34 2012 +1000
++++ b/src/CallTip.h	Mon Jul 23 12:22:51 2012 -0400
 @@ -50,6 +50,11 @@
  	int codePage;
  	int clickPlace;
@@ -106,9 +106,9 @@ diff -r 41bdec833d4a src/CallTip.h
  	CallTip();
  	~CallTip();
  
-diff -r 41bdec833d4a src/Editor.cxx
---- a/src/Editor.cxx	Fri Jul 13 14:23:14 2012 +1000
-+++ b/src/Editor.cxx	Sat Jul 21 08:26:29 2012 -0400
+diff -r 3f9b065c4401 src/Editor.cxx
+--- a/src/Editor.cxx	Wed Jul 11 12:43:34 2012 +1000
++++ b/src/Editor.cxx	Mon Jul 23 12:22:51 2012 -0400
 @@ -217,6 +217,9 @@
  
  	convertPastes = true;
@@ -139,9 +139,9 @@ diff -r 41bdec833d4a src/Editor.cxx
  							}
  							ll->positions[charInLine + 1] = ctrlCharWidth[ll->chars[charInLine]];
  						} else {
-diff -r 41bdec833d4a src/Editor.h
---- a/src/Editor.h	Fri Jul 13 14:23:14 2012 +1000
-+++ b/src/Editor.h	Sat Jul 21 08:26:29 2012 -0400
+diff -r 3f9b065c4401 src/Editor.h
+--- a/src/Editor.h	Wed Jul 11 12:43:34 2012 +1000
++++ b/src/Editor.h	Mon Jul 23 12:22:51 2012 -0400
 @@ -268,6 +268,9 @@
  
  	bool convertPastes;
@@ -152,17 +152,17 @@ diff -r 41bdec833d4a src/Editor.h
  	Document *pdoc;
  
  	Editor();
-diff -r 41bdec833d4a src/ScintillaBase.cxx
---- a/src/ScintillaBase.cxx	Fri Jul 13 14:23:14 2012 +1000
-+++ b/src/ScintillaBase.cxx	Sat Jul 21 08:26:29 2012 -0400
+diff -r 3f9b065c4401 src/ScintillaBase.cxx
+--- a/src/ScintillaBase.cxx	Wed Jul 11 12:43:34 2012 +1000
++++ b/src/ScintillaBase.cxx	Mon Jul 23 12:22:51 2012 -0400
 @@ -226,8 +226,8 @@
  	if (rcPopupBounds.Height() == 0)
  		rcPopupBounds = rcClient;
  
 -	int heightLB = 100;
 -	int widthLB = 100;
-+	int heightLB = ac.heightLB;
-+	int widthLB = ac.widthLB;
++	int heightLB = ac.heightLBDefault;
++	int widthLB = ac.widthLBDefault;
  	if (pt.x >= rcClient.right - widthLB) {
  		HorizontalScrollTo(xOffset + pt.x - rcClient.right + widthLB);
  		Redraw();
