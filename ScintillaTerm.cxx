@@ -281,6 +281,7 @@ public:
                       ColourDesired back) {
     wattrset(win, COLOR_PAIR(term_color_pair(fore, back)) |
                   reinterpret_cast<long>(font_.GetID()));
+    if (rc.left < 0) s += (int)-rc.left, rc.left = 0;
     // Note: assume that long and int are the same size so this code compiles on
     // x86_64.
     mvwaddnstr(win, rc.top, rc.left, s, Platform::Minimum(len, COLS - rc.left));
