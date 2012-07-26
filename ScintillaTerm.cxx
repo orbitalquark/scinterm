@@ -730,6 +730,7 @@ public:
     ctrlCharPadding = 0; // no ctrl character text blob padding
     ac.widthLBDefault = 10; // more sane bound for autocomplete width
     ac.heightLBDefault = 10; // more sane bound for autocomplete  height
+    ct.colourSel = ColourDesired(0, 0, 0xFF);
     ct.insetX = 2; // border and arrow widths are 1 each
     ct.widthArrow = 1; // arrow width is 1 character
     ct.borderHeight = 1; // no extra empty lines in border height
