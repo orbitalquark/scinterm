@@ -79,7 +79,12 @@ Font::~Font() {}
  */
 void Font::Create(const FontParameters &fp) {
   Release();
-  fid = reinterpret_cast<FontID>(fp.weight == SC_WEIGHT_BOLD ? A_BOLD : 0);
+  attr_t attrs = 0;
+  if (fp.weight == SC_WEIGHT_BOLD)
+    attrs = A_BOLD;
+  else if (fp.weight != SC_WEIGHT_NORMAL && fp.weight != SC_WEIGHT_SEMIBOLD)
+    attrs = fp.weight;
+  fid = reinterpret_cast<FontID>(attrs);
 }
 /** Releases a font's resources. */
 void Font::Release() { fid = 0; }
@@ -229,7 +234,7 @@ public:
    * @param back The background color to use.
    */
   void FillRectangle(PRectangle rc, ColourDesired back) {
-    wcolor_set(win, term_color_pair(COLOR_WHITE, back), NULL);
+    wattr_set(win, 0, term_color_pair(COLOR_WHITE, back), NULL);
     chtype ch = ' ';
     if (fabs(rc.left - (int)rc.left) > 0.1) {
       // If rc.left is a fractional value (e.g. 4.5) then whitespace dots are
@@ -279,11 +284,9 @@ public:
   void DrawTextNoClip(PRectangle rc, Font &font_, XYPOSITION ybase,
                       const char *s, int len, ColourDesired fore,
                       ColourDesired back) {
-    wattrset(win, COLOR_PAIR(term_color_pair(fore, back)) |
-                  reinterpret_cast<long>(font_.GetID()));
-    if (rc.left < 0) s += (int)-rc.left, rc.left = 0;
-    // Note: assume that long and int are the same size so this code compiles on
-    // x86_64.
+    wattr_set(win, reinterpret_cast<attr_t>(font_.GetID()),
+              term_color_pair(fore, back), NULL);
+    if (rc.left < 0) s += static_cast<int>(-rc.left), rc.left = 0;
     mvwaddnstr(win, rc.top, rc.left, s, Platform::Minimum(len, COLS - rc.left));
   }
   /**
