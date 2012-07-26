@@ -785,10 +785,13 @@ public:
     ClearSelection(multiPasteMode == SC_MULTIPASTE_EACH);
     SelectionPosition sp = !sel.IsRectangular() ? sel.Range(sel.Main()).Start()
                                                 : sel.Rectangular().Start();
-    if (!clipboard.rectangular)
-      InsertPaste(sp, clipboard.s, clipboard.len - 1);
-    else
-      PasteRectangular(sp, clipboard.s, clipboard.len - 1);
+    if (!clipboard.rectangular) {
+      int len = clipboard.len - 1;
+      const char *s = Document::TransformLineEnds(&len, clipboard.s, len,
+                                                  pdoc->eolMode);
+      InsertPaste(sp, s, len);
+      delete []s;
+    } else PasteRectangular(sp, clipboard.s, clipboard.len - 1);
     EnsureCaretVisible();
   }
   /** Setting of the primary and/or secondary X selections is not supported. */
