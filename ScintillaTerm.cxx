@@ -957,10 +957,9 @@ sptr_t scintilla_send_message(Scintilla *sci, unsigned int iMessage,
  * @param key The keycode of the key.
  * @param shift Flag indicating whether or not the shift modifier key is
  *   pressed.
- * @param shift Flag indicating whether or not the control modifier key is
+ * @param ctrl Flag indicating whether or not the control modifier key is
  *   pressed.
- * @param shift Flag indicating whether or not the alt modifier key is
- *   pressed.
+ * @param alt Flag indicating whether or not the alt modifier key is pressed.
  */
 void scintilla_send_key(Scintilla *sci, int key, bool shift, bool ctrl,
                         bool alt) {
@@ -973,7 +972,8 @@ void scintilla_send_key(Scintilla *sci, int key, bool shift, bool ctrl,
  * Call with a `null` buffer first to get the size of the buffer needed to store
  * clipboard text.
  * Keep in mind clipboard text may contain null bytes.
- * @param text The buffer to copy clipboard text to.
+ * @param sci The Scintilla window returned by `scintilla_new()`.
+ * @param buffer The buffer to copy clipboard text to.
  * @return size of the clipboard text.
  */
 int scintilla_get_clipboard(Scintilla *sci, char *buffer) {
