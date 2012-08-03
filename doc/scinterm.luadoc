@@ -1,0 +1,72 @@
+-- Copyright 2007-2012 Mitchell mitchell.att.foicica.com. See LICENSE.
+-- This is a DUMMY FILE used for making LuaDoc for the Scinterm API.
+
+---
+-- An implementation of [Scintilla][] for the [ncurses][] platform.
+--
+-- [Scintilla]: http://scintilla.org
+-- [ncurses]: http://invisible-island.net/ncurses/
+module('Scinterm')
+
+---
+-- Creates a new Scintilla ncurses window.
+-- @param callback SCNotification callback function of the form:
+--   `void callback(Scintilla *, int, void *, void *)`.
+-- @return `Scintilla *`
+function scintilla_new(callback) end
+
+---
+-- Returns the ncurses `WINDOW` associated with the given Scintilla window.
+-- @param sci The Scintilla window returned by `scintilla_new()`.
+-- @return ncurses `WINDOW`.
+function scintilla_get_window(sci) end
+
+---
+-- Sends the given message with parameters to the given Scintilla window.
+-- @param sci The Scintilla window returned by `scintilla_new()`.
+-- @param iMessage (`int`) The Scintilla message ID.
+-- @param wParam (`uptr_t`) The first parameter.
+-- @param lParam (`sptr_t`) The second parameter.
+-- @return `sptr_t`
+function scintilla_send_message(sci, iMessage, wParam, lParam) end
+
+---
+-- Sends the specified key to the given Scintilla window for processing.
+-- If it is not consumed, an SCNotification will be emitted.
+-- @param sci The Scintilla window returned by `scintilla_new()`.
+-- @param key (`int`) The keycode of the key.
+-- @param shift (`bool`) Flag indicating whether or not the shift modifier key
+--   is pressed.
+-- @param ctrl (`bool`) Flag indicating whether or not the control modifier key
+--   is pressed.
+-- @param alt (`bool`) Flag indicating whether or not the alt modifier key is
+--   pressed.
+-- @return `void`
+function scintilla_send_key(sci, key, shift, ctrl, alt) end
+
+---
+-- Copies the text of Scintilla's internal clipboard, not the primary and/or
+-- secondary X selections, into the given buffer and returns the size of the
+-- clipboard text.
+-- Call with a `null` buffer first to get the size of the buffer needed to store
+-- clipboard text.
+-- Keep in mind clipboard text may contain null bytes.
+-- @param sci The Scintilla window returned by `scintilla_new()`.
+-- @param buffer (`char *`) The buffer to copy clipboard text to.
+-- @return `int` size of the clipboard text.
+function scintilla_get_clipboard(sci, buffer) end
+
+---
+-- Refreshes the Scintilla window.
+-- This should be done along with the normal ncurses `refresh()`.
+-- @param sci The Scintilla window returned by `scintilla_new()`.
+-- @return `void`
+function scintilla_refresh(sci) end
+
+---
+-- Deletes the given Scintilla window.
+-- This function does not delete the ncurses `WINDOW` associated with it. You
+-- will have to delete the `WINDOW` manually.
+-- @param sci The Scintilla window returned by `scintilla_new()`.
+-- @return `void`
+function scintilla_delete(sci) end
