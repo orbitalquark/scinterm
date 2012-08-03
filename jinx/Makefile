@@ -11,7 +11,7 @@ lexers = $(wildcard ../Lex*.o)
 
 all: jinx
 jinx.o: jinx.c
-	$(CC) -g $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c $<
 ScintillaTerm.o: ../ScintillaTerm.cxx
 	$(CXX) $(CXXFLAGS) -c $<
 jinx: jinx.o ScintillaTerm.o $(lexers) $(scintilla)

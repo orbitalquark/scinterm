@@ -45,3 +45,16 @@ luadoc: doc/scinterm.luadoc
 cleandoc:
 	rm -f doc/*.html
 	rm -rf doc/api
+
+# Release.
+
+release_dir = scinterm_$(shell grep "^\#\#" CHANGELOG.md | head -1 | \
+                               cut -d ' ' -f 2)
+package = releases/$(release_dir).zip
+
+release: doc
+	hg archive $(release_dir)
+	rm $(release_dir)/.hg*
+	cp -rL doc $(release_dir)
+	zip -r $(package) $(release_dir)
+	rm -r $(release_dir)
