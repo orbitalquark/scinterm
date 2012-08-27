@@ -722,7 +722,7 @@ public:
     vs.markers[SC_MARKNUM_FOLDEROPEN].markType = SC_MARK_CHARACTER + '-';
     vs.markers[SC_MARKNUM_FOLDEROPEN].fore = ColourDesired(0xFF, 0xFF, 0xFF);
     vs.markers[SC_MARKNUM_FOLDEROPEN].back = ColourDesired(0, 0, 0);
-    vs.markers[SC_MARKNUM_FOLDER].markType = SC_MARK_CHARACTER + '-';
+    vs.markers[SC_MARKNUM_FOLDER].markType = SC_MARK_CHARACTER + '+';
     vs.markers[SC_MARKNUM_FOLDER].fore = ColourDesired(0xFF, 0xFF, 0xFF);
     vs.markers[SC_MARKNUM_FOLDER].back = ColourDesired(0, 0, 0);
     displayPopupMenu = false; // no context menu
