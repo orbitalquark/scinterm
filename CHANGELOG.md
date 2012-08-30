@@ -4,7 +4,7 @@
 
 [Atom Feed]: feed
 
-## 1.0 (?)
+## 1.0 (31 Aug 2012)
 
 Download:
 
