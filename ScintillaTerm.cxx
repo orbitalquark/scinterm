@@ -783,6 +783,7 @@ public:
    * selections.
    */
   virtual void Paste() {
+    if (!clipboard.s) return;
     ClearSelection(multiPasteMode == SC_MULTIPASTE_EACH);
     SelectionPosition sp = !sel.IsRectangular() ? sel.Range(sel.Main()).Start()
                                                 : sel.Rectangular().Start();
