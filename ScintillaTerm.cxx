@@ -728,6 +728,7 @@ public:
     displayPopupMenu = false; // no context menu
     marginNumberPadding = 0; // no number margin padding
     ctrlCharPadding = 0; // no ctrl character text blob padding
+    lastSegItalicsOffset = 0; // no offset for italic characters at EOLs
     ac.widthLBDefault = 10; // more sane bound for autocomplete width
     ac.heightLBDefault = 10; // more sane bound for autocomplete  height
     ct.colourSel = ColourDesired(0, 0, 0xFF);
