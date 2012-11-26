@@ -70,3 +70,12 @@ function scintilla_refresh(sci) end
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @return `void`
 function scintilla_delete(sci) end
+
+---
+-- [Macro] Returns the ncurses `COLOR_PAIR` for the given ncurses foreground and
+-- background `COLOR`s.
+-- This is used simply to enumerate every possible color combination.
+-- @param f (`int`) The ncurses foreground `COLOR`.
+-- @param b (`int`) The ncurses background `COLOR`.
+-- @return `int` number for defining an ncurses `COLOR_PAIR`.
+function SCI_COLOR_PAIR(f, b) end

@@ -91,16 +91,6 @@ void Font::Release() { fid = 0; }
 
 // Color handling.
 
-/**
- * Returns the ncurses `COLOR_PAIR` for the given ncurses foreground and
- * background `COLOR`s.
- * This is used simply to enumerate every possible color combination.
- * @param f The ncurses foreground `COLOR`.
- * @param b The ncurses background `COLOR`.
- * @return int number for defining an ncurses `COLOR_PAIR`.
- */
-#define SCI_COLOR_PAIR(f, b) ((b) * COLORS + (f) + 1)
-
 static bool inited_colors = false;
 
 /**
@@ -112,8 +102,8 @@ void init_colors() {
   if (inited_colors) return;
   if (has_colors()) {
     start_color();
-    for (int back = 0; back <= COLORS; back++)
-      for (int fore = 0; fore <= COLORS; fore++)
+    for (int back = 0; back <= 8; back++)
+      for (int fore = 0; fore <= 8; fore++)
         init_pair(SCI_COLOR_PAIR(fore, back), fore, back);
   }
   inited_colors = true;
