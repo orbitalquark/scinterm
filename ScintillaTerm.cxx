@@ -554,7 +554,7 @@ public:
   virtual int Find(const char *prefix) {
     int len = strlen(prefix);
     for (unsigned int i = 0; i < list.size(); i++)
-      if (strncmp(prefix, list.at(i).c_str() + 1, len))
+      if (strncmp(prefix, list.at(i).c_str() + 1, len) == 0)
         return i;
     return -1;
   }
