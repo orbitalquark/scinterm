@@ -4,6 +4,26 @@
 
 [Atom Feed]: feed
 
+## 1.1 (11 Dec 2012)
+
+Download:
+
+* [Scinterm 1.1][]
+
+Bugfixes:
+
+* Fixed crash when pasting uninitialized clipboard text.
+* Fixed bug with drawing around italic characters at EOLs.
+* Display control characters properly.
+* Fixed bug in searching autocompletion lists.
+
+Changes:
+
+* Expose [`SCI_COLOR_PAIR()`][] macro.
+
+[Scinterm 1.1]: download/scinterm_1.1.zip
+[`SCI_COLOR_PAIR()`]: api/Scinterm.html#SCI_COLOR_PAIR
+
 ## 1.0 (31 Aug 2012)
 
 Download:
