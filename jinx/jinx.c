@@ -1,4 +1,4 @@
-// Copyright 2007-2012 Mitchell mitchell.att.foicica.com. See LICENSE.
+// Copyright 2012-2013 Mitchell mitchell.att.foicica.com. See LICENSE.
 
 #include <locale.h>
 #include <ncurses.h>
