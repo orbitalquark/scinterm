@@ -75,6 +75,10 @@ Font::~Font() {}
  * Sets terminal character attributes for a particular font.
  * These attributes are a union of ncurses attributes and stored in the font's
  * `fid`.
+ * The ncurses attributes are not constructed from various fields in *fp* since
+ * there is no `underline` parameter. Instead, you need to manually set the
+ * `weight` parameter to be the union of your desired attributes.
+ * Scintillua (http://foicica.com/scintillua) has an example of this.
  * @param fp Scintilla font parameters.
  */
 void Font::Create(const FontParameters &fp) {
@@ -83,7 +87,7 @@ void Font::Create(const FontParameters &fp) {
   if (fp.weight == SC_WEIGHT_BOLD)
     attrs = A_BOLD;
   else if (fp.weight != SC_WEIGHT_NORMAL && fp.weight != SC_WEIGHT_SEMIBOLD)
-    attrs = fp.weight;
+    attrs = fp.weight; // font attributes are stored in fp.weight
   fid = reinterpret_cast<FontID>(attrs);
 }
 /** Releases a font's resources. */
