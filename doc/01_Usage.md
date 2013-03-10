@@ -27,13 +27,16 @@ toolkits like GTK and Qt, Scinterm lacks some Scintilla features:
 * Extra ascent and decent for lines is not supported.
 * Fold lines are not supported (`surface->LineTo()` is not supported).
 * Indentation guides are not visible (pixmap surfaces are not supported).
-* Indicators are not displayed (they would be drawn over by text lines).
+* Indicators other than `INDIC_ROUNDBOX` and `INDIC_STRAIGHTBOX` are not drawn
+  (`surface->LineTo()` is not supported for drawing indicator shapes and pixmap
+  surfaces are not supported). Translucent drawing and rounded corners are not
+  supported either.
 * Insert mode caret is not drawn properly (no way to detect it from within
   `surface->FillRectangle()`).
 * Margins are overwritten by long lines when scrolling to the right.
 * Marker types other than `SC_MARK_CHARACTER` are not drawn (pixmap surfaces are
   not supported and `surface->LineTo()` is not supported for drawing marker
-  shapes and ).
+  shapes).
 * Mouse interactions, cursor types, and hotspots are not supported.
 * Only 8 colors are supported: black (`0x000000`), red (`0xFF0000`), green
   (`0x00FF00`), yellow (`0xFFFF00`), blue (`0x0000FF`), magenta (`0xFF00FF`),

@@ -198,18 +198,10 @@ public:
    */
   bool Initialised() { return true; }
   /**
-   * Sets the surface's foreground color for text to print.
-   * First retrieves the current background color for determining the correct
-   * ncurses `COLOR_PAIR` and then sets the ncurses character color attribute.
-   * @param fore The Scintilla foreground color to use.
+   * Setting the surface's foreground color is not implemented because all uses
+   * in Scintilla involve special drawing that is not supported in ncurses.
    */
-  void PenColour(ColourDesired fore) {
-    attr_t attrs;
-    short pair = 0, back = COLOR_BLACK;
-    wattr_get(win, &attrs, &pair, NULL);
-    if (pair > 0) pair_content(pair, NULL, &back);
-    wcolor_set(win, term_color_pair(fore, back), NULL);
-  }
+  void PenColour(ColourDesired fore) {}
   /** Unused; return value irrelevant. */
   int LogPixelsY() { return 1; }
   /** Returns 1 since font height is always 1 in the terminal. */
@@ -252,10 +244,20 @@ public:
   /** Drawing rounded rectangles is not implemented. */
   void RoundedRectangle(PRectangle rc, ColourDesired fore,
                         ColourDesired back) {}
-  /** Drawing alpha rectangles is not implemented. */
+  /**
+   * Drawing alpha rectangles is not fully supported.
+   * Instead, fill the background color with the fill color, emulating
+   * INDIC_STRAIGHTBOX with no transparency.
+   */
   void AlphaRectangle(PRectangle rc, int cornerSize, ColourDesired fill,
                       int alphaFill, ColourDesired outline, int alphaOutline,
-                      int flags) {}
+                      int flags) {
+    attr_t attrs;
+    short pair = 0, fore = COLOR_WHITE;
+    wmove(win, rc.top - 1, rc.left), wattr_get(win, &attrs, &pair, NULL);
+    if (pair > 0) pair_content(pair, &fore, NULL);
+    wchgat(win, rc.right - rc.left, attrs, term_color_pair(fore, fill), NULL);
+  }
   /** Drawing images is not implemented. */
   void DrawRGBAImage(PRectangle rc, int width, int height,
                      const unsigned char *pixelsImage) {}
