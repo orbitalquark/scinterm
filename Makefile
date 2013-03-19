@@ -2,6 +2,7 @@
 
 .SUFFIXES: .cxx .c .o .h .a
 
+AR = ar
 CXX = g++
 INCLUDEDIRS = -I ../include -I ../src -I ../lexlib
 CXXFLAGS = -Wall -Wno-missing-braces -Wno-char-subscripts -Wno-long-long \
@@ -30,7 +31,7 @@ $(scintilla): AutoComplete.o CallTip.o Catalogue.o CellBuffer.o CharClassify.o \
               CharacterSet.o LexerBase.o LexerModule.o LexerNoExceptions.o \
               LexerSimple.o PropSetSimple.o StyleContext.o WordList.o \
               $(lexers) ScintillaTerm.o
-	ar rc $@ $^
+	$(AR) rc $@ $^
 	touch $@
 clean:
 	rm -f *.o $(scintilla)
