@@ -7,6 +7,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -280,8 +281,9 @@ public:
   void DrawTextNoClip(PRectangle rc, Font &font_, XYPOSITION ybase,
                       const char *s, int len, ColourDesired fore,
                       ColourDesired back) {
-    wattr_set(win, reinterpret_cast<attr_t>(font_.GetID()),
-              term_color_pair(fore, back), NULL);
+    intptr_t attrs = reinterpret_cast<intptr_t>(font_.GetID());
+    wattr_set(win, static_cast<attr_t>(attrs), term_color_pair(fore, back),
+              NULL);
     if (rc.left < 0) s += static_cast<int>(-rc.left), rc.left = 0;
     mvwaddnstr(win, rc.top, rc.left, s, Platform::Minimum(len, COLS - rc.left));
   }
