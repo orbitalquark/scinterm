@@ -298,8 +298,7 @@ public:
   void DrawTextClipped(PRectangle rc, Font &font_, XYPOSITION ybase,
                        const char *s, int len, ColourDesired fore,
                        ColourDesired back) {
-    if ((len == 2 && (isupper(s[0]) && isupper(s[1]))) ||
-        (len == 3 && (isupper(s[0]) && isupper(s[1]) && isupper(s[2]))))
+    if (rc.left >= rc.right) // when drawing control characters
       rc.left -= 2, rc.right -= 2, rc.top -= 1, rc.bottom -= 1;
     else if (rc.top > rc.bottom)
       rc.top -= 1, rc.bottom += 1;
