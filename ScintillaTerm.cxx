@@ -15,7 +15,7 @@
 #include <vector>
 #include <map>
 
-#include <ncurses.h>
+#include <curses.h>
 
 #include "Platform.h"
 

@@ -2,12 +2,18 @@
 
 ## Overview
 
-Scinterm is an implementation of [Scintilla][] for the [ncurses][] platform.
+Scinterm is an implementation of [Scintilla][] for terminal platforms including:
+
+* [ncurses][]
+* curses
+* [PDCurses][]
+* X/Open Curses
 
 ![Scinterm](images/scinterm.png)
 
 [Scintilla]: http://scintilla.org
 [ncurses]: http://invisible-island.net/ncurses/
+[PDCurses]: http://pdcurses.sourceforge.net/
 
 ## Requirements
 
