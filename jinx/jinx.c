@@ -1,7 +1,7 @@
 // Copyright 2012-2013 Mitchell mitchell.att.foicica.com. See LICENSE.
 
 #include <locale.h>
-#include <ncurses.h>
+#include <curses.h>
 
 #include "Scintilla.h"
 #include "SciLexer.h"

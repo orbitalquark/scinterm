@@ -2,8 +2,8 @@
 // Scintilla implemented in a UNIX terminal environment.
 // Contains platform facilities and a terminal-specific subclass of
 // ScintillaBase.
-// Note: setlocale(LC_CTYPE, "") must be called before initializing ncurses in
-// order to display UTF-8 characters properly.
+// Note: setlocale(LC_CTYPE, "") must be called before initializing curses in
+// order to display UTF-8 characters properly in ncursesw.
 
 #include <math.h>
 #include <stdio.h>
@@ -54,9 +54,9 @@
 #endif
 
 /**
- * Returns the given Scintilla `WindowID` as an ncurses `WINDOW`.
+ * Returns the given Scintilla `WindowID` as a curses `WINDOW`.
  * @param w A Scintilla `WindowID`.
- * @return ncurses `WINDOW`.
+ * @return curses `WINDOW`.
  */
 #define _WINDOW(w) reinterpret_cast<WINDOW *>(w)
 
@@ -74,9 +74,9 @@ Font::Font() : fid(0) {}
 Font::~Font() {}
 /**
  * Sets terminal character attributes for a particular font.
- * These attributes are a union of ncurses attributes and stored in the font's
+ * These attributes are a union of curses attributes and stored in the font's
  * `fid`.
- * The ncurses attributes are not constructed from various fields in *fp* since
+ * The curses attributes are not constructed from various fields in *fp* since
  * there is no `underline` parameter. Instead, you need to manually set the
  * `weight` parameter to be the union of your desired attributes.
  * Scintillua (http://foicica.com/scintillua) has an example of this.
@@ -99,7 +99,7 @@ void Font::Release() { fid = 0; }
 static bool inited_colors = false;
 
 /**
- * Initializes colors in ncurses if they have not already been initialized.
+ * Initializes colors in curses if they have not already been initialized.
  * Creates all possible color pairs using the `SCI_COLOR_PAIR()` macro.
  * This is called automatically from `scintilla_new()`.
  */
@@ -124,13 +124,13 @@ static ColourDesired CYAN(0, 0xFF, 0xFF);
 static ColourDesired WHITE(0xFF, 0xFF, 0xFF);
 
 /**
- * Returns an ncurses color for the given Scintilla color.
+ * Returns a curses color for the given Scintilla color.
  * Recognized colors are: black (0x000000), red (0xff0000), green (0x00ff00),
  * yellow (0xffff00), blue (0x0000ff), magenta (0xff00ff), cyan (0x00ffff),
  * and white (0xffffff). If the color is not recognized, returns `COLOR_WHITE`
  * by default.
- * @param color Color to get an ncurses color for.
- * @return ncurses color
+ * @param color Color to get a curses color for.
+ * @return curses color
  */
 static int term_color(ColourDesired color) {
   if (color == BLACK) return COLOR_BLACK;
@@ -144,16 +144,16 @@ static int term_color(ColourDesired color) {
 }
 
 /**
- * Returns an ncurses color for the given ncurses color.
+ * Returns a curses color for the given curses color.
  * This overloaded method only exists for the `term_color_pair()` macro.
  */
 static int term_color(int color) { return color; }
 
 /**
- * Returns an ncurses color pair from the given fore and back colors.
- * @param f Foreground color, either a Scintilla color or ncurses color.
- * @param b Background color, either a Scintilla color or ncurses color.
- * @return ncurses color pair suitable for calling `COLOR_PAIR()` with.
+ * Returns a curses color pair from the given fore and back colors.
+ * @param f Foreground color, either a Scintilla color or curses color.
+ * @param b Background color, either a Scintilla color or curses color.
+ * @return curses color pair suitable for calling `COLOR_PAIR()` with.
  */
 #define term_color_pair(f, b) SCI_COLOR_PAIR(term_color(f), term_color(b))
 
@@ -161,7 +161,7 @@ static int term_color(int color) { return color; }
 
 /**
  * Implementation of a Scintilla surface for the terminal.
- * The surface is initialized with an ncurses `WINDOW` for drawing on. Since the
+ * The surface is initialized with a curses `WINDOW` for drawing on. Since the
  * terminal can only show text, many of Scintilla's pixel-based functions are
  * not implemented.
  */
@@ -174,9 +174,9 @@ public:
   ~SurfaceImpl() { Release(); }
 
   /**
-   * Initializes/reinitializes the surface with an ncurses `WINDOW` for drawing
+   * Initializes/reinitializes the surface with a curses `WINDOW` for drawing
    * on.
-   * @param wid Ncurses `WINDOW`.
+   * @param wid Curses `WINDOW`.
    */
   void Init(WindowID wid) {
     Release();
@@ -185,7 +185,7 @@ public:
   /**
    * Initializes the surface with an existing surface for drawing on.
    * @param sid Existing surface.
-   * @param wid Ncurses `WINDOW`. Not used.
+   * @param wid Curses `WINDOW`. Not used.
    */
   void Init(SurfaceID sid, WindowID wid) { Init(sid); }
   /** Initializing the surface as a pixmap is not implemented. */
@@ -200,7 +200,7 @@ public:
   bool Initialised() { return true; }
   /**
    * Setting the surface's foreground color is not implemented because all uses
-   * in Scintilla involve special drawing that is not supported in ncurses.
+   * in Scintilla involve special drawing that is not supported in curses.
    */
   void PenColour(ColourDesired fore) {}
   /** Unused; return value irrelevant. */
@@ -271,7 +271,7 @@ public:
    * Draw the given text at the given position on the screen with the given
    * foreground and background colors.
    * @param rc The point on the screen to draw the given text at.
-   * @param font_ The current font for setting ncurses character attributes.
+   * @param font_ The current font for setting curses character attributes.
    * @param ybase Unused.
    * @param s The text to draw.
    * @param len The length of the text to draw.
@@ -291,7 +291,7 @@ public:
    * Similar to `DrawTextNoClip()`.
    * Called for drawing the caret, control characters, and line markers.
    * When drawing control characters, `rc` needs to have its pixel padding
-   * removed since ncurses has smaller resolution. Similarly when drawing line
+   * removed since curses has smaller resolution. Similarly when drawing line
    * markers, `rc` needs to be reshaped.
    * @see DrawTextNoClip
    */
@@ -382,7 +382,7 @@ void Window::Destroy() {
 /**
  * Returns the window's boundaries
  * Unlike other platforms, Scintilla paints in coordinates relative to the
- * window in ncurses. Therefore, this function should always return the window
+ * window in curses. Therefore, this function should always return the window
  * bounds to ensure all of it is painted.
  * @return PRectangle with the window's boundaries.
  */
@@ -405,9 +405,9 @@ void Window::SetPositionRelative(PRectangle rc, Window relativeTo) {
   if (y < begy) y = begy;
   // Correct to fit the parent if necessary.
   int sizex = rc.right - rc.left;
-  if (x > 0) sizex -= 1; // in ncurses, x pos counts as "1" width
+  if (x > 0) sizex -= 1; // in curses, x pos counts as "1" width
   int sizey = rc.bottom - rc.top;
-  if (y > 0) sizey -= 1; // in ncurses, y pos counts as "1" height
+  if (y > 0) sizey -= 1; // in curses, y pos counts as "1" height
   int screen_width = getmaxx(_WINDOW(relativeTo.GetID()));
   int screen_height = getmaxy(_WINDOW(relativeTo.GetID()));
   if (sizex > screen_width)
@@ -691,7 +691,7 @@ class ScintillaTerm : public ScintillaBase {
   SelectionText clipboard;
 public:
   /**
-   * Creates a new Scintilla instance in an ncurses `WINDOW`.
+   * Creates a new Scintilla instance in a curses `WINDOW`.
    * The `WINDOW` is initially full-screen.
    * @param callback_ Callback function for Scintilla notifications.
    */
@@ -842,7 +842,7 @@ public:
   virtual sptr_t DefWndProc(unsigned int iMessage, uptr_t wParam,
                             sptr_t lParam) { return 0; }
   /**
-   * Draws a CallTip, creating the ncurses window for it if necessary.
+   * Draws a CallTip, creating the curses window for it if necessary.
    * @param rc The bounds of the CallTip window. Ignored when redrawing the
    * CallTip.
    */
@@ -873,8 +873,8 @@ public:
   virtual void AddToPopUp(const char *label, int cmd=0, bool enabled=true) {}
 
   /**
-   * Gets the ncurses `WINDOW` associated with this Scintilla instance.
-   * @return ncurses `WINDOW`.
+   * Gets the curses `WINDOW` associated with this Scintilla instance.
+   * @return curses `WINDOW`.
    */
   WINDOW *GetWINDOW() { return _WINDOW(wMain.GetID()); }
   /** Repaints the Scintilla window. */
@@ -931,9 +931,9 @@ Scintilla *scintilla_new(void (*callback)(Scintilla *, int, void *, void *)) {
   return reinterpret_cast<Scintilla *>(new ScintillaTerm(callback));
 }
 /**
- * Returns the ncurses `WINDOW` associated with the given Scintilla window.
+ * Returns the curses `WINDOW` associated with the given Scintilla window.
  * @param sci The Scintilla window returned by `scintilla_new()`.
- * @return ncurses `WINDOW`.
+ * @return curses `WINDOW`.
  */
 WINDOW *scintilla_get_window(Scintilla *sci) {
   return reinterpret_cast<ScintillaTerm *>(sci)->GetWINDOW();
@@ -981,7 +981,7 @@ int scintilla_get_clipboard(Scintilla *sci, char *buffer) {
 }
 /**
  * Refreshes the Scintilla window.
- * This should be done along with the normal ncurses `refresh()`.
+ * This should be done along with the normal curses `refresh()`.
  * @param sci The Scintilla window returned by `scintilla_new()`.
  */
 void scintilla_refresh(Scintilla *sci) {
@@ -989,7 +989,7 @@ void scintilla_refresh(Scintilla *sci) {
 }
 /**
  * Deletes the given Scintilla window.
- * This function does not delete the ncurses `WINDOW` associated with it. You
+ * This function does not delete the curses `WINDOW` associated with it. You
  * will have to delete the `WINDOW` manually.
  * @param sci The Scintilla window returned by `scintilla_new()`.
  */

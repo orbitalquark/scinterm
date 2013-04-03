@@ -7,9 +7,9 @@ directory of an instance of Scintilla, similar to other Scintilla platforms like
 `gtk/` and `win32/`. After that, go into the Scinterm directory and run `make`
 to build the usual `../bin/scintilla.a`.
 
-## Ncurses Compatibility
+## Curses Compatibility
 
-Since ncurses is quite low-level in terms of graphics capability compared to GUI
+Since curses is quite low-level in terms of graphics capability compared to GUI
 toolkits like GTK and Qt, Scinterm lacks some Scintilla features:
 
 * Any settings with alpha values are not supported.
@@ -21,8 +21,8 @@ toolkits like GTK and Qt, Scinterm lacks some Scintilla features:
   drawing arrow shapes).
 * Caret settings like period, line style, and width are not supported
   (terminals use block carets with their own period definitions).
-* Code pages other than UTF-8 have not been tested and it is possible ncurses
-  does not support them.
+* Code pages other than UTF-8 have not been tested and it is possible some
+  curses implementations do not support them.
 * Edge lines are not displayed properly (the line is drawn over by text lines).
 * Extra ascent and decent for lines is not supported.
 * Fold lines are not supported (`surface->LineTo()` is not supported).
@@ -57,5 +57,5 @@ toolkits like GTK and Qt, Scinterm lacks some Scintilla features:
 
 ## `jinx`
 
-`jinx` is an example of using Scintilla with ncurses. You can build it by going
+`jinx` is an example of using Scintilla with curses. You can build it by going
 into `jinx/` and running `make`.

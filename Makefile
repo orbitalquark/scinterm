@@ -6,7 +6,7 @@ AR = ar
 CXX = g++
 INCLUDEDIRS = -I ../include -I ../src -I ../lexlib
 CXXFLAGS = -Wall -Wno-missing-braces -Wno-char-subscripts -Wno-long-long \
-           -pedantic -DNCURSES -DSCI_LEXER $(INCLUDEDIRS)
+           -pedantic -DCURSES -DSCI_LEXER $(INCLUDEDIRS)
 ifdef DEBUG
   CXXFLAGS += -DDEBUG -g
 else

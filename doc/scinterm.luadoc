@@ -2,23 +2,23 @@
 -- This is a DUMMY FILE used for making LuaDoc for the Scinterm API.
 
 ---
--- An implementation of [Scintilla][] for the [ncurses][] platform.
+-- An implementation of [Scintilla][] for curses platforms like [ncurses][].
 --
 -- [Scintilla]: http://scintilla.org
 -- [ncurses]: http://invisible-island.net/ncurses/
 module('Scinterm')
 
 ---
--- Creates a new Scintilla ncurses window.
+-- Creates a new Scintilla curses window.
 -- @param callback SCNotification callback function of the form:
 --   `void callback(Scintilla *, int, void *, void *)`.
 -- @return `Scintilla *`
 function scintilla_new(callback) end
 
 ---
--- Returns the ncurses `WINDOW` associated with the given Scintilla window.
+-- Returns the curses `WINDOW` associated with the given Scintilla window.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
--- @return ncurses `WINDOW`.
+-- @return curses `WINDOW`.
 function scintilla_get_window(sci) end
 
 ---
@@ -58,24 +58,24 @@ function scintilla_get_clipboard(sci, buffer) end
 
 ---
 -- Refreshes the Scintilla window.
--- This should be done along with the normal ncurses `refresh()`.
+-- This should be done along with the normal curses `refresh()`.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @return `void`
 function scintilla_refresh(sci) end
 
 ---
 -- Deletes the given Scintilla window.
--- This function does not delete the ncurses `WINDOW` associated with it. You
+-- This function does not delete the curses `WINDOW` associated with it. You
 -- will have to delete the `WINDOW` manually.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @return `void`
 function scintilla_delete(sci) end
 
 ---
--- [Macro] Returns the ncurses `COLOR_PAIR` for the given ncurses foreground and
+-- [Macro] Returns the curses `COLOR_PAIR` for the given curses foreground and
 -- background `COLOR`s.
 -- This is used simply to enumerate every possible color combination.
--- @param f (`int`) The ncurses foreground `COLOR`.
--- @param b (`int`) The ncurses background `COLOR`.
--- @return `int` number for defining an ncurses `COLOR_PAIR`.
+-- @param f (`int`) The curses foreground `COLOR`.
+-- @param b (`int`) The curses background `COLOR`.
+-- @return `int` number for defining a curses `COLOR_PAIR`.
 function SCI_COLOR_PAIR(f, b) end

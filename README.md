@@ -2,10 +2,9 @@
 
 ## Overview
 
-Scinterm is an implementation of [Scintilla][] for terminal platforms including:
+Scinterm is an implementation of [Scintilla][] for curses platforms including:
 
 * [ncurses][]
-* curses
 * [PDCurses][]
 * X/Open Curses
 
