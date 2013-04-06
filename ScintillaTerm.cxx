@@ -697,6 +697,7 @@ public:
    */
   ScintillaTerm(void (*callback_)(Scintilla *, int, void *, void *)) {
     wMain = newwin(0, 0, 0, 0);
+    keypad(GetWINDOW(), TRUE);
     callback = callback_;
     if ((sur = Surface::Allocate(SC_TECHNOLOGY_DEFAULT)))
       sur->Init(GetWINDOW());

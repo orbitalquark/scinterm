@@ -42,13 +42,12 @@ int main(int argc, char **argv) {
 
   int c = 0;
   WINDOW *win = scintilla_get_window(sci);
-  keypad(win, TRUE);
   while ((c = wgetch(win)) != 'q') {
     if (c == KEY_UP) c = SCK_UP;
     else if (c == KEY_DOWN) c = SCK_DOWN;
     else if (c == KEY_LEFT) c = SCK_LEFT;
     else if (c == KEY_RIGHT) c = SCK_RIGHT;
-    scintilla_send_key(sci, c, false, false, false);
+    scintilla_send_key(sci, c, FALSE, FALSE, FALSE);
     scintilla_refresh(sci);
   }
   scintilla_delete(sci);
