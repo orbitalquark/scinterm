@@ -4,6 +4,8 @@
 #ifndef SCINTILLATERM_H
 #define SCINTILLATERM_H
 
+#include <curses.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -21,11 +23,12 @@ void scintilla_delete(Scintilla *);
  * Returns the curses `COLOR_PAIR` for the given curses foreground and
  * background `COLOR`s.
  * This is used simply to enumerate every possible color combination.
+ * Note: only 256 combinations are possible due for curses portability.
  * @param f The curses foreground `COLOR`.
  * @param b The curses background `COLOR`.
  * @return int number for defining a curses `COLOR_PAIR`.
  */
-#define SCI_COLOR_PAIR(f, b) ((b) * 8 + (f) + 1)
+#define SCI_COLOR_PAIR(f, b) ((b) * ((COLORS < 16) ? 8 : 16) + (f) + 1)
 
 #ifdef __cplusplus
 }

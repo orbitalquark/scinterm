@@ -15,8 +15,6 @@
 #include <vector>
 #include <map>
 
-#include <curses.h>
-
 #include "Platform.h"
 
 #include "ILexer.h"
@@ -96,6 +94,15 @@ void Font::Release() { fid = 0; }
 
 // Color handling.
 
+static int COLOR_LBLACK = COLOR_BLACK + 8;
+static int COLOR_LRED = COLOR_RED + 8;
+static int COLOR_LGREEN = COLOR_GREEN + 8;
+static int COLOR_LYELLOW = COLOR_YELLOW + 8;
+static int COLOR_LBLUE = COLOR_BLUE + 8;
+static int COLOR_LMAGENTA = COLOR_MAGENTA + 8;
+static int COLOR_LCYAN = COLOR_CYAN + 8;
+static int COLOR_LWHITE = COLOR_WHITE + 8;
+
 static bool inited_colors = false;
 
 /**
@@ -107,28 +114,48 @@ void init_colors() {
   if (inited_colors) return;
   if (has_colors()) {
     start_color();
-    for (int back = 0; back <= 8; back++)
-      for (int fore = 0; fore <= 8; fore++)
+    for (int back = 0; back <= ((COLORS < 16) ? 8 : 16); back++)
+      for (int fore = 0; fore <= ((COLORS < 16) ? 8 : 16); fore++)
         init_pair(SCI_COLOR_PAIR(fore, back), fore, back);
+    if (COLORS < 16) {
+      COLOR_LBLACK -= 8;
+      COLOR_LRED -= 8;
+      COLOR_LGREEN -= 8;
+      COLOR_LYELLOW -= 8;
+      COLOR_LBLUE -= 8;
+      COLOR_LMAGENTA -= 8;
+      COLOR_LCYAN -= 8;
+      COLOR_LWHITE -= 8;
+    }
   }
   inited_colors = true;
 }
 
 static ColourDesired BLACK(0, 0, 0);
-static ColourDesired RED(0xFF, 0, 0);
-static ColourDesired GREEN(0, 0xFF, 0);
-static ColourDesired YELLOW(0xFF, 0xFF, 0);
-static ColourDesired BLUE(0, 0, 0xFF);
-static ColourDesired MAGENTA(0xFF, 0, 0xFF);
-static ColourDesired CYAN(0, 0xFF, 0xFF);
-static ColourDesired WHITE(0xFF, 0xFF, 0xFF);
+static ColourDesired RED(0x80, 0, 0);
+static ColourDesired GREEN(0, 0x80, 0);
+static ColourDesired YELLOW(0x80, 0x80, 0);
+static ColourDesired BLUE(0, 0, 0x80);
+static ColourDesired MAGENTA(0x80, 0, 0x80);
+static ColourDesired CYAN(0, 0x80, 0x80);
+static ColourDesired WHITE(0xC0, 0xC0, 0xC0);
+static ColourDesired LBLACK(0x40, 0x40, 0x40);
+static ColourDesired LRED(0xFF, 0, 0);
+static ColourDesired LGREEN(0, 0xFF, 0);
+static ColourDesired LYELLOW(0xFF, 0xFF, 0);
+static ColourDesired LBLUE(0, 0, 0xFF);
+static ColourDesired LMAGENTA(0xFF, 0, 0xFF);
+static ColourDesired LCYAN(0, 0xFF, 0xFF);
+static ColourDesired LWHITE(0xFF, 0xFF, 0xFF);
 
 /**
  * Returns a curses color for the given Scintilla color.
- * Recognized colors are: black (0x000000), red (0xff0000), green (0x00ff00),
- * yellow (0xffff00), blue (0x0000ff), magenta (0xff00ff), cyan (0x00ffff),
- * and white (0xffffff). If the color is not recognized, returns `COLOR_WHITE`
- * by default.
+ * Recognized colors are: black (0x000000), red (0x800000), green (0x008000),
+ * yellow (0x808000), blue (0x000080), magenta (0x800080), cyan (0x008080),
+ * white (0xc0c0c0), light black (0x404040), light red (0xff0000), light green
+ * (0x00ff00), light yellow (0xffff00), light blue (0x0000ff), light magenta
+ * (0xff00ff), light cyan (0x00ffff), and light white (0xffffff). If the color
+ * is not recognized, returns `COLOR_WHITE` by default.
  * @param color Color to get a curses color for.
  * @return curses color
  */
@@ -140,6 +167,14 @@ static int term_color(ColourDesired color) {
   else if (color == BLUE) return COLOR_BLUE;
   else if (color == MAGENTA) return COLOR_MAGENTA;
   else if (color == CYAN) return COLOR_CYAN;
+  else if (color == LBLACK) return COLOR_LBLACK;
+  else if (color == LRED) return COLOR_LRED;
+  else if (color == LGREEN) return COLOR_LGREEN;
+  else if (color == LYELLOW) return COLOR_LYELLOW;
+  else if (color == LBLUE) return COLOR_LBLUE;
+  else if (color == LMAGENTA) return COLOR_LMAGENTA;
+  else if (color == LCYAN) return COLOR_LCYAN;
+  else if (color == LWHITE) return COLOR_LWHITE;
   else return COLOR_WHITE;
 }
 
