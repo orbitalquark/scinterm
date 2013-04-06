@@ -114,8 +114,8 @@ void init_colors() {
   if (inited_colors) return;
   if (has_colors()) {
     start_color();
-    for (int back = 0; back <= ((COLORS < 16) ? 8 : 16); back++)
-      for (int fore = 0; fore <= ((COLORS < 16) ? 8 : 16); fore++)
+    for (int back = 0; back < ((COLORS < 16) ? 8 : 16); back++)
+      for (int fore = 0; fore < ((COLORS < 16) ? 8 : 16); fore++)
         init_pair(SCI_COLOR_PAIR(fore, back), fore, back);
     if (COLORS < 16) {
       COLOR_LBLACK -= 8;
