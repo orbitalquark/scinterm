@@ -169,6 +169,10 @@ static ColourDesired LBLUE(0, 0, 0xFF);
 static ColourDesired LMAGENTA(0xFF, 0, 0xFF);
 static ColourDesired LCYAN(0, 0xFF, 0xFF);
 static ColourDesired LWHITE(0xFF, 0xFF, 0xFF);
+static ColourDesired SCI_COLORS[] = {
+  BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, LBLACK, LRED, LGREEN,
+  LYELLOW, LBLUE, LMAGENTA, LCYAN, LWHITE
+};
 
 /**
  * Returns a curses color for the given Scintilla color.
@@ -368,7 +372,10 @@ public:
    */
   void DrawTextTransparent(PRectangle rc, Font &font_, XYPOSITION ybase,
                            const char *s, int len, ColourDesired fore) {
-    DrawTextNoClip(rc, font_, ybase, s, len, fore, BLACK);
+    attr_t attrs = wattrget(win, (int)rc.top, (int)rc.left);
+    short pair = PAIR_NUMBER(attrs), back = COLOR_BLACK;
+    if (pair > 0) pair_content(pair, NULL, &back);
+    DrawTextNoClip(rc, font_, ybase, s, len, fore, SCI_COLORS[back]);
   }
   /**
    * Measures the width of characters in the given string.
@@ -776,10 +783,10 @@ public:
     vs.extraDescent = -1; // hack to make lineHeight 1 instead of 2
     // Use '+' and '-' fold markers.
     vs.markers[SC_MARKNUM_FOLDEROPEN].markType = SC_MARK_CHARACTER + '-';
-    vs.markers[SC_MARKNUM_FOLDEROPEN].fore = ColourDesired(0xFF, 0xFF, 0xFF);
+    vs.markers[SC_MARKNUM_FOLDEROPEN].fore = ColourDesired(0xC0, 0xC0, 0xC0);
     vs.markers[SC_MARKNUM_FOLDEROPEN].back = ColourDesired(0, 0, 0);
     vs.markers[SC_MARKNUM_FOLDER].markType = SC_MARK_CHARACTER + '+';
-    vs.markers[SC_MARKNUM_FOLDER].fore = ColourDesired(0xFF, 0xFF, 0xFF);
+    vs.markers[SC_MARKNUM_FOLDER].fore = ColourDesired(0xC0, 0xC0, 0xC0);
     vs.markers[SC_MARKNUM_FOLDER].back = ColourDesired(0, 0, 0);
     displayPopupMenu = false; // no context menu
     marginNumberPadding = 0; // no number margin padding
@@ -787,7 +794,8 @@ public:
     lastSegItalicsOffset = 0; // no offset for italic characters at EOLs
     ac.widthLBDefault = 10; // more sane bound for autocomplete width
     ac.heightLBDefault = 10; // more sane bound for autocomplete  height
-    ct.colourSel = ColourDesired(0, 0, 0xFF);
+    ct.colourBG = ColourDesired(0, 0, 0);
+    ct.colourUnSel = ColourDesired(0xC0, 0xC0, 0xC0);
     ct.insetX = 2; // border and arrow widths are 1 each
     ct.widthArrow = 1; // arrow width is 1 character
     ct.borderHeight = 1; // no extra empty lines in border height
