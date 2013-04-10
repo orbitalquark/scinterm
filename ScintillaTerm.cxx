@@ -58,6 +58,28 @@
  */
 #define _WINDOW(w) reinterpret_cast<WINDOW *>(w)
 
+// Defines for getting attributes for INDIC_ROUNDBOX and INDIC_STRAIGHTBOX.
+// These are specific to curses implementations.
+#if NCURSES_VERSION_MAJOR
+#ifdef NCURSES_WIDECHAR
+#define wattrget(w, y, x) (w)->_line[(y)].text[(x)].attr;
+#undef NCURSES_CH_T
+#define NCURSES_CH_T cchar_t
+#else
+#define wattrget(w, y, x) (w)->_line[(y)].text[(x)];
+#endif
+struct ldat {
+  NCURSES_CH_T *text;
+  NCURSES_SIZE_T firstchar;
+  NCURSES_SIZE_T lastchar;
+  NCURSES_SIZE_T oldindex;
+};
+#elif PDCURSES
+#define wattrget(w, y, x) (w)->_y[(y)][(x)];
+#else
+#define wattrget(w, y, x) 0
+#endif
+
 // Font handling.
 
 /**
@@ -288,11 +310,11 @@ public:
   void AlphaRectangle(PRectangle rc, int cornerSize, ColourDesired fill,
                       int alphaFill, ColourDesired outline, int alphaOutline,
                       int flags) {
-    attr_t attrs;
-    short pair = 0, fore = COLOR_WHITE;
-    wmove(win, rc.top - 1, rc.left), wattr_get(win, &attrs, &pair, NULL);
+    int x = rc.left, y = rc.top - 1, len = rc.right - rc.left;
+    attr_t attrs = wattrget(win, y, x);
+    short pair = PAIR_NUMBER(attrs), fore = COLOR_WHITE;
     if (pair > 0) pair_content(pair, &fore, NULL);
-    wchgat(win, rc.right - rc.left, attrs, term_color_pair(fore, fill), NULL);
+    mvwchgat(win, y, x, len, attrs, term_color_pair(fore, fill), NULL);
   }
   /** Drawing images is not implemented. */
   void DrawRGBAImage(PRectangle rc, int width, int height,
