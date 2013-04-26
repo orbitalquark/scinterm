@@ -4,6 +4,7 @@
 #ifndef SCINTILLATERM_H
 #define SCINTILLATERM_H
 
+#define NCURSES_OPAQUE 0
 #include <curses.h>
 
 #ifdef __cplusplus
