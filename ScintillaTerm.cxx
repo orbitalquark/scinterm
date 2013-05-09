@@ -61,7 +61,7 @@
 // Defines for getting attributes for INDIC_ROUNDBOX and INDIC_STRAIGHTBOX.
 // These are specific to curses implementations.
 #if NCURSES_VERSION_MAJOR
-#if (defined(NCURSES_WIDECHAR) || __APPLE__)
+#if (defined(NCURSES_WIDECHAR) || defined(_XOPEN_SOURCE_EXTENDED))
 #define wattrget(w, y, x) (w)->_line[(y)].text[(x)].attr;
 #undef NCURSES_CH_T
 #define NCURSES_CH_T cchar_t
