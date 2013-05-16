@@ -6,5 +6,6 @@ Scinterm.
 ## Code Contributors
 
 * Neil Hodgson
+* Paul Evans
 * Peter Kazmier
 * Robin Haberkorn

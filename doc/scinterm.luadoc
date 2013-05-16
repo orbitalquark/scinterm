@@ -34,7 +34,8 @@ function scintilla_send_message(sci, iMessage, wParam, lParam) end
 -- Sends the specified key to the given Scintilla window for processing.
 -- If it is not consumed, an SCNotification will be emitted.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
--- @param key (`int`) The keycode of the key.
+-- @param key (`int`) The keycode of the key, or, if Scintilla's code page is
+--   UTF-8, the UTF-8 code point of the key.
 -- @param shift (`bool`) Flag indicating whether or not the shift modifier key
 --   is pressed.
 -- @param ctrl (`bool`) Flag indicating whether or not the control modifier key

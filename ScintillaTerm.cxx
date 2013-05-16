@@ -753,6 +753,32 @@ class ScintillaTerm : public ScintillaBase {
   Surface *sur;
   void (*callback)(Scintilla *, int, void *, void *);
   SelectionText clipboard;
+
+  /**
+   * Uses the given UTF-8 code point to fill the given UTF-8 byte sequence and
+   * length.
+   * This algorithm was inspired by Paul Evans' libtermkey.
+   * (http://www.leonerd.org.uk/code/libtermkey)
+   * @param code The UTF-8 code point.
+   * @param s The string to write the UTF-8 byte sequence in. Must be at least
+   *   6 bytes in size.
+   * @param len The integer to put the number of UTF-8 bytes written in.
+   */
+  void toutf8(int code, char *s, int *len) {
+    if (code < 0x80) *len = 1;
+    else if (code < 0x800) *len = 2;
+    else if (code < 0x10000) *len = 3;
+    else if (code < 0x200000) *len = 4;
+    else if (code < 0x4000000) *len = 5;
+    else *len = 6;
+    for (int b = *len - 1; b > 0; b--) s[b] = 0x80 | (code & 0x3F), code >>= 6;
+    if (*len == 1) s[0] = code & 0x7F;
+    else if (*len == 2) s[0] = 0xC0 | (code & 0x1F);
+    else if (*len == 3) s[0] = 0xE0 | (code & 0x0F);
+    else if (*len == 4) s[0] = 0xF0 | (code & 0x07);
+    else if (*len == 5) s[0] = 0xF8 | (code & 0x03);
+    else if (*len == 6) s[0] = 0xFC | (code & 0x01);
+  }
 public:
   /**
    * Creates a new Scintilla instance in a curses `WINDOW`.
@@ -878,9 +904,17 @@ public:
    * @param modifiers A bitmask of modifiers for `key`.
    */
   virtual int KeyDefault(int key, int modifiers) {
-    if (key < 256 && !(modifiers & (SCMOD_CTRL | SCMOD_ALT | SCMOD_META))) {
-      AddChar(key);
-      return 1;
+    if ((IsUnicodeMode() || key < 256) && modifiers == 0) {
+      if (IsUnicodeMode()) {
+        char utf8[6];
+        int len;
+        toutf8(key, utf8, &len);
+        AddCharUTF(utf8, len);
+        return 1;
+      } else {
+        AddChar(key);
+        return 1;
+      }
     } else {
       SCNotification scn = {0};
       scn.nmhdr.code = SCN_KEY;
