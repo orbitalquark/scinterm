@@ -22,7 +22,6 @@
 #ifdef SCI_LEXER
 #include "SciLexer.h"
 #endif
-#include "SVector.h"
 #include "SplitVector.h"
 #include "Partitioning.h"
 #include "RunStyles.h"
@@ -879,11 +878,10 @@ public:
     SelectionPosition sp = !sel.IsRectangular() ? sel.Range(sel.Main()).Start()
                                                 : sel.Rectangular().Start();
     if (!clipboard.rectangular) {
-      int len = clipboard.len - 1;
-      const char *s = Document::TransformLineEnds(&len, clipboard.s, len,
+      std::string s = Document::TransformLineEnds(clipboard.s,
+                                                  clipboard.len - 1,
                                                   pdoc->eolMode);
-      InsertPaste(sp, s, len);
-      delete []s;
+      InsertPaste(sp, s.c_str(), s.length());
     } else PasteRectangular(sp, clipboard.s, clipboard.len - 1);
     EnsureCaretVisible();
   }
