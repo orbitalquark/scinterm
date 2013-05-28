@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
 
 #include "Platform.h"
 
@@ -873,16 +874,16 @@ public:
    * selections.
    */
   virtual void Paste() {
-    if (!clipboard.s) return;
+    if (clipboard.Empty()) return;
     ClearSelection(multiPasteMode == SC_MULTIPASTE_EACH);
     SelectionPosition sp = !sel.IsRectangular() ? sel.Range(sel.Main()).Start()
                                                 : sel.Rectangular().Start();
     if (!clipboard.rectangular) {
-      std::string s = Document::TransformLineEnds(clipboard.s,
-                                                  clipboard.len - 1,
+      std::string s = Document::TransformLineEnds(clipboard.Data(),
+                                                  clipboard.Length(),
                                                   pdoc->eolMode);
       InsertPaste(sp, s.c_str(), s.length());
-    } else PasteRectangular(sp, clipboard.s, clipboard.len - 1);
+    } else PasteRectangular(sp, clipboard.Data(), clipboard.Length());
     EnsureCaretVisible();
   }
   /** Setting of the primary and/or secondary X selections is not supported. */
@@ -1013,8 +1014,8 @@ public:
    * @return size of the clipboard text
    */
   int GetClipboard(char *buffer) {
-    if (buffer) memcpy(buffer, clipboard.s, clipboard.len);
-    return clipboard.len;
+    if (buffer) memcpy(buffer, clipboard.Data(), clipboard.Length() + 1);
+    return clipboard.Length() + 1;
   }
 };
 
