@@ -20,9 +20,12 @@ Scinterm requires Scintilla 3.2.2 or greater.
 
 ## Download
 
-Download Scinterm from the project's [download page][].
+Download Scinterm from the project's [download page][] or from this quick link:
+
+* [Source][]
 
 [download page]: http://foicica.com/scinterm/download
+[Source]: download/scinterm_LATEST.zip
 
 ## Installation and Usage
 
