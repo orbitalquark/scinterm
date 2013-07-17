@@ -38,12 +38,14 @@
 #include "ViewStyle.h"
 #include "Decoration.h"
 #include "CharClassify.h"
+#include "CaseFolder.h"
 #include "Document.h"
 #include "Selection.h"
 #include "PositionCache.h"
 #include "Editor.h"
 #include "ScintillaBase.h"
 #include "UniConversion.h"
+#include "CaseConvert.h"
 #include "ScintillaTerm.h"
 
 #if SCI_LEXER
@@ -793,6 +795,7 @@ public:
       sur->Init(GetWINDOW());
 
     // Defaults for terminals.
+    drawOverstrikeCaret = false; // always draw normal caret
     bufferedDraw = false; // draw directly to the screen
     twoPhaseDraw = false; // no need for this
     horizontalScrollBarVisible = false; // no scroll bars

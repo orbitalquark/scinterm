@@ -9,8 +9,8 @@ to build the usual `../bin/scintilla.a`.
 
 ## Curses Compatibility
 
-Since curses is quite low-level in terms of graphics capability compared to GUI
-toolkits like GTK and Qt, Scinterm lacks some Scintilla features:
+Scinterm lacks some Scintilla features due to curses' non-existant graphics
+capabilities:
 
 * Any settings with alpha values are not supported.
 * Autocompletion lists cannot show images (pixmap surfaces are not supported).
@@ -24,7 +24,7 @@ toolkits like GTK and Qt, Scinterm lacks some Scintilla features:
 * Code pages other than UTF-8 have not been tested and it is possible some
   curses implementations do not support them.
 * Edge lines are not displayed properly (the line is drawn over by text lines).
-* Extra ascent and decent for lines is not supported.
+* Extra ascent and descent for lines is not supported.
 * Fold lines are not supported (`surface->LineTo()` is not supported).
 * Indentation guides are not visible (pixmap surfaces are not supported).
 * Indicators other than `INDIC_ROUNDBOX` and `INDIC_STRAIGHTBOX` are not drawn
