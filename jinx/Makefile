@@ -3,7 +3,8 @@
 CC = gcc
 CXX = g++
 INCLUDEDIRS = -I ../../include -I ../../src -I ../../lexlib -I ../
-CFLAGS = -DCURSES -DSCI_LEXER -W -Wall $(INCLUDEDIRS)
+CFLAGS = -DCURSES -DSCI_LEXER -D_XOPEN_SOURCE_EXTENDED -W -Wall $(INCLUDEDIRS) \
+         -Wno-unused-parameter -Wno-missing-field-initializers
 CXXFLAGS = $(CFLAGS)
 
 scintilla = ../../bin/scintilla.a

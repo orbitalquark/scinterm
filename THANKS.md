@@ -9,3 +9,4 @@ Scinterm.
 * Paul Evans
 * Peter Kazmier
 * Robin Haberkorn
+* Valere Monseur

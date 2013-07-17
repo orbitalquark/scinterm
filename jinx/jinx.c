@@ -9,13 +9,14 @@
 
 #define SSM(m, w, l) scintilla_send_message(sci, m, w, l)
 
-void scnotification(Scintilla *view, struct SCNotification *scn) {
+void scnotification(Scintilla *view, int msg, void *lParam, void *wParam) {
+  //struct SCNotification *scn = (struct SCNotification *)lParam;
   //printw("SCNotification received: %i", scn->nmhdr.code);
 }
 
 int main(int argc, char **argv) {
-  initscr(), raw(), cbreak(), noecho(), start_color();
   setlocale(LC_CTYPE, ""); // for displaying UTF-8 characters properly
+  initscr(), raw(), cbreak(), noecho(), start_color();
   Scintilla *sci = scintilla_new(scnotification);
   curs_set(0); // Scintilla draws its own cursor
 
@@ -40,6 +41,7 @@ int main(int argc, char **argv) {
   SSM(SCI_SETFOCUS, 1, 0);
   scintilla_refresh(sci);
 
+  // Non-UTF8 input.
   int c = 0;
   WINDOW *win = scintilla_get_window(sci);
   while ((c = wgetch(win)) != 'q') {
@@ -50,6 +52,23 @@ int main(int argc, char **argv) {
     scintilla_send_key(sci, c, FALSE, FALSE, FALSE);
     scintilla_refresh(sci);
   }
+  // UTF-8 input.
+  //SSM(SCI_SETCODEPAGE, SC_CP_UTF8, 0);
+  //wint_t c = {0};
+  //WINDOW *win = scintilla_get_window(sci);
+  //while (c != 'q') {
+  //  int status = wget_wch(win, &c);
+  //  if (status == ERR)
+  //    continue;
+  //  else if (status == KEY_CODE_YES) {
+  //    if (c == KEY_UP) c = SCK_UP;
+  //    else if (c == KEY_DOWN) c = SCK_DOWN;
+  //    else if (c == KEY_LEFT) c = SCK_LEFT;
+  //    else if (c == KEY_RIGHT) c = SCK_RIGHT;
+  //  }
+  //  scintilla_send_key(sci, c, FALSE, FALSE, FALSE);
+  //  scintilla_refresh(sci);
+  //}
   scintilla_delete(sci);
   endwin();
 
