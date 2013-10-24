@@ -374,6 +374,7 @@ public:
    */
   void DrawTextTransparent(PRectangle rc, Font &font_, XYPOSITION ybase,
                            const char *s, int len, ColourDesired fore) {
+    if ((int)rc.top >= getmaxy(win) - 1) return;
     attr_t attrs = wattrget(win, (int)rc.top, (int)rc.left);
     short pair = PAIR_NUMBER(attrs), back = COLOR_BLACK;
     if (pair > 0) pair_content(pair, NULL, &back);
