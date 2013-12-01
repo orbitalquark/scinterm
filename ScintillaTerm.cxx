@@ -818,6 +818,12 @@ public:
     vs.markers[SC_MARKNUM_FOLDER].markType = SC_MARK_CHARACTER + '+';
     vs.markers[SC_MARKNUM_FOLDER].fore = ColourDesired(0xC0, 0xC0, 0xC0);
     vs.markers[SC_MARKNUM_FOLDER].back = ColourDesired(0, 0, 0);
+    vs.markers[SC_MARKNUM_FOLDEROPENMID].markType = SC_MARK_CHARACTER + '-';
+    vs.markers[SC_MARKNUM_FOLDEROPENMID].fore = ColourDesired(0xC0, 0xC0, 0xC0);
+    vs.markers[SC_MARKNUM_FOLDEROPENMID].back = ColourDesired(0, 0, 0);
+    vs.markers[SC_MARKNUM_FOLDEREND].markType = SC_MARK_CHARACTER + '+';
+    vs.markers[SC_MARKNUM_FOLDEREND].fore = ColourDesired(0xC0, 0xC0, 0xC0);
+    vs.markers[SC_MARKNUM_FOLDEREND].back = ColourDesired(0, 0, 0);
     displayPopupMenu = false; // no context menu
     marginNumberPadding = 0; // no number margin padding
     ctrlCharPadding = 0; // no ctrl character text blob padding
