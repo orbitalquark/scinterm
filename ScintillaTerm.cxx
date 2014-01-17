@@ -919,7 +919,7 @@ public:
         return 1;
       }
     } else {
-      SCNotification scn = {0};
+      SCNotification scn = {};
       scn.nmhdr.code = SCN_KEY;
       scn.ch = key;
       scn.modifiers = modifiers;
