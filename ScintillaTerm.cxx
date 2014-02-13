@@ -348,7 +348,8 @@ public:
     wattr_set(win, static_cast<attr_t>(attrs), term_color_pair(fore, back),
               NULL);
     if (rc.left < 0) s += static_cast<int>(-rc.left), rc.left = 0;
-    mvwaddnstr(win, rc.top, rc.left, s, Platform::Minimum(len, COLS - rc.left));
+    mvwaddnstr(win, rc.top, rc.left, s,
+               Platform::Minimum(len, getmaxx(win) - rc.left));
   }
   /**
    * Similar to `DrawTextNoClip()`.
