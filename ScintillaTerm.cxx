@@ -755,6 +755,7 @@ int Platform::Clamp(int val, int minVal, int maxVal) {
 /** Implementation of Scintilla for the Terminal. */
 class ScintillaTerm : public ScintillaBase {
   Surface *sur;
+  int width, height;
   void (*callback)(Scintilla *, int, void *, void *);
   SelectionText clipboard;
 
@@ -795,6 +796,7 @@ public:
     callback = callback_;
     if ((sur = Surface::Allocate(SC_TECHNOLOGY_DEFAULT)))
       sur->Init(GetWINDOW());
+    getmaxyx(GetWINDOW(), height, width);
 
     // Defaults for terminals.
     drawOverstrikeCaret = false; // always draw normal caret
@@ -986,6 +988,8 @@ public:
     WINDOW *w = GetWINDOW();
     rcPaint.top = 0, rcPaint.left = 0; // paint from (0, 0), not (begy, begx)
     getmaxyx(w, rcPaint.bottom, rcPaint.right);
+    if (rcPaint.bottom != height || rcPaint.right != width)
+      height = rcPaint.bottom, width = rcPaint.right, ChangeSize();
     Paint(sur, rcPaint);
     wrefresh(w);
     if (ac.Active())

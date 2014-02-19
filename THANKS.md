@@ -5,6 +5,7 @@ Scinterm.
 
 ## Code Contributors
 
+* Chris Emerson
 * Neil Hodgson
 * Paul Evans
 * Peter Kazmier
