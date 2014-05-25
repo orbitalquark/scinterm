@@ -883,14 +883,8 @@ public:
   virtual void Paste() {
     if (clipboard.Empty()) return;
     ClearSelection(multiPasteMode == SC_MULTIPASTE_EACH);
-    SelectionPosition sp = !sel.IsRectangular() ? sel.Range(sel.Main()).Start()
-                                                : sel.Rectangular().Start();
-    if (!clipboard.rectangular) {
-      std::string s = Document::TransformLineEnds(clipboard.Data(),
-                                                  clipboard.Length(),
-                                                  pdoc->eolMode);
-      InsertPaste(sp, s.c_str(), s.length());
-    } else PasteRectangular(sp, clipboard.Data(), clipboard.Length());
+    InsertPasteShape(clipboard.Data(), static_cast<int>(clipboard.Length()),
+                     !clipboard.rectangular ? pasteStream : pasteRectangular);
     EnsureCaretVisible();
   }
   /** Setting of the primary and/or secondary X selections is not supported. */
