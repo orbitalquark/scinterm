@@ -46,7 +46,7 @@ Changes:
 * Expose [`SCI_COLOR_PAIR()`][] macro.
 
 [Scinterm 1.1]: download/scinterm_1.1.zip
-[`SCI_COLOR_PAIR()`]: api/Scinterm.html#SCI_COLOR_PAIR
+[`SCI_COLOR_PAIR()`]: api.html#SCI_COLOR_PAIR
 
 ## 1.0 (31 Aug 2012)
 

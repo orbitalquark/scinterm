@@ -39,13 +39,11 @@ clean:
 # Documentation.
 
 doc: manual luadoc
-manual: doc/*.md *.md
-	doc/bombay -d doc -t doc --title Scinterm --navtitle Manual $^
+manual: doc/*.md *.md | doc/bombay
+	doc/bombay -d doc -t doc --title Scinterm $^
 luadoc: doc/scinterm.luadoc
 	luadoc -d doc -t doc --doclet doc/markdowndoc $^
-cleandoc:
-	rm -f doc/*.html
-	rm -rf doc/api
+cleandoc: ; rm -f doc/manual.html doc/api.html
 
 # Release.
 
@@ -59,3 +57,13 @@ release: doc
 	cp -rL doc $(release_dir)
 	zip -r $(package) $(release_dir)
 	rm -r $(release_dir)
+
+# External dependencies.
+
+bombay_zip = bombay.zip
+
+$(bombay_zip):
+	wget "http://foicica.com/hg/bombay/archive/tip.zip" && mv tip.zip $@
+doc/bombay: | $(bombay_zip)
+	mkdir $(notdir $@) && unzip -d $(notdir $@) $| && \
+		mv $(notdir $@)/*/* $(dir $@)
