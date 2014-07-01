@@ -49,7 +49,7 @@ cleandoc: ; rm -f doc/manual.html doc/api.html
 
 release_dir = scinterm_$(shell grep "^\#\#" CHANGELOG.md | head -1 | \
                                cut -d ' ' -f 2)
-package = releases/$(release_dir).zip
+package = /tmp/$(release_dir).zip
 
 release: doc
 	hg archive $(release_dir)
