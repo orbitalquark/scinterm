@@ -4,6 +4,23 @@
 
 [Atom Feed]: feed
 
+## 1.3 (09 Jul 2014)
+
+Download:
+
+* [Scinterm 1.3][]
+
+Bugfixes:
+
+* Clip long lines properly when view width is less than `COLS`.
+* Fixed painting bug in resized views.
+
+Changes:
+
+* Updated to Scintilla 3.4.2.
+
+[Scinterm 1.3]: download/scinterm_1.3.zip
+
 ## 1.2 (05 Feb 2014)
 
 Download:
