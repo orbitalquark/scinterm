@@ -42,6 +42,9 @@
 #include "Document.h"
 #include "Selection.h"
 #include "PositionCache.h"
+#include "EditModel.h"
+#include "MarginView.h"
+#include "EditView.h"
 #include "Editor.h"
 #include "ScintillaBase.h"
 #include "UniConversion.h"
@@ -799,9 +802,9 @@ public:
     getmaxyx(GetWINDOW(), height, width);
 
     // Defaults for terminals.
-    drawOverstrikeCaret = false; // always draw normal caret
-    bufferedDraw = false; // draw directly to the screen
-    twoPhaseDraw = false; // no need for this
+    view.drawOverstrikeCaret = false; // always draw normal caret
+    view.bufferedDraw = false; // draw directly to the screen
+    view.phasesDraw = EditView::phasesOne; // no need for two-phase drawing
     horizontalScrollBarVisible = false; // no scroll bars
     verticalScrollBarVisible = false; // no scroll bars
     vs.selColours.fore = ColourDesired(0, 0, 0); // black on white selection
