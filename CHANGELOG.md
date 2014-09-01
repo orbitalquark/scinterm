@@ -4,6 +4,23 @@
 
 [Atom Feed]: feed
 
+## 1.4 (01 Sep 2014)
+
+Download:
+
+* [Scinterm 1.4][]
+
+Bugfixes:
+
+* Fixed nested folding marker drawing.
+
+Changes:
+
+* Updated to [Scintilla][] 3.5.0.
+
+[Scinterm 1.4]: download/scinterm_1.4.zip
+[Scintilla]: http://scintilla.org
+
 ## 1.3 (09 Jul 2014)
 
 Download:
@@ -17,9 +34,10 @@ Bugfixes:
 
 Changes:
 
-* Updated to Scintilla 3.4.2.
+* Updated to [Scintilla][] 3.4.2.
 
 [Scinterm 1.3]: download/scinterm_1.3.zip
+[Scintilla]: http://scintilla.org
 
 ## 1.2 (05 Feb 2014)
 
@@ -41,9 +59,10 @@ Changes:
   translucency.
 * Support curses, PDCurses, and X/Open Curses.
 * Recognize up to 16 separate colors for terminals that support it.
-* Updated to Scintilla 3.3.7.
+* Updated to [Scintilla][] 3.3.7.
 
 [Scinterm 1.2]: download/scinterm_1.2.zip
+[Scintilla]: http://scintilla.org
 
 ## 1.1 (11 Dec 2012)
 
