@@ -476,19 +476,18 @@ void Window::SetPositionRelative(PRectangle rc, Window relativeTo) {
   if (y < begy) y = begy;
   // Correct to fit the parent if necessary.
   int sizex = rc.right - rc.left;
-  if (x > 0) sizex -= 1; // in curses, x pos counts as "1" width
   int sizey = rc.bottom - rc.top;
-  if (y > 0) sizey -= 1; // in curses, y pos counts as "1" height
   int screen_width = getmaxx(_WINDOW(relativeTo.GetID()));
   int screen_height = getmaxy(_WINDOW(relativeTo.GetID()));
   if (sizex > screen_width)
-    x = begx;
-  else if (x + sizex > screen_width)
-    x = screen_width - sizex;
-  if (sizey > screen_height)
-    y = begy;
-  else if (y + sizey > screen_height)
-    y = screen_height - sizey;
+    x = begx; // align left
+  else if (x + sizex > begx + screen_width)
+    x = begx + screen_width - sizex; // align right
+  if (y + sizey > begy + screen_height) {
+    y = begy + screen_height - sizey; // align bottom
+    if (screen_height == 1) y--; // show directly above the relative window
+  }
+  if (y < 0) y = begy; // align top
   // Update the location.
   mvwin(_WINDOW(wid), y, x);
 }
