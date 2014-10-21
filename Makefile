@@ -25,12 +25,13 @@ all: $(scintilla)
 	$(CXX) $(CXXFLAGS) -c $<
 $(scintilla): AutoComplete.o CallTip.o CaseConvert.o CaseFolder.o Catalogue.o \
               CellBuffer.o CharClassify.o ContractionState.o Decoration.o \
-              Document.o Editor.o ExternalLexer.o Indicator.o KeyMap.o \
-              LineMarker.o PerLine.o PositionCache.o RESearch.o RunStyles.o \
-              ScintillaBase.o Selection.o Style.o UniConversion.o ViewStyle.o \
-              XPM.o Accessor.o CharacterCategory.o CharacterSet.o LexerBase.o \
-              LexerModule.o LexerNoExceptions.o LexerSimple.o PropSetSimple.o \
-              StyleContext.o WordList.o $(lexers) ScintillaTerm.o
+              Document.o EditModel.o Editor.o EditView.o ExternalLexer.o \
+              Indicator.o KeyMap.o LineMarker.o MarginView.o PerLine.o \
+              PositionCache.o RESearch.o RunStyles.o ScintillaBase.o \
+              Selection.o Style.o UniConversion.o ViewStyle.o XPM.o Accessor.o \
+              CharacterSet.o LexerBase.o LexerModule.o LexerNoExceptions.o \
+              LexerSimple.o PropSetSimple.o StyleContext.o WordList.o \
+              $(lexers) ScintillaTerm.o
 	$(AR) rc $@ $^
 	touch $@
 clean:
