@@ -862,11 +862,17 @@ public:
    * @param lParam The second parameter.
    */
   virtual sptr_t WndProc(unsigned int iMessage, uptr_t wParam, uptr_t lParam) {
-    switch (iMessage) {
-      case SCI_GETDIRECTFUNCTION:
-        return reinterpret_cast<sptr_t>(scintilla_send_message);
-      case SCI_GETDIRECTPOINTER: return reinterpret_cast<sptr_t>(this);
-      default: return ScintillaBase::WndProc(iMessage, wParam, lParam);
+    try {
+      switch (iMessage) {
+        case SCI_GETDIRECTFUNCTION:
+          return reinterpret_cast<sptr_t>(scintilla_send_message);
+        case SCI_GETDIRECTPOINTER: return reinterpret_cast<sptr_t>(this);
+        default: return ScintillaBase::WndProc(iMessage, wParam, lParam);
+      }
+    } catch (std::bad_alloc&) {
+      errorStatus = SC_STATUS_BADALLOC;
+    } catch (...) {
+      errorStatus = SC_STATUS_FAILURE;
     }
     return 0;
   }
