@@ -46,6 +46,25 @@ function scintilla_send_message(sci, iMessage, wParam, lParam) end
 function scintilla_send_key(sci, key, shift, ctrl, alt) end
 
 ---
+-- Sends the specified mouse event to the given Scintilla window for processing.
+-- @param sci The Scintilla window returned by `scintilla_new()`.
+-- @param event (`int`) The mouse event (`SCM_CLICK`, `SCM_DRAG`, or
+--   `SCM_RELEASE`).
+-- @param time (`unsigned int`) The time in milliseconds of the mouse event.
+--   This is only needed if double and triple clicks need to be detected.
+-- @param button (`int`) The button number pressed, or `0` if none.
+-- @param y (`int`) The absolute y coordinate of the mouse event.
+-- @param x (`int`) The absolute x coordinate of the mouse event.
+-- @param shift (`bool`) Flag indicating whether or not the shift modifier key
+--   is pressed.
+-- @param ctrl (`bool`) Flag indicating whether or not the control modifier key
+--   is pressed.
+-- @param alt (`bool`) Flag indicating whether or not the alt modifier key is
+--   pressed.
+-- @return `void`
+function scintilla_send_mouse(sci, event, time, button, y, x, shift, ctrl, alt) end
+
+---
 -- Copies the text of Scintilla's internal clipboard, not the primary and/or
 -- secondary X selections, into the given buffer and returns the size of the
 -- clipboard text.

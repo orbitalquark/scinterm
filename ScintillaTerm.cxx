@@ -760,6 +760,7 @@ class ScintillaTerm : public ScintillaBase {
   int width, height;
   void (*callback)(Scintilla *, int, void *, void *);
   SelectionText clipboard;
+  bool capturedMouse;
 
   /**
    * Uses the given UTF-8 code point to fill the given UTF-8 byte sequence and
@@ -799,6 +800,8 @@ public:
     if ((sur = Surface::Allocate(SC_TECHNOLOGY_DEFAULT)))
       sur->Init(GetWINDOW());
     getmaxyx(GetWINDOW(), height, width);
+
+    capturedMouse = false;
 
     // Defaults for terminals.
     view.drawOverstrikeCaret = false; // always draw normal caret
@@ -942,10 +945,10 @@ public:
   }
   /** A ticking caret is not implemented. */
   virtual void SetTicking(bool on) {}
-  /** Mouse capture is not implemented. */
-  virtual void SetMouseCapture(bool on) {}
-  /** Mouse capture is not implemented. */
-  virtual bool HaveMouseCapture() { return false; }
+  /** Sets whether or not the mouse is captured. */
+  virtual void SetMouseCapture(bool on) { capturedMouse = on; }
+  /** Returns whether or not the mouse is captured. */
+  virtual bool HaveMouseCapture() { return capturedMouse; }
   /** A Scintilla direct pointer is not implemented. */
   virtual sptr_t DefWndProc(unsigned int iMessage, uptr_t wParam,
                             sptr_t lParam) { return 0; }
@@ -1018,6 +1021,43 @@ public:
     KeyDown(key, shift, ctrl, alt, &consumed);
   }
   /**
+   * Sends a mouse button press to Scintilla.
+   * @param button The button number pressed, or `0` if none.
+   * @param y The y coordinate of the mouse event relative to this window.
+   * @param x The x coordinate of the mouse event relative to this window.
+   * @param shift Flag indicating whether or not the shift modifier key is
+   *   pressed.
+   * @param ctrl Flag indicating whether or not the control modifier key is
+   *   pressed.
+   * @param alt Flag indicating whether or not the alt modifier key is pressed.
+   */
+  void MousePress(int button, int time, int y, int x, bool shift, bool ctrl,
+                  bool alt) {
+    if (button == 1)
+      // Note: ctrl + alt + drag creates rectangular selection.
+      ButtonDown(Point(x, y), time, shift, ctrl, alt);
+    else if (button == 4)
+      WndProc(SCI_LINESCROLL, 0, -getmaxy(GetWINDOW()) / 4);
+    else if (button == 5)
+      WndProc(SCI_LINESCROLL, 0, getmaxy(GetWINDOW()) / 4);
+  }
+  /**
+   * Sends a mouse move event to Scintilla.
+   * @param y The y coordinate of the mouse event relative to this window.
+   * @param x The x coordinate of the mouse event relative to this window.
+   */
+  void MouseMove(int y, int x) { ButtonMove(Point(x, y)); }
+  /**
+   * Sends a mouse release event to Scintilla.
+   * @param y The y coordinate of the mouse event relative to this window.
+   * @param x The x coordinate of the mouse event relative to this window.
+   * @param ctrl Flag indicating whether or not the control modifier key is
+   *   pressed.
+   */
+  void MouseRelease(int time, int y, int x, int ctrl) {
+    if (HaveMouseCapture()) ButtonUp(Point(x, y), time, ctrl);
+  }
+  /**
    * Copies the text of the internal clipboard, not the primary and/or secondary
    * X selections, into the given buffer and returns the size of the clipboard
    * text.
@@ -1074,6 +1114,37 @@ sptr_t scintilla_send_message(Scintilla *sci, unsigned int iMessage,
 void scintilla_send_key(Scintilla *sci, int key, bool shift, bool ctrl,
                         bool alt) {
   reinterpret_cast<ScintillaTerm *>(sci)->KeyPress(key, shift, ctrl, alt);
+}
+/**
+ * Sends the specified mouse event to the given Scintilla window for processing.
+ * @param sci The Scintilla window returned by `scintilla_new()`.
+ * @param event The mouse event (`SCM_CLICK`, `SCM_DRAG`, or `SCM_RELEASE`).
+ * @param time The time in milliseconds of the mouse event. This is only needed
+ *   if double and triple clicks need to be detected.
+ * @param button The button number pressed, or `0` if none.
+ * @param y The absolute y coordinate of the mouse event.
+ * @param x The absolute x coordinate of the mouse event.
+ * @param shift Flag indicating whether or not the shift modifier key is
+ *   pressed.
+ * @param ctrl Flag indicating whether or not the control modifier key is
+ *   pressed.
+ * @param alt Flag indicating whether or not the alt modifier key is pressed.
+ */
+void scintilla_send_mouse(Scintilla *sci, int event, unsigned int time,
+                          int button, int y, int x, bool shift, bool ctrl,
+                          bool alt) {
+  ScintillaTerm *sciterm = reinterpret_cast<ScintillaTerm *>(sci);
+  WINDOW *win = sciterm->GetWINDOW();
+  int begy = 0, begx = 0, maxy = getmaxy(win), maxx = getmaxx(win);
+  getbegyx(win, begy, begx);
+  if (x < begx || x > maxx || y < begy || y > maxy) return;
+  y = y - begy, x = x - begx;
+  if (event == SCM_PRESS)
+    sciterm->MousePress(button, time, y, x, shift, ctrl, alt);
+  else if (event == SCM_DRAG)
+    sciterm->MouseMove(y, x);
+  else if (event == SCM_RELEASE)
+    sciterm->MouseRelease(time, y, x, ctrl);
 }
 /**
  * Copies the text of Scintilla's internal clipboard, not the primary and/or

@@ -26,16 +26,18 @@ capabilities:
 * Edge lines are not displayed properly (the line is drawn over by text lines).
 * Extra ascent and descent for lines is not supported.
 * Fold lines are not supported (`surface->LineTo()` is not supported).
+* Hotspot underlines are not drawn on mouse hover (`surface->FillRectangle()` is
+  not supported).
 * Indentation guides are not visible (pixmap surfaces are not supported).
 * Indicators other than `INDIC_ROUNDBOX` and `INDIC_STRAIGHTBOX` are not drawn
-  (`surface->LineTo()` is not supported for drawing indicator shapes and pixmap
-  surfaces are not supported). Translucent drawing and rounded corners are not
-  supported either.
+  (`surface->LineTo()` and `surface->FillRectangle()` are not supported for
+  drawing indicator shapes and pixmap surfaces are not supported). Translucent
+  drawing and rounded corners are not supported either.
 * Margins are overwritten by long lines when scrolling to the right.
 * Marker types other than `SC_MARK_CHARACTER` are not drawn (pixmap surfaces are
   not supported and `surface->LineTo()` is not supported for drawing marker
   shapes).
-* Mouse interactions, cursor types, and hotspots are not supported.
+* Mouse cursor types are not supported.
 * Up to 16 colors are supported, regardless of how many colors the terminal
   supports. They are: black (`0x000000`), red (`0x800000`), green (`0x008000`),
   yellow (`0x808000`), blue (`0x000080`), magenta (`0x800080`), cyan

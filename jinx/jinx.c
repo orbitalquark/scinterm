@@ -1,6 +1,7 @@
 // Copyright 2012-2014 Mitchell mitchell.att.foicica.com. See LICENSE.
 
 #include <locale.h>
+#include <sys/time.h>
 #include <curses.h>
 
 #include "Scintilla.h"
@@ -38,18 +39,40 @@ int main(int argc, char **argv) {
   SSM(SCI_SETPROPERTY, (uptr_t)"fold", (sptr_t)"1");
   SSM(SCI_SETMARGINWIDTHN, 2, 1);
   SSM(SCI_SETMARGINMASKN, 2, SC_MASK_FOLDERS);
+  SSM(SCI_SETMARGINSENSITIVEN, 2, 1);
+  SSM(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_CLICK, 0);
   SSM(SCI_SETFOCUS, 1, 0);
   scintilla_refresh(sci);
 
+  printf("\033[?1000h"); // enable mouse press and release events
+  //printf("\033[?1002h"); // enable mouse press, drag, and release events
+  //printf("\033[?1003h"); // enable mouse move, press, drag, and release events
+  mousemask(ALL_MOUSE_EVENTS, NULL);
+
   // Non-UTF8 input.
   int c = 0;
+  MEVENT mouse;
   WINDOW *win = scintilla_get_window(sci);
   while ((c = wgetch(win)) != 'q') {
-    if (c == KEY_UP) c = SCK_UP;
-    else if (c == KEY_DOWN) c = SCK_DOWN;
-    else if (c == KEY_LEFT) c = SCK_LEFT;
-    else if (c == KEY_RIGHT) c = SCK_RIGHT;
-    scintilla_send_key(sci, c, FALSE, FALSE, FALSE);
+    if (c != KEY_MOUSE) {
+      if (c == KEY_UP) c = SCK_UP;
+      else if (c == KEY_DOWN) c = SCK_DOWN;
+      else if (c == KEY_LEFT) c = SCK_LEFT;
+      else if (c == KEY_RIGHT) c = SCK_RIGHT;
+      scintilla_send_key(sci, c, FALSE, FALSE, FALSE);
+    } else if (getmouse(&mouse) == OK) {
+      if (mouse.bstate & BUTTON1_CLICKED) {
+        struct timeval time = {0, 0};
+        gettimeofday(&time, NULL);
+        int millis = time.tv_sec * 1000 + time.tv_usec / 1000;
+        scintilla_send_mouse(sci, SCM_PRESS, millis, 1, mouse.y, mouse.x,
+                             mouse.bstate & BUTTON_SHIFT,
+                             mouse.bstate & BUTTON_CTRL,
+                             mouse.bstate & BUTTON_ALT);
+        scintilla_send_mouse(sci, SCM_RELEASE, millis, 1, mouse.y, mouse.x,
+                             FALSE, FALSE, FALSE);
+      }
+    }
     scintilla_refresh(sci);
   }
   // UTF-8 input.
@@ -69,6 +92,11 @@ int main(int argc, char **argv) {
   //  scintilla_send_key(sci, c, FALSE, FALSE, FALSE);
   //  scintilla_refresh(sci);
   //}
+
+  printf("\033[?1000l"); // disable mouse press and release events
+  //printf("\033[?1002l"); // disable mouse press, drag, and release events
+  //printf("\033[?1003l"); // disable mouse move, press, drag, and release
+
   scintilla_delete(sci);
   endwin();
 

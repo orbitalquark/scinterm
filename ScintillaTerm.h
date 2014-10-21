@@ -16,7 +16,9 @@ Scintilla *scintilla_new(void (*)(Scintilla *, int, void *, void *));
 WINDOW *scintilla_get_window(Scintilla *);
 sptr_t scintilla_send_message(Scintilla *, unsigned int, uptr_t, sptr_t);
 void scintilla_send_key(Scintilla *, int, bool, bool, bool);
-int scintilla_get_clipboard(Scintilla *sci, char *);
+void scintilla_send_mouse(Scintilla *, int, unsigned int, int, int, int, bool,
+                          bool, bool);
+int scintilla_get_clipboard(Scintilla *, char *);
 void scintilla_refresh(Scintilla *);
 void scintilla_delete(Scintilla *);
 
@@ -30,6 +32,10 @@ void scintilla_delete(Scintilla *);
  * @return int number for defining a curses `COLOR_PAIR`.
  */
 #define SCI_COLOR_PAIR(f, b) ((b) * ((COLORS < 16) ? 8 : 16) + (f) + 1)
+
+#define SCM_PRESS 1
+#define SCM_DRAG 2
+#define SCM_RELEASE 3
 
 #ifdef __cplusplus
 }
