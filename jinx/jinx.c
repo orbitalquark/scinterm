@@ -48,6 +48,7 @@ int main(int argc, char **argv) {
   //printf("\033[?1002h"); // enable mouse press, drag, and release events
   //printf("\033[?1003h"); // enable mouse move, press, drag, and release events
   mousemask(ALL_MOUSE_EVENTS, NULL);
+  mouseinterval(0);
 
   // Non-UTF8 input.
   int c = 0;
@@ -61,17 +62,18 @@ int main(int argc, char **argv) {
       else if (c == KEY_RIGHT) c = SCK_RIGHT;
       scintilla_send_key(sci, c, FALSE, FALSE, FALSE);
     } else if (getmouse(&mouse) == OK) {
-      if (mouse.bstate & BUTTON1_CLICKED) {
-        struct timeval time = {0, 0};
-        gettimeofday(&time, NULL);
-        int millis = time.tv_sec * 1000 + time.tv_usec / 1000;
-        scintilla_send_mouse(sci, SCM_PRESS, millis, 1, mouse.y, mouse.x,
-                             mouse.bstate & BUTTON_SHIFT,
-                             mouse.bstate & BUTTON_CTRL,
-                             mouse.bstate & BUTTON_ALT);
-        scintilla_send_mouse(sci, SCM_RELEASE, millis, 1, mouse.y, mouse.x,
-                             FALSE, FALSE, FALSE);
-      }
+      int event = SCM_DRAG, button = 0;
+      if (mouse.bstate & BUTTON1_PRESSED)
+        event = SCM_PRESS, button = 1;
+      else if (mouse.bstate & BUTTON1_RELEASED)
+        event = SCM_RELEASE, button = 1;
+      struct timeval time = {0, 0};
+      gettimeofday(&time, NULL);
+      int millis = time.tv_sec * 1000 + time.tv_usec / 1000;
+      scintilla_send_mouse(sci, event, millis, button, mouse.y, mouse.x,
+                           mouse.bstate & BUTTON_SHIFT,
+                           mouse.bstate & BUTTON_CTRL,
+                           mouse.bstate & BUTTON_ALT);
     }
     scintilla_refresh(sci);
   }
