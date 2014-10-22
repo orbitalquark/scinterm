@@ -1003,6 +1003,9 @@ public:
       height = rcPaint.bottom, width = rcPaint.right, ChangeSize();
     Paint(sur, rcPaint);
     wrefresh(w);
+#if PDCURSES
+    touchwin(w); // pdcurses sometimes has problems drawing overlapping windows
+#endif
     if (ac.Active())
       ac.lb->Select(ac.lb->GetSelection()); // redraw
     else if (ct.inCallTipMode)
