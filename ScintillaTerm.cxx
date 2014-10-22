@@ -1143,7 +1143,8 @@ void scintilla_send_mouse(Scintilla *sci, int event, unsigned int time,
   WINDOW *win = sciterm->GetWINDOW();
   int begy = 0, begx = 0, maxy = getmaxy(win), maxx = getmaxx(win);
   getbegyx(win, begy, begx);
-  if (x < begx || x > maxx || y < begy || y > maxy) return;
+  if ((x < begx || x > maxx || y < begy || y > maxy) &&
+      button != 4 && button != 5) return; // ignore most events outside windows
   y = y - begy, x = x - begx;
   if (event == SCM_PRESS)
     sciterm->MousePress(button, time, y, x, shift, ctrl, alt);
