@@ -1046,10 +1046,12 @@ public:
     if (button == 1)
       // Note: ctrl + alt + drag creates rectangular selection.
       return (ButtonDown(Point(x, y), time, shift, ctrl, alt), true);
-    else if (button == 4)
-      return (WndProc(SCI_LINESCROLL, 0, -getmaxy(GetWINDOW()) / 4), true);
-    else if (button == 5)
-      return (WndProc(SCI_LINESCROLL, 0, getmaxy(GetWINDOW()) / 4), true);
+    else if (button == 4 || button == 5) {
+      int lines = getmaxy(GetWINDOW()) / 4;
+      if (lines < 1) lines = 1;
+      if (button == 4) lines *= -1;
+      return (WndProc(SCI_LINESCROLL, 0, lines), true);
+    }
     return false;
   }
   /**
