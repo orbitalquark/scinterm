@@ -1039,16 +1039,18 @@ public:
    * @param ctrl Flag indicating whether or not the control modifier key is
    *   pressed.
    * @param alt Flag indicating whether or not the alt modifier key is pressed.
+   * @return whether or not Scintilla handled the mouse event
    */
-  void MousePress(int button, int time, int y, int x, bool shift, bool ctrl,
+  bool MousePress(int button, int time, int y, int x, bool shift, bool ctrl,
                   bool alt) {
     if (button == 1)
       // Note: ctrl + alt + drag creates rectangular selection.
-      ButtonDown(Point(x, y), time, shift, ctrl, alt);
+      return (ButtonDown(Point(x, y), time, shift, ctrl, alt), true);
     else if (button == 4)
-      WndProc(SCI_LINESCROLL, 0, -getmaxy(GetWINDOW()) / 4);
+      return (WndProc(SCI_LINESCROLL, 0, -getmaxy(GetWINDOW()) / 4), true);
     else if (button == 5)
-      WndProc(SCI_LINESCROLL, 0, getmaxy(GetWINDOW()) / 4);
+      return (WndProc(SCI_LINESCROLL, 0, getmaxy(GetWINDOW()) / 4), true);
+    return false;
   }
   /**
    * Sends a mouse move event to Scintilla.
@@ -1138,23 +1140,26 @@ void scintilla_send_key(Scintilla *sci, int key, bool shift, bool ctrl,
  * @param ctrl Flag indicating whether or not the control modifier key is
  *   pressed.
  * @param alt Flag indicating whether or not the alt modifier key is pressed.
+ * @return whether or not Scintilla handled the mouse event
  */
-void scintilla_send_mouse(Scintilla *sci, int event, unsigned int time,
+bool scintilla_send_mouse(Scintilla *sci, int event, unsigned int time,
                           int button, int y, int x, bool shift, bool ctrl,
                           bool alt) {
   ScintillaTerm *sciterm = reinterpret_cast<ScintillaTerm *>(sci);
   WINDOW *win = sciterm->GetWINDOW();
   int begy = 0, begx = 0, maxy = getmaxy(win), maxx = getmaxx(win);
   getbegyx(win, begy, begx);
-  if ((x < begx || x > maxx || y < begy || y > maxy) &&
-      button != 4 && button != 5) return; // ignore most events outside windows
+  // Ignore most events outside the window.
+  if ((x < begx || x > begx + maxx - 1 || y < begy || y > begy + maxy - 1) &&
+      button != 4 && button != 5) return false;
   y = y - begy, x = x - begx;
   if (event == SCM_PRESS)
-    sciterm->MousePress(button, time, y, x, shift, ctrl, alt);
+    return sciterm->MousePress(button, time, y, x, shift, ctrl, alt);
   else if (event == SCM_DRAG)
-    sciterm->MouseMove(y, x);
+    return (sciterm->MouseMove(y, x), sciterm->HaveMouseCapture());
   else if (event == SCM_RELEASE)
-    sciterm->MouseRelease(time, y, x, ctrl);
+    return (sciterm->MouseRelease(time, y, x, ctrl), true);
+  return false;
 }
 /**
  * Copies the text of Scintilla's internal clipboard, not the primary and/or
