@@ -807,6 +807,7 @@ public:
     view.drawOverstrikeCaret = false; // always draw normal caret
     view.bufferedDraw = false; // draw directly to the screen
     view.phasesDraw = EditView::phasesOne; // no need for two-phase drawing
+    clickCloseThreshold = 0; // ignore double-clicks more than 1 character apart
     horizontalScrollBarVisible = false; // no scroll bars
     verticalScrollBarVisible = false; // no scroll bars
     vs.selColours.fore = ColourDesired(0, 0, 0); // black on white selection
