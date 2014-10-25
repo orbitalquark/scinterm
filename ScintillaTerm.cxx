@@ -881,6 +881,11 @@ public:
   virtual void Initialise() {}
   /** Extra finalising code is unnecessary. */
   virtual void Finalise() {}
+  /** Disable drag and drop since it is not implemented. */
+  virtual void StartDrag() {
+    inDragDrop = ddNone;
+    SetDragPosition(SelectionPosition(invalidPosition));
+  }
   /** Setting scroll positions is not implemented. */
   virtual void SetVerticalScrollPos() {}
   /** Setting scroll positions is not implemented. */
