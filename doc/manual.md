@@ -23,6 +23,7 @@ capabilities:
   (terminals use block carets with their own period definitions).
 * Code pages other than UTF-8 have not been tested and it is possible some
   curses implementations do not support them.
+* Drag and drop is not supported.
 * Edge lines are not displayed properly (the line is drawn over by text lines).
 * Extra ascent and descent for lines is not supported.
 * Fold lines are not supported (`surface->LineTo()` is not supported).
