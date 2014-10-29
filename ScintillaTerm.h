@@ -12,15 +12,19 @@ extern "C" {
 #endif
 
 typedef void *Scintilla;
-Scintilla *scintilla_new(void (*)(Scintilla *, int, void *, void *));
-WINDOW *scintilla_get_window(Scintilla *);
-sptr_t scintilla_send_message(Scintilla *, unsigned int, uptr_t, sptr_t);
-void scintilla_send_key(Scintilla *, int, bool, bool, bool);
-bool scintilla_send_mouse(Scintilla *, int, unsigned int, int, int, int, bool,
-                          bool, bool);
-int scintilla_get_clipboard(Scintilla *, char *);
-void scintilla_refresh(Scintilla *);
-void scintilla_delete(Scintilla *);
+Scintilla *scintilla_new(void (*callback)(Scintilla *sci, int iMessage,
+                                          void *wParam, void *lParam));
+WINDOW *scintilla_get_window(Scintilla *sci);
+sptr_t scintilla_send_message(Scintilla *sci, unsigned int iMessage, 
+                              uptr_t wParam, sptr_t lParam);
+void scintilla_send_key(Scintilla *sci, int key, bool shift, bool ctrl,
+                        bool alt);
+bool scintilla_send_mouse(Scintilla *sci, int event, unsigned int time, 
+                          int button, int y, int x, bool shift, bool ctrl,
+                          bool alt);
+int scintilla_get_clipboard(Scintilla *sci, char *buffer);
+void scintilla_refresh(Scintilla *sci);
+void scintilla_delete(Scintilla *sci);
 
 /**
  * Returns the curses `COLOR_PAIR` for the given curses foreground and
