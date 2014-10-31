@@ -1061,11 +1061,23 @@ public:
     return false;
   }
   /**
-   * Sends a mouse move event to Scintilla.
+   * Sends a mouse move event to Scintilla, returning whether or not Scintilla
+   * handled the mouse event.
    * @param y The y coordinate of the mouse event relative to this window.
    * @param x The x coordinate of the mouse event relative to this window.
+   * @param shift Flag indicating whether or not the shift modifier key is
+   *   pressed.
+   * @param ctrl Flag indicating whether or not the control modifier key is
+   *   pressed.
+   * @param alt Flag indicating whether or not the alt modifier key is pressed.
+   * @return whether or not Scintilla handled the mouse event
    */
-  void MouseMove(int y, int x) { ButtonMove(Point(x, y)); }
+  bool MouseMove(int y, int x, bool shift, bool ctrl, bool alt) {
+    int modifiers = (shift ? SCI_SHIFT : 0) | (ctrl ? SCI_CTRL : 0) |
+                    (alt ? SCI_ALT : 0);
+    ButtonMoveWithModifiers(Point(x, y), modifiers);
+    return HaveMouseCapture();
+  }
   /**
    * Sends a mouse release event to Scintilla.
    * @param y The y coordinate of the mouse event relative to this window.
@@ -1164,7 +1176,7 @@ bool scintilla_send_mouse(Scintilla *sci, int event, unsigned int time,
   if (event == SCM_PRESS)
     return sciterm->MousePress(button, time, y, x, shift, ctrl, alt);
   else if (event == SCM_DRAG)
-    return (sciterm->MouseMove(y, x), sciterm->HaveMouseCapture());
+    return sciterm->MouseMove(y, x, shift, ctrl, alt);
   else if (event == SCM_RELEASE)
     return (sciterm->MouseRelease(time, y, x, ctrl), true);
   return false;

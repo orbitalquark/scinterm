@@ -61,7 +61,7 @@ function scintilla_send_key(sci, key, shift, ctrl, alt) end
 --   is pressed.
 -- @param alt (`bool`) Flag indicating whether or not the alt modifier key is
 --   pressed.
--- @return `void`
+-- @return `bool` whether or not Scintilla handled the mouse event.
 function scintilla_send_mouse(sci, event, time, button, y, x, shift, ctrl, alt) end
 
 ---
