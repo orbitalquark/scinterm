@@ -297,20 +297,23 @@ public:
       // Line markers.
       wattr_set(win, 0, term_color_pair(fore, back), NULL);
       if (npts == 3 && pts[0].x == pts[1].x)
-        // SC_MARK_ARROW.
+        // SC_MARK_ARROW
         mvwaddstr(win, pts[0].y - 1, pts[0].x, "\342\226\272");
       else if (npts == 3 && pts[0].x != pts[1].x)
-        // SC_MARK_ARROWDOWN.
+        // SC_MARK_ARROWDOWN
         mvwaddstr(win, pts[0].y, pts[npts - 1].x, "\342\226\274");
       else if (npts == 12)
-        // SC_MARK_PLUS.
+        // SC_MARK_PLUS
         mvwaddch(win, pts[1].y + 1, pts[1].x + 1, '+');
       else if (npts == 4)
         // SC_MARK_MINUS
         mvwaddch(win, pts[1].y + 1, pts[1].x + 3, '-'); // add armSize
       else if (npts == 8)
-        // SC_MARK_SHORTARROW.
+        // SC_MARK_SHORTARROW
         mvwaddstr(win, pts[3].y, pts[3].x, "\342\206\222");
+      else if (npts == 5)
+        // SC_MARK_BOOKMARK
+        mvwaddstr(win, pts[0].y, pts[0].x, "\316\243");
     }
   }
   /**
