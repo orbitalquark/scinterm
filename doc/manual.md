@@ -47,7 +47,6 @@ capabilities:
   use these color values with Scintilla; unrecognized colors are set to white by
   default. For some terminals, you may need to set a lexer style's `bold`
   attribute in order to use the light color variant.
-* Scroll bars are not supported.
 * Some styles settings like font name, font size, and italic do not display
   properly (terminals use one only font, size and variant).
 * Viewing whitespace does not show the 'Tab' character arrows

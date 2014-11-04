@@ -826,6 +826,7 @@ class ScintillaTerm : public ScintillaBase {
   Surface *sur;
   int width, height;
   void (*callback)(Scintilla *, int, void *, void *);
+  int scrollBarHeight, scrollBarWidth;
   SelectionText clipboard;
   bool capturedMouse;
 
@@ -868,6 +869,7 @@ public:
       sur->Init(GetWINDOW());
     getmaxyx(GetWINDOW(), height, width);
 
+    scrollBarHeight = 1, scrollBarWidth = 1;
     capturedMouse = false;
 
     // Defaults for terminals.
@@ -875,8 +877,8 @@ public:
     view.bufferedDraw = false; // draw directly to the screen
     view.phasesDraw = EditView::phasesOne; // no need for two-phase drawing
     clickCloseThreshold = 0; // ignore double-clicks more than 1 character apart
-    horizontalScrollBarVisible = false; // no scroll bars
-    verticalScrollBarVisible = false; // no scroll bars
+    horizontalScrollBarVisible = false; // no horizontal scroll bar
+    scrollWidth = 2 * width; // reasonable default
     vs.selColours.fore = ColourDesired(0, 0, 0); // black on white selection
     vs.selColours.fore.isSet = true; // setting selection foreground above
     vs.caretcolour = ColourDesired(0xFF, 0xFF, 0xFF); // white caret
@@ -951,12 +953,48 @@ public:
     inDragDrop = ddNone;
     SetDragPosition(SelectionPosition(invalidPosition));
   }
-  /** Setting scroll positions is not implemented. */
-  virtual void SetVerticalScrollPos() {}
-  /** Setting scroll positions is not implemented. */
-  virtual void SetHorizontalScrollPos() {}
-  /** Modifying scrollbars is not implemented. */
-  virtual bool ModifyScrollBars(int nMax, int nPage) { return false; }
+  /** Draws the vertical scroll bar. */
+  virtual void SetVerticalScrollPos() {
+    if (!verticalScrollBarVisible) return;
+    WINDOW *w = GetWINDOW();
+    int maxy = getmaxy(w), maxx = getmaxx(w);
+    // Draw the gutter.
+    wattr_set(w, 0, term_color_pair(COLOR_WHITE, COLOR_BLACK), NULL);
+    for (int i = 0; i < maxy; i++) mvwaddch(w, i, maxx - 1, ACS_CKBOARD);
+    // Draw the bar.
+    int y = static_cast<float>(topLine) / pdoc->LinesTotal() * maxy;
+    wattr_set(w, 0, term_color_pair(COLOR_BLACK, COLOR_WHITE), NULL);
+    for (int i = y; i < y + scrollBarHeight; i++) mvwaddch(w, i, maxx - 1, ' ');
+  }
+  /** Draws the horizontal scroll bar. */
+  virtual void SetHorizontalScrollPos() {
+    if (!horizontalScrollBarVisible) return;
+    WINDOW *w = GetWINDOW();
+    int maxy = getmaxy(w), maxx = getmaxx(w);
+    // Draw the gutter.
+    wattr_set(w, 0, term_color_pair(COLOR_WHITE, COLOR_BLACK), NULL);
+    for (int i = 0; i < maxx; i++) mvwaddch(w, maxy - 1, i, ACS_CKBOARD);
+    // Draw the bar.
+    int x = static_cast<float>(xOffset) / scrollWidth * maxx;
+    wattr_set(w, 0, term_color_pair(COLOR_BLACK, COLOR_WHITE), NULL);
+    for (int i = x; i < x + scrollBarWidth; i++) mvwaddch(w, maxy - 1, i, ' ');
+  }
+  /**
+   * Sets the height of the vertical scroll bar and width of the horizontal
+   * scroll bar.
+   * The height is based on the given size of a page and the total number of
+   * pages. The width is based on the width of the view and the view's scroll
+   * width property.
+   */
+  virtual bool ModifyScrollBars(int nMax, int nPage) {
+    WINDOW *w = GetWINDOW();
+    int height = roundf(static_cast<float>(nPage) / nMax * getmaxy(w));
+    scrollBarHeight = Platform::Maximum(1, height);
+    int maxx = getmaxx(w);
+    int width = roundf(static_cast<float>(maxx) / scrollWidth * maxx);
+    scrollBarWidth = Platform::Maximum(1, width);
+    return true;
+  }
   /**
    * Copies the selected text to the internal clipboard.
    * The primary and secondary X selections are unaffected.
@@ -1074,6 +1112,7 @@ public:
     if (rcPaint.bottom != height || rcPaint.right != width)
       height = rcPaint.bottom, width = rcPaint.right, ChangeSize();
     Paint(sur, rcPaint);
+    SetVerticalScrollPos(), SetHorizontalScrollPos();
     wrefresh(w);
 #if PDCURSES
     touchwin(w); // pdcurses sometimes has problems drawing overlapping windows
@@ -1120,9 +1159,8 @@ public:
         // Note: ctrl + alt + drag creates rectangular selection.
         return (ButtonDown(Point(x, y), time, shift, ctrl, alt), true);
       else {
-        WINDOW *win = _WINDOW(ct.wCallTip.GetID());
-        int begy, begx;
-        getbegyx(win, begy, begx);
+        WINDOW *w = _WINDOW(ct.wCallTip.GetID());
+        int begy = getbegy(w), begx = getbegx(w);
         ct.MouseClick(Point(x - begx + 1, y - begy + 1));
         CallTipClick();
         return true;
@@ -1241,9 +1279,9 @@ bool scintilla_send_mouse(Scintilla *sci, int event, unsigned int time,
                           int button, int y, int x, bool shift, bool ctrl,
                           bool alt) {
   ScintillaTerm *sciterm = reinterpret_cast<ScintillaTerm *>(sci);
-  WINDOW *win = sciterm->GetWINDOW();
-  int begy = 0, begx = 0, maxy = getmaxy(win), maxx = getmaxx(win);
-  getbegyx(win, begy, begx);
+  WINDOW *w = sciterm->GetWINDOW();
+  int begy = getbegy(w), begx = getbegx(w);
+  int maxy = getmaxy(w), maxx = getmaxx(w);
   // Ignore most events outside the window.
   if ((x < begx || x > begx + maxx - 1 || y < begy || y > begy + maxy - 1) &&
       button != 4 && button != 5) return false;
