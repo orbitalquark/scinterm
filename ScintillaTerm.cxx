@@ -233,6 +233,7 @@ static int term_color(int color) { return color; }
  */
 class SurfaceImpl : public Surface {
   WINDOW *win;
+  PRectangle clip;
   bool isCallTip;
 public:
   /** Allocates a new Scintilla surface for the terminal. */
@@ -409,7 +410,8 @@ public:
     intptr_t attrs = reinterpret_cast<intptr_t>(font_.GetID());
     wattr_set(win, static_cast<attr_t>(attrs), term_color_pair(fore, back),
               NULL);
-    if (rc.left < 0) s += static_cast<int>(-rc.left), rc.left = 0;
+    if (rc.left < clip.left) // do not overwrite margin text
+      s += static_cast<int>(clip.left - rc.left), rc.left = clip.left;
     mvwaddnstr(win, rc.top, rc.left, s,
                Platform::Minimum(len, getmaxx(win) - rc.left));
   }
@@ -484,8 +486,15 @@ public:
   /** Returns 1 since terminal font characters always have a width of 1. */
   XYPOSITION AverageCharWidth(Font &font_) { return 1; }
 
-  /** Setting clips is not implemented. */
-  void SetClip(PRectangle rc) {}
+  /**
+   * Ensure text to be drawn is drawn within the given rectangle.
+   * This is needed in order to prevent long lines from overwriting margin text
+   * when scrolling to the right.
+   */
+  void SetClip(PRectangle rc) {
+    clip.left = rc.left, clip.top = rc.top;
+    clip.right = rc.right, clip.bottom = rc.bottom;
+  }
   /** Flushing cache is not implemented. */
   void FlushCachedState() {}
 

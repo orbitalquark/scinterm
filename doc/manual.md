@@ -32,7 +32,6 @@ capabilities:
   (`surface->LineTo()` and `surface->FillRectangle()` are not supported for
   drawing indicator shapes and pixmap surfaces are not supported). Translucent
   drawing and rounded corners are not supported either.
-* Margins are overwritten by long lines when scrolling to the right.
 * Most complex marker types are not drawn properly or at all (pixmap surfaces
   are not supported and `surface->LineTo()` is not supported for drawing some
   marker shapes).
