@@ -233,9 +233,10 @@ static int term_color(int color) { return color; }
  */
 class SurfaceImpl : public Surface {
   WINDOW *win;
+  bool isCallTip;
 public:
   /** Allocates a new Scintilla surface for the terminal. */
-  SurfaceImpl() : win(0) {}
+  SurfaceImpl() : win(0), isCallTip(false) {}
   /** Deletes the surface. */
   ~SurfaceImpl() { Release(); }
 
@@ -275,10 +276,52 @@ public:
   int DeviceHeightFont(int points) { return 1; }
   void MoveTo(int x_, int y_) {}
   void LineTo(int x_, int y_) {}
-  /** Drawing polygons is not implemented. */
-  void Polygon(Point *pts, int npts, ColourDesired fore, ColourDesired back) {}
-  /** Drawing rectangles in Scintilla's sense is not implemented. */
-  void RectangleDraw(PRectangle rc, ColourDesired fore, ColourDesired back) {}
+  /**
+   * Draws the character equivalent of the given polygon's points.
+   * Scintilla only calls this method for CallTip arrows and SC_MARK*ARROW*,
+   * SC_MARKPLUS, and SC_MARKMINUS line markers.
+   * By analyzing the number of points and the points themselves, the type of
+   * arrow can be deduced. This is very volatile though. Any changes in how
+   * Scintilla draws polygons will likely require this method to be updated.
+   */
+  void Polygon(Point *pts, int npts, ColourDesired fore, ColourDesired back) {
+    if (isCallTip) {
+      // CallTip arrows.
+      wattr_set(win, 0, term_color_pair(back, COLOR_WHITE), NULL); // invert
+      if (pts[0].y < pts[npts - 1].y)
+        mvwaddch(win, pts[0].y, pts[npts - 1].x + 1, ACS_UARROW);
+      else if (pts[0].y > pts[npts - 1].y)
+        mvwaddch(win, pts[0].y - 2, pts[npts - 1].x + 1, ACS_DARROW);
+    } else {
+      // Line markers.
+      wattr_set(win, 0, term_color_pair(fore, back), NULL);
+      if (npts == 3 && pts[0].x == pts[1].x)
+        // SC_MARK_ARROW.
+        mvwaddch(win, pts[0].y - 1, pts[0].x, ACS_RARROW);
+      else if (npts == 3 && pts[0].x != pts[1].x)
+        // SC_MARK_ARROWDOWN.
+        mvwaddch(win, pts[npts - 1].y + 1, pts[npts - 1].x, ACS_DARROW);
+      else if (npts == 12)
+        // SC_MARK_PLUS.
+        mvwaddch(win, pts[1].y + 1, pts[1].x + 1, '+');
+      else if (npts == 4)
+        // SC_MARK_MINUS
+        mvwaddch(win, pts[1].y + 1, pts[1].x + 3, '-'); // add armSize
+      else if (npts == 8)
+        // SC_MARK_SHORTARROW.
+        mvwaddch(win, pts[3].y, pts[3].x, ACS_RARROW);
+    }
+  }
+  /**
+   * Draw a small rectangle as a diamond symbol.
+   * Scintilla only calls this method for SC_MARK_SMALLRECT and SC_MARKBOX* line
+   * markers. Any changes in how Scintilla determines rectangle boundaries will
+   * require this method to be updated.
+   */
+  void RectangleDraw(PRectangle rc, ColourDesired fore, ColourDesired back) {
+    wattr_set(win, 0, term_color_pair(fore, back), NULL);
+    mvwaddch(win, rc.top - 3, rc.left - 1, ACS_DIAMOND);
+  }
   /**
    * Clears the given portion of the screen with the given background color.
    * In some cases, it can be determined that whitespace is being drawn. If so,
@@ -308,9 +351,17 @@ public:
   void FillRectangle(PRectangle rc, Surface &surfacePattern) {
     FillRectangle(rc, BLACK);
   }
-  /** Drawing rounded rectangles is not implemented. */
+  /**
+   * Draw a rounded rectangle as a normal rectangle.
+   * Scintilla only calls this method for SC_MARK_ROUNDRECT line markers. Any
+   * changes in how Scintilla determines rectangle boundaries will require this
+   * method to be updated.
+   */
   void RoundedRectangle(PRectangle rc, ColourDesired fore,
-                        ColourDesired back) {}
+                        ColourDesired back) {
+    rc.left--, rc.top--, rc.right++, rc.bottom++;
+    FillRectangle(rc, back);
+  }
   /**
    * Drawing alpha rectangles is not fully supported.
    * Instead, fill the background color with the fill color, emulating
@@ -328,8 +379,16 @@ public:
   /** Drawing images is not implemented. */
   void DrawRGBAImage(PRectangle rc, int width, int height,
                      const unsigned char *pixelsImage) {}
-  /** Drawing ellipses is not implemented. */
-  void Ellipse(PRectangle rc, ColourDesired fore, ColourDesired back) {}
+  /**
+   * Draw a circle as a degree sign.
+   * Scintilla only calls this method for SC_MARK_CIRCLE* line markers. Any
+   * changes in how Scintilla determines circle boundaries will require this
+   * method to be updated.
+   */
+  void Ellipse(PRectangle rc, ColourDesired fore, ColourDesired back) {
+    wattr_set(win, 0, term_color_pair(fore, back), NULL);
+    mvwaddch(win, rc.top - 1, rc.left - 1, ACS_DEGREE);
+  }
   /** Copying surfaces is not implemented. */
   void Copy(PRectangle rc, Point from, Surface &surfaceSource) {}
 
@@ -401,10 +460,15 @@ public:
     }
   }
   /**
-   * Returns the length of the string since terminal font characters always have
-   * a width of 1.
+   * Returns the number of characters in the given string since terminal font
+   * characters always have a width of 1.
    */
-  XYPOSITION WidthText(Font &font_, const char *s, int len) { return len; }
+  XYPOSITION WidthText(Font &font_, const char *s, int len) {
+    int width = 0;
+    for (int i = 0; i < len; i++)
+      if (!UTF8IsTrailByte((unsigned char)s[i])) width++;
+    return width;
+  }
   /** Returns 1 since terminal font characters always have a width of 1. */
   XYPOSITION WidthChar(Font &font_, char ch) { return 1; }
   /** Returns 0 since terminal font characters have no ascent. */
@@ -427,6 +491,9 @@ public:
 
   void SetUnicodeMode(bool unicodeMode_) {}
   void SetDBCSMode(int codePage) {}
+
+  /** Sets whether or not this surface is a CallTip. */
+  void setIsCallTip(bool callTip) { isCallTip = callTip; }
 };
 
 /** Creates a new terminal surface. */
@@ -820,19 +887,17 @@ public:
     vs.ms[1].width = 1; // marker margin width should be 1
     vs.ms[2].style = SC_MARGIN_TEXT; // markers are text-based, not pixmap-based
     vs.extraDescent = -1; // hack to make lineHeight 1 instead of 2
+    // Set default marker foreground and background colors.
+    for (int i = 0; i <= MARKER_MAX; i++) {
+      vs.markers[i].fore = ColourDesired(0xC0, 0xC0, 0xC0);
+      vs.markers[i].back = ColourDesired(0, 0, 0);
+      if (i >= 25) vs.markers[i].markType = SC_MARK_EMPTY;
+    }
     // Use '+' and '-' fold markers.
-    vs.markers[SC_MARKNUM_FOLDEROPEN].markType = SC_MARK_CHARACTER + '-';
-    vs.markers[SC_MARKNUM_FOLDEROPEN].fore = ColourDesired(0xC0, 0xC0, 0xC0);
-    vs.markers[SC_MARKNUM_FOLDEROPEN].back = ColourDesired(0, 0, 0);
-    vs.markers[SC_MARKNUM_FOLDER].markType = SC_MARK_CHARACTER + '+';
-    vs.markers[SC_MARKNUM_FOLDER].fore = ColourDesired(0xC0, 0xC0, 0xC0);
-    vs.markers[SC_MARKNUM_FOLDER].back = ColourDesired(0, 0, 0);
-    vs.markers[SC_MARKNUM_FOLDEROPENMID].markType = SC_MARK_CHARACTER + '-';
-    vs.markers[SC_MARKNUM_FOLDEROPENMID].fore = ColourDesired(0xC0, 0xC0, 0xC0);
-    vs.markers[SC_MARKNUM_FOLDEROPENMID].back = ColourDesired(0, 0, 0);
-    vs.markers[SC_MARKNUM_FOLDEREND].markType = SC_MARK_CHARACTER + '+';
-    vs.markers[SC_MARKNUM_FOLDEREND].fore = ColourDesired(0xC0, 0xC0, 0xC0);
-    vs.markers[SC_MARKNUM_FOLDEREND].back = ColourDesired(0, 0, 0);
+    vs.markers[SC_MARKNUM_FOLDEROPEN].markType = SC_MARK_MINUS;
+    vs.markers[SC_MARKNUM_FOLDER].markType = SC_MARK_PLUS;
+    vs.markers[SC_MARKNUM_FOLDEROPENMID].markType = SC_MARK_MINUS;
+    vs.markers[SC_MARKNUM_FOLDEREND].markType = SC_MARK_PLUS;
     displayPopupMenu = false; // no context menu
     vs.marginNumberPadding = 0; // no number margin padding
     vs.ctrlCharPadding = 0; // no ctrl character text blob padding
@@ -987,6 +1052,7 @@ public:
     Surface *sur = Surface::Allocate(SC_TECHNOLOGY_DEFAULT);
     if (sur) {
       sur->Init(wid);
+      static_cast<SurfaceImpl *>(sur)->setIsCallTip(true);
       ct.PaintCT(sur);
       wrefresh(_WINDOW(wid));
       sur->Release();
@@ -1049,10 +1115,19 @@ public:
    */
   bool MousePress(int button, int time, int y, int x, bool shift, bool ctrl,
                   bool alt) {
-    if (button == 1)
-      // Note: ctrl + alt + drag creates rectangular selection.
-      return (ButtonDown(Point(x, y), time, shift, ctrl, alt), true);
-    else if (button == 4 || button == 5) {
+    if (button == 1) {
+      if (!ct.inCallTipMode)
+        // Note: ctrl + alt + drag creates rectangular selection.
+        return (ButtonDown(Point(x, y), time, shift, ctrl, alt), true);
+      else {
+        WINDOW *win = _WINDOW(ct.wCallTip.GetID());
+        int begy, begx;
+        getbegyx(win, begy, begx);
+        ct.MouseClick(Point(x - begx + 1, y - begy + 1));
+        CallTipClick();
+        return true;
+      }
+    } else if (button == 4 || button == 5) {
       int lines = getmaxy(GetWINDOW()) / 4;
       if (lines < 1) lines = 1;
       if (button == 4) lines *= -1;

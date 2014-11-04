@@ -17,8 +17,6 @@ capabilities:
   Instead, they show the first character in the string passed to
   [`SCI_REGISTERIMAGE`][].
 * Buffered and two-phase drawing is not supported.
-* Call tip arrows are not displayed (`surface->Polygon()` is not supported for
-  drawing arrow shapes).
 * Caret settings like period, line style, and width are not supported
   (terminals use block carets with their own period definitions).
 * Code pages other than UTF-8 have not been tested and it is possible some
@@ -35,9 +33,9 @@ capabilities:
   drawing indicator shapes and pixmap surfaces are not supported). Translucent
   drawing and rounded corners are not supported either.
 * Margins are overwritten by long lines when scrolling to the right.
-* Marker types other than `SC_MARK_CHARACTER` are not drawn (pixmap surfaces are
-  not supported and `surface->LineTo()` is not supported for drawing marker
-  shapes).
+* Most complex marker types are not drawn properly or at all (pixmap surfaces
+  are not supported and `surface->LineTo()` is not supported for drawing some
+  marker shapes).
 * Mouse cursor types are not supported.
 * Up to 16 colors are supported, regardless of how many colors the terminal
   supports. They are: black (`0x000000`), red (`0x800000`), green (`0x008000`),
