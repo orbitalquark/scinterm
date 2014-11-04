@@ -289,18 +289,18 @@ public:
       // CallTip arrows.
       wattr_set(win, 0, term_color_pair(back, COLOR_WHITE), NULL); // invert
       if (pts[0].y < pts[npts - 1].y)
-        mvwaddch(win, pts[0].y, pts[npts - 1].x + 1, ACS_UARROW);
+        mvwaddstr(win, pts[0].y, pts[npts - 1].x + 1, "\342\226\262");
       else if (pts[0].y > pts[npts - 1].y)
-        mvwaddch(win, pts[0].y - 2, pts[npts - 1].x + 1, ACS_DARROW);
+        mvwaddstr(win, pts[0].y - 2, pts[npts - 1].x + 1, "\342\226\274");
     } else {
       // Line markers.
       wattr_set(win, 0, term_color_pair(fore, back), NULL);
       if (npts == 3 && pts[0].x == pts[1].x)
         // SC_MARK_ARROW.
-        mvwaddch(win, pts[0].y - 1, pts[0].x, ACS_RARROW);
+        mvwaddstr(win, pts[0].y - 1, pts[0].x, "\342\226\272");
       else if (npts == 3 && pts[0].x != pts[1].x)
         // SC_MARK_ARROWDOWN.
-        mvwaddch(win, pts[npts - 1].y + 1, pts[npts - 1].x, ACS_DARROW);
+        mvwaddstr(win, pts[0].y, pts[npts - 1].x, "\342\226\274");
       else if (npts == 12)
         // SC_MARK_PLUS.
         mvwaddch(win, pts[1].y + 1, pts[1].x + 1, '+');
@@ -309,18 +309,18 @@ public:
         mvwaddch(win, pts[1].y + 1, pts[1].x + 3, '-'); // add armSize
       else if (npts == 8)
         // SC_MARK_SHORTARROW.
-        mvwaddch(win, pts[3].y, pts[3].x, ACS_RARROW);
+        mvwaddstr(win, pts[3].y, pts[3].x, "\342\206\222");
     }
   }
   /**
-   * Draw a small rectangle as a diamond symbol.
+   * Draw a small rectangle.
    * Scintilla only calls this method for SC_MARK_SMALLRECT and SC_MARKBOX* line
    * markers. Any changes in how Scintilla determines rectangle boundaries will
    * require this method to be updated.
    */
   void RectangleDraw(PRectangle rc, ColourDesired fore, ColourDesired back) {
     wattr_set(win, 0, term_color_pair(fore, back), NULL);
-    mvwaddch(win, rc.top - 3, rc.left - 1, ACS_DIAMOND);
+    mvwaddstr(win, rc.top - 3, rc.left - 1, "\342\226\240");
   }
   /**
    * Clears the given portion of the screen with the given background color.
@@ -380,14 +380,14 @@ public:
   void DrawRGBAImage(PRectangle rc, int width, int height,
                      const unsigned char *pixelsImage) {}
   /**
-   * Draw a circle as a degree sign.
+   * Draw a circle.
    * Scintilla only calls this method for SC_MARK_CIRCLE* line markers. Any
    * changes in how Scintilla determines circle boundaries will require this
    * method to be updated.
    */
   void Ellipse(PRectangle rc, ColourDesired fore, ColourDesired back) {
     wattr_set(win, 0, term_color_pair(fore, back), NULL);
-    mvwaddch(win, rc.top - 1, rc.left - 1, ACS_DEGREE);
+    mvwaddstr(win, rc.top - 1, rc.left - 1, "\342\227\217");
   }
   /** Copying surfaces is not implemented. */
   void Copy(PRectangle rc, Point from, Surface &surfaceSource) {}
