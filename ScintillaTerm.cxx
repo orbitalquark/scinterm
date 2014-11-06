@@ -800,9 +800,12 @@ class ScintillaTerm : public ScintillaBase {
   Surface *sur; // window surface to draw on
   int width, height; // window dimensions
   void (*callback)(Scintilla *, int, void *, void *); // SCNotification callback
-  int scrollBarHeight, scrollBarWidth; // width of the scroll bars
+  int scrollBarVPos, scrollBarHPos; // positions of the scroll bars
+  int scrollBarHeight, scrollBarWidth; // height and width of the scroll bars
   SelectionText clipboard; // current clipboard text
   bool capturedMouse; // whether or not the mouse is currently captured
+  bool draggingVScrollBar, draggingHScrollBar; // a scrollbar is being dragged
+  int dragOffset; // the distance to the position of the scrollbar being dragged
 
   /**
    * Uses the given UTF-8 code point to fill the given UTF-8 byte sequence and
@@ -835,15 +838,14 @@ public:
    * The `WINDOW` is initially full-screen.
    * @param callback_ Callback function for Scintilla notifications.
    */
-  ScintillaTerm(void (*callback_)(Scintilla *, int, void *, void *)) {
+  ScintillaTerm(void (*callback_)(Scintilla *, int, void *, void *)) :
+               scrollBarHeight(1), scrollBarWidth(1) {
     wMain = newwin(0, 0, 0, 0);
     keypad(GetWINDOW(), TRUE);
     callback = callback_;
     if ((sur = Surface::Allocate(SC_TECHNOLOGY_DEFAULT)))
       sur->Init(GetWINDOW());
     getmaxyx(GetWINDOW(), height, width);
-    scrollBarHeight = 1, scrollBarWidth = 1;
-    capturedMouse = false;
 
     // Defaults for terminals.
     view.drawOverstrikeCaret = false; // always draw normal caret
@@ -852,7 +854,7 @@ public:
     mouseSelectionRectangularSwitch = true; // easier rectangular selection
     clickCloseThreshold = 0; // ignore double-clicks more than 1 character apart
     horizontalScrollBarVisible = false; // no horizontal scroll bar
-    scrollWidth = 2 * width; // reasonable default for any horizontal scroll bar
+    scrollWidth = 5 * width; // reasonable default for any horizontal scroll bar
     vs.selColours.fore = ColourDesired(0, 0, 0); // black on white selection
     vs.selColours.fore.isSet = true; // setting selection foreground above
     vs.caretcolour = ColourDesired(0xFF, 0xFF, 0xFF); // white caret
@@ -926,9 +928,11 @@ public:
     wattr_set(w, 0, term_color_pair(COLOR_WHITE, COLOR_BLACK), NULL);
     for (int i = 0; i < maxy; i++) mvwaddch(w, i, maxx - 1, ACS_CKBOARD);
     // Draw the bar.
-    int y = static_cast<float>(topLine) / pdoc->LinesTotal() * maxy;
+    scrollBarVPos = static_cast<float>(topLine) /
+                    (MaxScrollPos() + LinesOnScreen() - 1) * maxy;
     wattr_set(w, 0, term_color_pair(COLOR_BLACK, COLOR_WHITE), NULL);
-    for (int i = y; i < y + scrollBarHeight; i++) mvwaddch(w, i, maxx - 1, ' ');
+    for (int i = scrollBarVPos; i < scrollBarVPos + scrollBarHeight; i++)
+      mvwaddch(w, i, maxx - 1, ' ');
   }
   /** Draws the horizontal scroll bar. */
   virtual void SetHorizontalScrollPos() {
@@ -939,9 +943,10 @@ public:
     wattr_set(w, 0, term_color_pair(COLOR_WHITE, COLOR_BLACK), NULL);
     for (int i = 0; i < maxx; i++) mvwaddch(w, maxy - 1, i, ACS_CKBOARD);
     // Draw the bar.
-    int x = static_cast<float>(xOffset) / scrollWidth * maxx;
+    scrollBarHPos = static_cast<float>(xOffset) / scrollWidth * maxx;
     wattr_set(w, 0, term_color_pair(COLOR_BLACK, COLOR_WHITE), NULL);
-    for (int i = x; i < x + scrollBarWidth; i++) mvwaddch(w, maxy - 1, i, ' ');
+    for (int i = scrollBarHPos; i < scrollBarHPos + scrollBarWidth; i++)
+      mvwaddch(w, maxy - 1, i, ' ');
   }
   /**
    * Sets the height of the vertical scroll bar and width of the horizontal
@@ -952,11 +957,11 @@ public:
    */
   virtual bool ModifyScrollBars(int nMax, int nPage) {
     WINDOW *w = GetWINDOW();
-    int height = roundf(static_cast<float>(nPage) / nMax * getmaxy(w));
-    scrollBarHeight = Platform::Maximum(1, height);
-    int maxx = getmaxx(w);
+    int maxy = getmaxy(w), maxx = getmaxx(w);
+    int height = roundf(static_cast<float>(nPage) / nMax * maxy);
+    scrollBarHeight = Platform::Clamp(height, 1, maxy);
     int width = roundf(static_cast<float>(maxx) / scrollWidth * maxx);
-    scrollBarWidth = Platform::Maximum(1, width);
+    scrollBarWidth = Platform::Clamp(width, 1, maxx);
     return true;
   }
   /**
@@ -1114,13 +1119,26 @@ public:
         int begy = getbegy(w), begx = getbegx(w);
         ct.MouseClick(Point(x - begx + 1, y - begy + 1));
         return (CallTipClick(), true);
+      } else if (verticalScrollBarVisible && x == getmaxx(GetWINDOW()) - 1) {
+        if (y < scrollBarVPos)
+          return (ScrollTo(topLine - LinesOnScreen()), true);
+        else if (y >= scrollBarVPos + scrollBarHeight)
+          return (ScrollTo(topLine + LinesOnScreen()), true);
+        else
+          draggingVScrollBar = true, dragOffset = y - scrollBarVPos;
+      } else if (horizontalScrollBarVisible && y == getmaxy(GetWINDOW()) - 1) {
+        if (x < scrollBarHPos)
+          return (HorizontalScrollTo(xOffset - getmaxx(GetWINDOW()) / 2), true);
+        else if (x >= scrollBarHPos + scrollBarWidth)
+          return (HorizontalScrollTo(xOffset + getmaxx(GetWINDOW()) / 2), true);
+        else
+          draggingHScrollBar = true, dragOffset = x - scrollBarHPos;
       } else return (ButtonDown(Point(x, y), time, shift, ctrl, alt), true);
-      // TODO: scrollbar interaction
     } else if (button == 4 || button == 5) {
       int lines = getmaxy(GetWINDOW()) / 4;
       if (lines < 1) lines = 1;
       if (button == 4) lines *= -1;
-      return (WndProc(SCI_LINESCROLL, 0, lines), true);
+      return (ScrollTo(topLine + lines), true);
     }
     return false;
   }
@@ -1137,9 +1155,20 @@ public:
    * @return whether or not Scintilla handled the mouse event
    */
   bool MouseMove(int y, int x, bool shift, bool ctrl, bool alt) {
-    int modifiers = (shift ? SCI_SHIFT : 0) | (ctrl ? SCI_CTRL : 0) |
-                    (alt ? SCI_ALT : 0);
-    ButtonMoveWithModifiers(Point(x, y), modifiers);
+    if (!draggingVScrollBar && !draggingHScrollBar) {
+      int modifiers = (shift ? SCI_SHIFT : 0) | (ctrl ? SCI_CTRL : 0) |
+                      (alt ? SCI_ALT : 0);
+      ButtonMoveWithModifiers(Point(x, y), modifiers);
+    } else if (draggingVScrollBar) {
+      int maxy = getmaxy(GetWINDOW()) - scrollBarHeight, pos = y - dragOffset;
+      if (pos >= 0 && pos <= maxy) ScrollTo(pos * MaxScrollPos() / maxy);
+      return true;
+    } else if (draggingHScrollBar) {
+      int maxx = getmaxx(GetWINDOW()) - scrollBarWidth, pos = x - dragOffset;
+      if (pos >= 0 && pos <= maxx)
+        HorizontalScrollTo(pos * (scrollWidth - maxx - scrollBarWidth) / maxx);
+      return true;
+    }
     return HaveMouseCapture();
   }
   /**
@@ -1150,7 +1179,10 @@ public:
    *   pressed.
    */
   void MouseRelease(int time, int y, int x, int ctrl) {
-    if (HaveMouseCapture()) ButtonUp(Point(x, y), time, ctrl);
+    if (draggingVScrollBar || draggingHScrollBar)
+      draggingVScrollBar = false, draggingHScrollBar = false;
+    else if (HaveMouseCapture())
+      ButtonUp(Point(x, y), time, ctrl);
   }
   /**
    * Copies the text of the internal clipboard, not the primary and/or secondary
