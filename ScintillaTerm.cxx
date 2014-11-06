@@ -593,7 +593,7 @@ PRectangle Window::GetMonitorRect(Point pt) { return GetPosition(); }
 class ListBoxImpl : public ListBox {
   int height, width;
   std::vector<std::string> list;
-  char types[10]; // 0-9
+  char types[SCI_TYPEMAX];
   int selection;
 public:
 	CallBackAction doubleClickAction;
@@ -650,7 +650,7 @@ public:
    * Prepends the item's type character (if any) to the list item for display.
    */
   virtual void Append(char *s, int type = -1) {
-    char chtype = (type >= 0 && type <= 9) ? types[type] : ' ';
+    char chtype = (type >= 0 && type < SCI_TYPEMAX) ? types[type] : ' ';
     list.push_back(std::string(&chtype, 1) + std::string(s));
     int len = strlen(s);
     if (width < len) {
@@ -711,14 +711,14 @@ public:
    * @usage SCI_REGISTERIMAGE(2, "+") // type 2 shows '+' in front of list item.
    */
   virtual void RegisterImage(int type, const char *xpm_data) {
-    if (type >= 0 && type <= 9) types[type] = xpm_data[0]; // TODO: type > 9?
+    if (type >= 0 && type < SCI_TYPEMAX) types[type] = xpm_data[0];
   }
   /** Registering images is not implemented. */
   virtual void RegisterRGBAImage(int type, int width, int height,
                                  const unsigned char *pixelsImage) {}
   /** Clears all registered types back to ' ' (space). */
   virtual void ClearRegisteredImages() {
-    for (int i = 0; i < 10; i++) types[i] = ' ';
+    for (int i = 0; i < SCI_TYPEMAX; i++) types[i] = ' ';
   }
   /** Enable double-click to select a list item. */
   virtual void SetDoubleClickAction(CallBackAction action, void *data) {
