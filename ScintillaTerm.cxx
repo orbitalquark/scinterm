@@ -596,8 +596,12 @@ class ListBoxImpl : public ListBox {
   char types[10]; // 0-9
   int selection;
 public:
+	CallBackAction doubleClickAction;
+	void *doubleClickActionData;
+
   /** Allocates a new Scintilla ListBox for the terminal. */
-  ListBoxImpl() : height(5), width(10), selection(0) {
+  ListBoxImpl() : height(5), width(10), selection(0), doubleClickAction(NULL),
+                  doubleClickActionData(NULL) {
     list.reserve(10);
     ClearRegisteredImages();
   }
@@ -716,8 +720,10 @@ public:
   virtual void ClearRegisteredImages() {
     for (int i = 0; i < 10; i++) types[i] = ' ';
   }
-  /** TODO: Double-clicking is not implemented. */
-  virtual void SetDoubleClickAction(CallBackAction action, void *data) {}
+  /** Enable double-click to select a list item. */
+  virtual void SetDoubleClickAction(CallBackAction action, void *data) {
+    doubleClickAction = action, doubleClickActionData = data;
+  }
   /** Sets the list items in the listbox to the given items. */
   virtual void SetList(const char *listText, char separator, char typesep) {
     Clear();
@@ -804,6 +810,7 @@ class ScintillaTerm : public ScintillaBase {
   int scrollBarHeight, scrollBarWidth; // height and width of the scroll bars
   SelectionText clipboard; // current clipboard text
   bool capturedMouse; // whether or not the mouse is currently captured
+  unsigned int autoCompleteLastClickTime; // last click time in the AC box
   bool draggingVScrollBar, draggingHScrollBar; // a scrollbar is being dragged
   int dragOffset; // the distance to the position of the scrollbar being dragged
 
@@ -1048,7 +1055,7 @@ public:
     Surface *sur = Surface::Allocate(SC_TECHNOLOGY_DEFAULT);
     if (sur) {
       sur->Init(wid);
-      static_cast<SurfaceImpl *>(sur)->setIsCallTip(true);
+      reinterpret_cast<SurfaceImpl *>(sur)->setIsCallTip(true);
       ct.PaintCT(sur);
       wrefresh(_WINDOW(wid));
       sur->Release();
@@ -1100,7 +1107,7 @@ public:
     KeyDown(key, shift, ctrl, alt, NULL);
   }
   /**
-   * Sends a mouse button press to Scintilla.
+   * Handles a mouse button press.
    * @param button The button number pressed, or `0` if none.
    * @param y The y coordinate of the mouse event relative to this window.
    * @param x The x coordinate of the mouse event relative to this window.
@@ -1109,17 +1116,63 @@ public:
    * @param ctrl Flag indicating whether or not the control modifier key is
    *   pressed.
    * @param alt Flag indicating whether or not the alt modifier key is pressed.
-   * @return whether or not Scintilla handled the mouse event
+   * @return whether or not the mouse event was handled
    */
-  bool MousePress(int button, int time, int y, int x, bool shift, bool ctrl,
-                  bool alt) {
-    if (button == 1) {
-      if (ct.inCallTipMode) {
-        WINDOW *w = _WINDOW(ct.wCallTip.GetID());
-        int begy = getbegy(w), begx = getbegx(w);
-        ct.MouseClick(Point(x - begx + 1, y - begy + 1));
+  bool MousePress(int button, unsigned int time, int y, int x, bool shift,
+                  bool ctrl, bool alt) {
+    if (ac.Active() && (button == 1 || button == 4 || button == 5)) {
+      // Select an autocompletion list item if possible or scroll the list.
+      WINDOW *w = _WINDOW(ac.lb->GetID()), *parent = GetWINDOW();
+      int begy = getbegy(w) - getbegy(parent); // y is relative to the view
+      int begx = getbegx(w) - getbegx(parent); // x is relative to the view
+      int maxy = getmaxy(w) - 1, maxx = getmaxx(w) - 1; // ignore border
+      int ry = y - begy, rx = x - begx; // relative to list box
+      if (ry > 0 && ry < maxy && rx > 0 && rx < maxx) {
+        if (button == 1) {
+          // Select a list item.
+          // The currently selected item is normally displayed in the middle.
+          int middle = ac.lb->GetVisibleRows() / 2;
+          int n = ac.lb->GetSelection(), ny = middle;
+          if (n < middle)
+            ny = n; // the currently selected item is near the beginning
+          else if (n >= ac.lb->Length() - middle)
+            ny = (n - 1) % ac.lb->GetVisibleRows(); // it's near the end
+          // Compute the index of the item to select.
+          int offset = ry - ny - 1; // -1 ignores list box border
+          if (offset == 0 &&
+              time - autoCompleteLastClickTime < Platform::DoubleClickTime()) {
+            ListBoxImpl* listbox = reinterpret_cast<ListBoxImpl *>(ac.lb);
+            if (listbox->doubleClickAction != NULL)
+              listbox->doubleClickAction(listbox->doubleClickActionData);
+          } else ac.lb->Select(n + offset);
+          autoCompleteLastClickTime = time;
+        } else {
+          // Scroll the list.
+          int n = ac.lb->GetSelection();
+          if (button == 4 && n > 0)
+            ac.lb->Select(n - 1);
+          else if (button == 5 && n < ac.lb->Length() - 1)
+            ac.lb->Select(n + 1);
+        }
+        return true;
+      } else if (ry == 0 || ry == maxy || rx == 0 || rx == maxx)
+        return true; // ignore border click
+    } else if (ct.inCallTipMode && button == 1) {
+      // Send the click to the CallTip.
+      WINDOW *w = _WINDOW(ct.wCallTip.GetID()), *parent = GetWINDOW();
+      int begy = getbegy(w) - getbegy(parent); // y is relative to the view
+      int begx = getbegx(w) - getbegx(parent); // x is relative to the view
+      int maxy = getmaxy(w) - 1, maxx = getmaxx(w) - 1; // ignore border
+      int ry = y - begy, rx = x - begx; // relative to list box
+      if (ry >= 0 && ry <= maxy && rx >= 0 && rx <= maxx) {
+        ct.MouseClick(Point(rx, ry));
         return (CallTipClick(), true);
-      } else if (verticalScrollBarVisible && x == getmaxx(GetWINDOW()) - 1) {
+      }
+    }
+
+    if (button == 1) {
+      if (verticalScrollBarVisible && x == getmaxx(GetWINDOW()) - 1) {
+        // Scroll the vertical scrollbar.
         if (y < scrollBarVPos)
           return (ScrollTo(topLine - LinesOnScreen()), true);
         else if (y >= scrollBarVPos + scrollBarHeight)
@@ -1127,14 +1180,18 @@ public:
         else
           draggingVScrollBar = true, dragOffset = y - scrollBarVPos;
       } else if (horizontalScrollBarVisible && y == getmaxy(GetWINDOW()) - 1) {
+        // Scroll the horizontal scroll bar.
         if (x < scrollBarHPos)
           return (HorizontalScrollTo(xOffset - getmaxx(GetWINDOW()) / 2), true);
         else if (x >= scrollBarHPos + scrollBarWidth)
           return (HorizontalScrollTo(xOffset + getmaxx(GetWINDOW()) / 2), true);
         else
           draggingHScrollBar = true, dragOffset = x - scrollBarHPos;
-      } else return (ButtonDown(Point(x, y), time, shift, ctrl, alt), true);
+      } else
+        // Have Scintilla handle the click.
+        return (ButtonDown(Point(x, y), time, shift, ctrl, alt), true);
     } else if (button == 4 || button == 5) {
+      // Scroll the view.
       int lines = getmaxy(GetWINDOW()) / 4;
       if (lines < 1) lines = 1;
       if (button == 4) lines *= -1;
