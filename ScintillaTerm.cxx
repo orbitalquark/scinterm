@@ -1254,67 +1254,24 @@ public:
   }
 };
 
-// Link with C.
+// Link with C. Documentation in Scintilla.h.
 extern "C" {
-/**
- * Creates a new Scintilla window.
- * @param callback A callback function for Scintilla notifications.
- */
 Scintilla *scintilla_new(void (*callback)(Scintilla *, int, void *, void *)) {
   init_colors();
   return reinterpret_cast<Scintilla *>(new ScintillaTerm(callback));
 }
-/**
- * Returns the curses `WINDOW` associated with the given Scintilla window.
- * @param sci The Scintilla window returned by `scintilla_new()`.
- * @return curses `WINDOW`.
- */
 WINDOW *scintilla_get_window(Scintilla *sci) {
   return reinterpret_cast<ScintillaTerm *>(sci)->GetWINDOW();
 }
-/**
- * Sends the given message with parameters to the given Scintilla window.
- * @param sci The Scintilla window returned by `scintilla_new()`.
- * @param iMessage The message ID.
- * @param wParam The first parameter.
- * @param lParam The second parameter.
- */
 sptr_t scintilla_send_message(Scintilla *sci, unsigned int iMessage,
                               uptr_t wParam, sptr_t lParam) {
   return reinterpret_cast<ScintillaTerm *>(sci)->WndProc(iMessage, wParam,
                                                          lParam);
 }
-/**
- * Sends the specified key to the given Scintilla window for processing.
- * If it is not consumed, an SCNotification will be emitted.
- * @param sci The Scintilla window returned by `scintilla_new()`.
- * @param key The keycode of the key.
- * @param shift Flag indicating whether or not the shift modifier key is
- *   pressed.
- * @param ctrl Flag indicating whether or not the control modifier key is
- *   pressed.
- * @param alt Flag indicating whether or not the alt modifier key is pressed.
- */
 void scintilla_send_key(Scintilla *sci, int key, bool shift, bool ctrl,
                         bool alt) {
   reinterpret_cast<ScintillaTerm *>(sci)->KeyPress(key, shift, ctrl, alt);
 }
-/**
- * Sends the specified mouse event to the given Scintilla window for processing.
- * @param sci The Scintilla window returned by `scintilla_new()`.
- * @param event The mouse event (`SCM_CLICK`, `SCM_DRAG`, or `SCM_RELEASE`).
- * @param time The time in milliseconds of the mouse event. This is only needed
- *   if double and triple clicks need to be detected.
- * @param button The button number pressed, or `0` if none.
- * @param y The absolute y coordinate of the mouse event.
- * @param x The absolute x coordinate of the mouse event.
- * @param shift Flag indicating whether or not the shift modifier key is
- *   pressed.
- * @param ctrl Flag indicating whether or not the control modifier key is
- *   pressed.
- * @param alt Flag indicating whether or not the alt modifier key is pressed.
- * @return whether or not Scintilla handled the mouse event
- */
 bool scintilla_send_mouse(Scintilla *sci, int event, unsigned int time,
                           int button, int y, int x, bool shift, bool ctrl,
                           bool alt) {
@@ -1334,34 +1291,12 @@ bool scintilla_send_mouse(Scintilla *sci, int event, unsigned int time,
     return (sciterm->MouseRelease(time, y, x, ctrl), true);
   return false;
 }
-/**
- * Copies the text of Scintilla's internal clipboard, not the primary and/or
- * secondary X selections, into the given buffer and returns the size of the
- * clipboard text.
- * Call with a `null` buffer first to get the size of the buffer needed to store
- * clipboard text.
- * Keep in mind clipboard text may contain null bytes.
- * @param sci The Scintilla window returned by `scintilla_new()`.
- * @param buffer The buffer to copy clipboard text to.
- * @return size of the clipboard text.
- */
 int scintilla_get_clipboard(Scintilla *sci, char *buffer) {
   return reinterpret_cast<ScintillaTerm *>(sci)->GetClipboard(buffer);
 }
-/**
- * Refreshes the Scintilla window.
- * This should be done along with the normal curses `refresh()`.
- * @param sci The Scintilla window returned by `scintilla_new()`.
- */
 void scintilla_refresh(Scintilla *sci) {
   reinterpret_cast<ScintillaTerm *>(sci)->Refresh();
 }
-/**
- * Deletes the given Scintilla window.
- * This function does not delete the curses `WINDOW` associated with it. You
- * will have to delete the `WINDOW` manually.
- * @param sci The Scintilla window returned by `scintilla_new()`.
- */
 void scintilla_delete(Scintilla *sci) {
   delete reinterpret_cast<ScintillaTerm *>(sci);
 }
