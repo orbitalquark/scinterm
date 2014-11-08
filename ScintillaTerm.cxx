@@ -507,12 +507,25 @@ public:
   /** Setting DBCS mode is not implemented. UTF-8 is used. */
   void SetDBCSMode(int codePage) {}
 
+  /** Draws the text representation of a tab arrow. */
+  void DrawTabArrow(PRectangle rcTab, int ymid) {
+    // TODO: set color to vs.whitespaceColours.fore and back.
+    wcolor_set(win, term_color_pair(COLOR_BLACK, COLOR_BLACK), NULL);
+    for (int i = rcTab.left - 1; i < rcTab.right; i++)
+      mvwaddch(win, rcTab.bottom - 1, i, '-' | A_BOLD);
+    mvwaddch(win, rcTab.bottom - 1, rcTab.right, '>' | A_BOLD);
+  }
   /** Sets whether or not this surface is a CallTip. */
   void setIsCallTip(bool callTip) { isCallTip = callTip; }
 };
 
 /** Creates a new terminal surface. */
 Surface *Surface::Allocate(int) { return new SurfaceImpl(); }
+
+/** Custom function for drawing tab arrows in the terminal. */
+static void DrawTabArrow(Surface *surface, PRectangle rcTab, int ymid) {
+  reinterpret_cast<SurfaceImpl *>(surface)->DrawTabArrow(rcTab, ymid);
+}
 
 // Window handling.
 
@@ -858,6 +871,7 @@ public:
     view.drawOverstrikeCaret = false; // always draw normal caret
     view.bufferedDraw = false; // draw directly to the screen
     view.phasesDraw = EditView::phasesOne; // no need for two-phase drawing
+    view.customDrawTabArrow = DrawTabArrow; // draw text arrows for tabs
     mouseSelectionRectangularSwitch = true; // easier rectangular selection
     clickCloseThreshold = 0; // ignore double-clicks more than 1 character apart
     horizontalScrollBarVisible = false; // no horizontal scroll bar

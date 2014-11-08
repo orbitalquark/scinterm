@@ -48,8 +48,6 @@ capabilities:
   attribute in order to use the light color variant.
 * Some styles settings like font name, font size, and italic do not display
   properly (terminals use one only font, size and variant).
-* Viewing whitespace does not show the 'Tab' character arrows
-  (`surface->LineTo()` is not supported for drawing arrows).
 * Visual wrap flags are not supported (`surface->LineTo()` is not supported).
 * X selections (primary and secondary) are not integrated into the clipboard.
 * Zoom is not supported (terminal font size is fixed).
