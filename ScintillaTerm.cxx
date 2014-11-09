@@ -507,13 +507,20 @@ public:
   /** Setting DBCS mode is not implemented. UTF-8 is used. */
   void SetDBCSMode(int codePage) {}
 
+  /** Draws the text representation of a wrap marker. */
+  void DrawWrapMarker(PRectangle rcPlace, bool isEndMarker,
+                      ColourDesired wrapColour) {
+    wattr_set(win, 0, term_color_pair(wrapColour, COLOR_BLACK), NULL);
+    mvwaddstr(win, rcPlace.top, rcPlace.left,
+              isEndMarker ? "\342\206\251" : "\342\206\252"); // ↩ or ↪
+  }
   /** Draws the text representation of a tab arrow. */
   void DrawTabArrow(PRectangle rcTab, int ymid) {
     // TODO: set color to vs.whitespaceColours.fore and back.
-    wcolor_set(win, term_color_pair(COLOR_BLACK, COLOR_BLACK), NULL);
+    wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), NULL);
     for (int i = rcTab.left - 1; i < rcTab.right; i++)
-      mvwaddch(win, rcTab.bottom - 1, i, '-' | A_BOLD);
-    mvwaddch(win, rcTab.bottom - 1, rcTab.right, '>' | A_BOLD);
+      mvwaddch(win, rcTab.top, i, '-' | A_BOLD);
+    mvwaddch(win, rcTab.top, rcTab.right, '>' | A_BOLD);
   }
   /** Sets whether or not this surface is a CallTip. */
   void setIsCallTip(bool callTip) { isCallTip = callTip; }
@@ -522,6 +529,12 @@ public:
 /** Creates a new terminal surface. */
 Surface *Surface::Allocate(int) { return new SurfaceImpl(); }
 
+/** Custom function for drawing wrap markers in the terminal. */
+static void DrawWrapVisualMarker(Surface *surface, PRectangle rcPlace,
+                                 bool isEndMarker, ColourDesired wrapColour) {
+  reinterpret_cast<SurfaceImpl *>(surface)->DrawWrapMarker(rcPlace, isEndMarker,
+                                                           wrapColour);
+}
 /** Custom function for drawing tab arrows in the terminal. */
 static void DrawTabArrow(Surface *surface, PRectangle rcTab, int ymid) {
   reinterpret_cast<SurfaceImpl *>(surface)->DrawTabArrow(rcTab, ymid);
@@ -868,10 +881,14 @@ public:
     getmaxyx(GetWINDOW(), height, width);
 
     // Defaults for terminals.
+    marginView.wrapMarkerPaddingRight = 0; // no padding for margin wrap markers
+    marginView.customDrawWrapMarker = DrawWrapVisualMarker; // draw text markers
     view.drawOverstrikeCaret = false; // always draw normal caret
     view.bufferedDraw = false; // draw directly to the screen
     view.phasesDraw = EditView::phasesOne; // no need for two-phase drawing
+    view.tabArrowPaddingTop = 0; // no padding for tab arrows
     view.customDrawTabArrow = DrawTabArrow; // draw text arrows for tabs
+    view.customDrawWrapMarker = DrawWrapVisualMarker; // draw text wrap markers
     mouseSelectionRectangularSwitch = true; // easier rectangular selection
     clickCloseThreshold = 0; // ignore double-clicks more than 1 character apart
     horizontalScrollBarVisible = false; // no horizontal scroll bar
