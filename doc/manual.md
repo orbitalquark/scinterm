@@ -24,7 +24,6 @@ capabilities:
 * Drag and drop is not supported.
 * Edge lines are not displayed properly (the line is drawn over by text lines).
 * Extra ascent and descent for lines is not supported.
-* Fold lines are not supported (`surface->LineTo()` is not supported).
 * Hotspot underlines are not drawn on mouse hover (`surface->FillRectangle()` is
   not supported).
 * Indentation guides are not visible (pixmap surfaces are not supported).
@@ -32,7 +31,7 @@ capabilities:
   (`surface->LineTo()` and `surface->FillRectangle()` are not supported for
   drawing indicator shapes and pixmap surfaces are not supported). Translucent
   drawing and rounded corners are not supported either.
-* Most complex marker types are not drawn properly or at all (pixmap surfaces
+* Some complex marker types are not drawn properly or at all (pixmap surfaces
   are not supported and `surface->LineTo()` is not supported for drawing some
   marker shapes).
 * Mouse cursor types are not supported.

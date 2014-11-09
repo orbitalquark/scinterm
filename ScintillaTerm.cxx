@@ -235,10 +235,9 @@ static int term_color(int color) { return color; }
 class SurfaceImpl : public Surface {
   WINDOW *win;
   PRectangle clip;
-  bool isCallTip;
 public:
   /** Allocates a new Scintilla surface for the terminal. */
-  SurfaceImpl() : win(0), isCallTip(false) {}
+  SurfaceImpl() : win(0) {}
   /** Deletes the surface. */
   ~SurfaceImpl() { Release(); }
 
@@ -291,49 +290,23 @@ public:
   /**
    * Draws the character equivalent of shape outlined by the given polygon's
    * points.
-   * Scintilla only calls this method for CallTip arrows and `SC_MARK*ARROW*`,
-   * `SC_MARKPLUS`, `SC_MARKMINUS`, and `SC_MARKBOOKMARK` line markers.
-   * By analyzing the number of points and the points themselves, the type of
-   * shape and orientation (if applicable) can be deduced. This method is very
-   * volatile though. Any changes in how Scintilla draws polygons will likely
-   * require this algorithm to be updated.
+   * Scintilla only calls this method for CallTip arrows.
+   * Line markers that Scintilla would normally draw as polygons are handled in
+   * `DrawLineMarker()`.
    */
   void Polygon(Point *pts, int npts, ColourDesired fore, ColourDesired back) {
-    if (isCallTip) {
-      // Draw a CallTip arrow.
-      wattr_set(win, 0, term_color_pair(back, COLOR_WHITE), NULL); // invert
-      if (pts[0].y < pts[npts - 1].y) // up arrow
-        mvwaddstr(win, pts[0].y, pts[npts - 1].x + 1, "\342\226\262"); // ▲
-      else if (pts[0].y > pts[npts - 1].y) // down arrow
-        mvwaddstr(win, pts[0].y - 2, pts[npts - 1].x + 1, "\342\226\274"); // ▼
-    } else {
-      // Draw a line marker symbol.
-      wattr_set(win, 0, term_color_pair(fore, back), NULL);
-      if (npts == 3 && pts[0].x == pts[1].x) // SC_MARK_ARROW
-        mvwaddstr(win, pts[0].y - 1, pts[0].x, "\342\226\272"); // ▲
-      else if (npts == 3 && pts[0].x != pts[1].x) // SC_MARK_ARROWDOWN
-        mvwaddstr(win, pts[0].y, pts[npts - 1].x, "\342\226\274"); // ▼
-      else if (npts == 12) // SC_MARK_PLUS
-        mvwaddch(win, pts[1].y + 1, pts[1].x + 1, '+');
-      else if (npts == 4) // SC_MARK_MINUS
-        mvwaddch(win, pts[1].y + 1, pts[1].x + 3, '-'); // add armSize
-      else if (npts == 8) // SC_MARK_SHORTARROW
-        mvwaddstr(win, pts[3].y, pts[3].x, "\342\206\222"); // →
-      else if (npts == 5) // SC_MARK_BOOKMARK
-        mvwaddstr(win, pts[0].y, pts[0].x, "\316\243"); // Σ
-    }
+    wattr_set(win, 0, term_color_pair(back, COLOR_WHITE), NULL); // invert
+    if (pts[0].y < pts[npts - 1].y) // up arrow
+      mvwaddstr(win, pts[0].y, pts[npts - 1].x + 1, "▲");
+    else if (pts[0].y > pts[npts - 1].y) // down arrow
+      mvwaddstr(win, pts[0].y - 2, pts[npts - 1].x + 1, "▼");
   }
   /**
-   * Draws a small rectangle.
-   * Scintilla only calls this method for `SC_MARKSMALLRECT` and `SC_MARKBOX*`
-   * line markers. However, only `SC_MARKSMALLRECT` is drawn properly. Any
-   * changes in how Scintilla determines rectangle boundaries will require this
-   * method to be updated.
+   * Scintilla never calls this method.
+   * Line markers that Scintilla would normally draw as rectangles are handled
+   * in `DrawLineMarker()`.
    */
-  void RectangleDraw(PRectangle rc, ColourDesired fore, ColourDesired back) {
-    wattr_set(win, 0, term_color_pair(fore, back), NULL);
-    mvwaddstr(win, rc.top - 3, rc.left - 1, "\342\226\240"); // ■
-  }
+  void RectangleDraw(PRectangle rc, ColourDesired fore, ColourDesired back) {}
   /**
    * Clears the given portion of the screen with the given background color.
    * In some cases, it can be determined that whitespace is being drawn. If so,
@@ -361,16 +334,12 @@ public:
     FillRectangle(rc, BLACK);
   }
   /**
-   * Draws a rounded rectangle as a normal rectangle.
-   * Scintilla only calls this method for `SC_MARK_ROUNDRECT` line markers. Any
-   * changes in how Scintilla determines rectangle boundaries will require this
-   * method to be updated.
+   * Scintilla never calls this method.
+   * Line markers that Scintilla would normally draw as rounded rectangles are
+   * handled in `DrawLineMarker()`.
    */
   void RoundedRectangle(PRectangle rc, ColourDesired fore,
-                        ColourDesired back) {
-    rc.left--, rc.top--, rc.right++, rc.bottom++; // re-adjust boundaries
-    FillRectangle(rc, back);
-  }
+                        ColourDesired back) {}
   /**
    * Drawing alpha rectangles is not fully supported.
    * Instead, fills the background color of the given rectangle with the fill
@@ -391,16 +360,11 @@ public:
   void DrawRGBAImage(PRectangle rc, int width, int height,
                      const unsigned char *pixelsImage) {}
   /**
-   * Draws a circle.
-   * Scintilla only calls this method for `SC_MARK_CIRCLE*` line markers.
-   * However, only `SC_MARKCIRCLE` is drawn properly. Any changes in how
-   * Scintilla determines circle boundaries will require this method to be
-   * updated.
+   * Scintilla never calls this method.
+   * Line markers that Scintilla would normally draw as circles are handled in
+   * `DrawLineMarker()`.
    */
-  void Ellipse(PRectangle rc, ColourDesired fore, ColourDesired back) {
-    wattr_set(win, 0, term_color_pair(fore, back), NULL);
-    mvwaddstr(win, rc.top - 1, rc.left - 1, "\342\227\217"); // ●
-  }
+  void Ellipse(PRectangle rc, ColourDesired fore, ColourDesired back) {}
   /** Copying surfaces is not implemented. */
   void Copy(PRectangle rc, Point from, Surface &surfaceSource) {}
 
@@ -434,8 +398,6 @@ public:
                        ColourDesired back) {
     if (rc.left >= rc.right) // when drawing text blobs
       rc.left -= 2, rc.right -= 2, rc.top -= 1, rc.bottom -= 1;
-    else if (rc.top > rc.bottom) // when drawing SC_MARKCHARACTER line marker
-      rc.top -= 1, rc.bottom += 1;
     DrawTextNoClip(rc, font_, ybase, s, len, fore, back);
   }
   /**
@@ -507,28 +469,112 @@ public:
   /** Setting DBCS mode is not implemented. UTF-8 is used. */
   void SetDBCSMode(int codePage) {}
 
+  /** Draws the text representation of a line marker, if possible. */
+  void DrawLineMarker(PRectangle &rcWhole, Font &fontForCharacter, int tFold,
+                      const void *data) {
+    // TODO: handle fold marker highlighting.
+    const LineMarker *marker = reinterpret_cast<const LineMarker *>(data);
+    wattr_set(win, 0, term_color_pair(marker->fore, marker->back), NULL);
+    switch (marker->markType) {
+    case SC_MARK_CIRCLE:
+      mvwaddstr(win, rcWhole.top, rcWhole.left, "●");
+      return;
+    case SC_MARK_SMALLRECT:
+    case SC_MARK_ROUNDRECT:
+      mvwaddstr(win, rcWhole.top, rcWhole.left, "■");
+      return;
+    case SC_MARK_ARROW:
+      mvwaddstr(win, rcWhole.top, rcWhole.left, "►");
+      return;
+    case SC_MARK_SHORTARROW:
+      mvwaddstr(win, rcWhole.top, rcWhole.left, "→");
+      return;
+    case SC_MARK_ARROWDOWN:
+      mvwaddstr(win, rcWhole.top, rcWhole.left, "▼");
+      return;
+    case SC_MARK_MINUS:
+      mvwaddch(win, rcWhole.top, rcWhole.left, '-');
+      return;
+    case SC_MARK_BOXMINUS:
+    case SC_MARK_BOXMINUSCONNECTED:
+      mvwaddstr(win, rcWhole.top, rcWhole.left, "⊟");
+      return;
+    case SC_MARK_CIRCLEMINUS:
+    case SC_MARK_CIRCLEMINUSCONNECTED:
+      mvwaddstr(win, rcWhole.top, rcWhole.left, "⊖");
+      return;
+    case SC_MARK_PLUS:
+      mvwaddch(win, rcWhole.top, rcWhole.left, '+');
+      return;
+    case SC_MARK_BOXPLUS:
+    case SC_MARK_BOXPLUSCONNECTED:
+      mvwaddstr(win, rcWhole.top, rcWhole.left, "⊞");
+      return;
+    case SC_MARK_CIRCLEPLUS:
+    case SC_MARK_CIRCLEPLUSCONNECTED:
+      mvwaddstr(win, rcWhole.top, rcWhole.left, "⊕");
+      return;
+    case SC_MARK_VLINE:
+      mvwaddch(win, rcWhole.top, rcWhole.left, ACS_VLINE);
+      return;
+    case SC_MARK_LCORNER:
+    case SC_MARK_LCORNERCURVE:
+      mvwaddch(win, rcWhole.top, rcWhole.left, ACS_LLCORNER);
+      return;
+    case SC_MARK_TCORNER:
+    case SC_MARK_TCORNERCURVE:
+      mvwaddch(win, rcWhole.top, rcWhole.left, ACS_LTEE);
+      return;
+    case SC_MARK_DOTDOTDOT:
+      mvwaddstr(win, rcWhole.top, rcWhole.left, "…");
+      return;
+    case SC_MARK_ARROWS:
+      mvwaddstr(win, rcWhole.top, rcWhole.left, "»");
+      return;
+    case SC_MARK_FULLRECT:
+      FillRectangle(rcWhole, marker->back);
+      return;
+    case SC_MARK_LEFTRECT:
+      mvwaddstr(win, rcWhole.top, rcWhole.left, "▌");
+      return;
+    case SC_MARK_BOOKMARK:
+      mvwaddstr(win, rcWhole.top, rcWhole.left, "Σ");
+      return;
+    }
+    if (marker->markType >= SC_MARK_CHARACTER) {
+      char ch = static_cast<char>(marker->markType - SC_MARK_CHARACTER);
+      DrawTextClipped(rcWhole, fontForCharacter, rcWhole.bottom, &ch, 1,
+                      marker->fore, marker->back);
+      return;
+    }
+  }
   /** Draws the text representation of a wrap marker. */
   void DrawWrapMarker(PRectangle rcPlace, bool isEndMarker,
                       ColourDesired wrapColour) {
     wattr_set(win, 0, term_color_pair(wrapColour, COLOR_BLACK), NULL);
-    mvwaddstr(win, rcPlace.top, rcPlace.left,
-              isEndMarker ? "\342\206\251" : "\342\206\252"); // ↩ or ↪
+    mvwaddstr(win, rcPlace.top, rcPlace.left, isEndMarker ? "↩" : "↪");
   }
   /** Draws the text representation of a tab arrow. */
-  void DrawTabArrow(PRectangle rcTab, int ymid) {
+  void DrawTabArrow(PRectangle rcTab) {
     // TODO: set color to vs.whitespaceColours.fore and back.
     wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), NULL);
     for (int i = rcTab.left - 1; i < rcTab.right; i++)
       mvwaddch(win, rcTab.top, i, '-' | A_BOLD);
     mvwaddch(win, rcTab.top, rcTab.right, '>' | A_BOLD);
   }
-  /** Sets whether or not this surface is a CallTip. */
-  void setIsCallTip(bool callTip) { isCallTip = callTip; }
 };
 
 /** Creates a new terminal surface. */
 Surface *Surface::Allocate(int) { return new SurfaceImpl(); }
 
+/** Custom function for drawing line markers in the terminal. */
+static void DrawLineMarker(Surface *surface, PRectangle &rcWhole,
+                           Font &fontForCharacter, int tFold, int marginStyle,
+                           const void *data) {
+  reinterpret_cast<SurfaceImpl *>(surface)->DrawLineMarker(rcWhole,
+                                                           fontForCharacter,
+                                                           tFold, data);
+}
 /** Custom function for drawing wrap markers in the terminal. */
 static void DrawWrapVisualMarker(Surface *surface, PRectangle rcPlace,
                                  bool isEndMarker, ColourDesired wrapColour) {
@@ -537,7 +583,7 @@ static void DrawWrapVisualMarker(Surface *surface, PRectangle rcPlace,
 }
 /** Custom function for drawing tab arrows in the terminal. */
 static void DrawTabArrow(Surface *surface, PRectangle rcTab, int ymid) {
-  reinterpret_cast<SurfaceImpl *>(surface)->DrawTabArrow(rcTab, ymid);
+  reinterpret_cast<SurfaceImpl *>(surface)->DrawTabArrow(rcTab);
 }
 
 // Window handling.
@@ -905,6 +951,7 @@ public:
       vs.markers[i].fore = ColourDesired(0xC0, 0xC0, 0xC0);
       vs.markers[i].back = ColourDesired(0, 0, 0);
       if (i >= 25) vs.markers[i].markType = SC_MARK_EMPTY;
+      vs.markers[i].customDraw = DrawLineMarker;
     }
     // Use '+' and '-' fold markers.
     vs.markers[SC_MARKNUM_FOLDEROPEN].markType = SC_MARK_MINUS;
@@ -1086,7 +1133,6 @@ public:
     Surface *sur = Surface::Allocate(SC_TECHNOLOGY_DEFAULT);
     if (sur) {
       sur->Init(wid);
-      reinterpret_cast<SurfaceImpl *>(sur)->setIsCallTip(true);
       ct.PaintCT(sur);
       wrefresh(_WINDOW(wid));
       sur->Release();
