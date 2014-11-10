@@ -28,9 +28,9 @@ Scinterm lacks some Scintilla features due to the terminal's constraints:
 * Drag and drop is not supported.
 * Edge lines are not displayed properly (the line is drawn over by text lines).
 * Extra ascent and descent for lines is not supported.
+* Fold lines cannot be drawn above or below lines.
 * Hotspot underlines are not drawn on mouse hover (`surface->FillRectangle()` is
   not supported).
-* Indentation guides are not visible (pixmap surfaces are not supported).
 * Indicators other than `INDIC_ROUNDBOX` and `INDIC_STRAIGHTBOX` are not drawn
   (`surface->LineTo()` and `surface->FillRectangle()` are not supported for
   drawing indicator shapes and pixmap surfaces are not supported). Translucent

@@ -365,8 +365,16 @@ public:
    * `DrawLineMarker()`.
    */
   void Ellipse(PRectangle rc, ColourDesired fore, ColourDesired back) {}
-  /** Copying surfaces is not implemented. */
-  void Copy(PRectangle rc, Point from, Surface &surfaceSource) {}
+  /**
+   * Draw an indentation guide.
+   * Scintilla will only call this method when drawing indentation guides or
+   * during certain drawing operations when double buffering is enabled. Since
+   * the latter is not supported, assume the former.
+   */
+  void Copy(PRectangle rc, Point from, Surface &surfaceSource) {
+    wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), NULL);
+    mvwaddch(win, rc.top, rc.left - 1, '|' | A_BOLD);
+  }
 
   /**
    * Draws the given text at the given position on the screen with the given
@@ -979,13 +987,23 @@ public:
       delete sur;
     }
   }
-  /** Sends the given message and parameters to Scintilla. */
+  /**
+   * Sends the given message and parameters to Scintilla unless it is a message
+   * that changes an unsupported property.
+   */
   virtual sptr_t WndProc(unsigned int iMessage, uptr_t wParam, uptr_t lParam) {
     try {
       switch (iMessage) {
         case SCI_GETDIRECTFUNCTION:
           return reinterpret_cast<sptr_t>(scintilla_send_message);
         case SCI_GETDIRECTPOINTER: return reinterpret_cast<sptr_t>(this);
+        // Ignore attempted changes of the following unsupported properties.
+        case SCI_SETBUFFEREDDRAW:
+        case SCI_SETWHITESPACESIZE:
+        case SCI_SETTWOPHASEDRAW: case SCI_SETPHASESDRAW:
+        case SCI_SETEXTRAASCENT: case SCI_SETEXTRADESCENT:
+          return 0;
+        // Pass to Scintilla.
         default: return ScintillaBase::WndProc(iMessage, wParam, lParam);
       }
     } catch (std::bad_alloc&) {
