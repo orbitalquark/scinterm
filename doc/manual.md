@@ -1,5 +1,10 @@
 # Usage
 
+It is highly recommended to run Scinterm in a UTF-8-aware terminal with a font
+that supports many UTF-8 characters ("DejaVu Sans Mono" is one of them) because
+Scinterm makes use of UTF-8 characters when drawing wrap symbols, some marker
+symbols, and call tip arrows.
+
 ## Compiling
 
 After downloading Scinterm, it is recommended to unzip it into the top-level
@@ -9,8 +14,7 @@ to build the usual `../bin/scintilla.a`.
 
 ## Curses Compatibility
 
-Scinterm lacks some Scintilla features due to curses' non-existant graphics
-capabilities:
+Scinterm lacks some Scintilla features due to the terminal's constraints:
 
 * Any settings with alpha values are not supported.
 * Autocompletion lists cannot show images (pixmap surfaces are not supported).

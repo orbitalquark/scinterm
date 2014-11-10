@@ -302,7 +302,7 @@ public:
       mvwaddstr(win, pts[0].y - 2, pts[npts - 1].x + 1, "▼");
   }
   /**
-   * Scintilla never calls this method.
+   * Scintilla will never call this method.
    * Line markers that Scintilla would normally draw as rectangles are handled
    * in `DrawLineMarker()`.
    */
@@ -334,7 +334,7 @@ public:
     FillRectangle(rc, BLACK);
   }
   /**
-   * Scintilla never calls this method.
+   * Scintilla will never call this method.
    * Line markers that Scintilla would normally draw as rounded rectangles are
    * handled in `DrawLineMarker()`.
    */
@@ -360,7 +360,7 @@ public:
   void DrawRGBAImage(PRectangle rc, int width, int height,
                      const unsigned char *pixelsImage) {}
   /**
-   * Scintilla never calls this method.
+   * Scintilla will never call this method.
    * Line markers that Scintilla would normally draw as circles are handled in
    * `DrawLineMarker()`.
    */
