@@ -107,7 +107,7 @@ void scintilla_delete(Scintilla *sci);
  */
 #define SCI_COLOR_PAIR(f, b) ((b) * ((COLORS < 16) ? 8 : 16) + (f) + 1)
 
-#define SCI_TYPEMAX 64
+#define IMAGE_MAX 31
 
 #define SCM_PRESS 1
 #define SCM_DRAG 2

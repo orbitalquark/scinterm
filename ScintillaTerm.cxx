@@ -668,13 +668,13 @@ PRectangle Window::GetMonitorRect(Point pt) { return GetPosition(); }
 
 /**
  * Implementation of a Scintilla ListBox for the terminal.
- * Instead of registering images to types, printable characters are registered
- * to types.
+ * Instead of registering images to types, printable UTF-8 characters are
+ * registered to types.
  */
 class ListBoxImpl : public ListBox {
   int height, width;
   std::vector<std::string> list;
-  char types[SCI_TYPEMAX];
+  char types[IMAGE_MAX + 1][5]; // UTF-8 character plus terminating '\0'
   int selection;
 public:
 	CallBackAction doubleClickAction;
@@ -731,8 +731,10 @@ public:
    * Prepends the item's type character (if any) to the list item for display.
    */
   virtual void Append(char *s, int type = -1) {
-    char chtype = (type >= 0 && type < SCI_TYPEMAX) ? types[type] : ' ';
-    list.push_back(std::string(&chtype, 1) + std::string(s));
+    if (type >= 0 && type <= IMAGE_MAX) {
+      char *chtype = types[type];
+      list.push_back(std::string(chtype, strlen(chtype)) + std::string(s));
+    } else list.push_back(std::string(" ") + std::string(s));
     int len = strlen(s);
     if (width < len) {
       width = len + 1; // include type character len
@@ -768,9 +770,12 @@ public:
    */
   virtual int Find(const char *prefix) {
     int len = strlen(prefix);
-    for (unsigned int i = 0; i < list.size(); i++)
-      if (strncmp(prefix, list.at(i).c_str() + 1, len) == 0)
-        return i;
+    for (unsigned int i = 0; i < list.size(); i++) {
+      const char *item = list.at(i).c_str();
+      item += UTF8DrawBytes(reinterpret_cast<const unsigned char *>(item),
+                            strlen(item));
+      if (strncmp(prefix, item, len) == 0) return i;
+    }
     return -1;
   }
   /**
@@ -781,25 +786,33 @@ public:
    */
   virtual void GetValue(int n, char *value, int len) {
     if (len > 0) {
-      strncpy(value, list.at(n).c_str() + 1, len);
+      const char *item = list.at(n).c_str();
+      item += UTF8DrawBytes(reinterpret_cast<const unsigned char *>(item),
+                            strlen(item));
+      strncpy(value, item, len);
       value[len - 1] = '\0';
     } else value[0] = '\0';
   }
   /**
-   * Registers the first character of the given string to the given type.
+   * Registers the first UTF-8 character of the given string to the given type.
    * By default, ' ' (space) is registered to all types.
    * @usage SCI_REGISTERIMAGE(1, "*") // type 1 shows '*' in front of list item.
    * @usage SCI_REGISTERIMAGE(2, "+") // type 2 shows '+' in front of list item.
+   * @usage SCI_REGISTERIMAGE(3, "■") // type 3 shows '■' in front of list item.
    */
   virtual void RegisterImage(int type, const char *xpm_data) {
-    if (type >= 0 && type < SCI_TYPEMAX) types[type] = xpm_data[0];
+    if (type < 0 || type > IMAGE_MAX) return;
+    int len = UTF8DrawBytes(reinterpret_cast<const unsigned char *>(xpm_data),
+                            strlen(xpm_data));
+    for (int i = 0; i < len; i++) types[type][i] = xpm_data[i];
+    types[type][len] = '\0';
   }
   /** Registering images is not implemented. */
   virtual void RegisterRGBAImage(int type, int width, int height,
                                  const unsigned char *pixelsImage) {}
   /** Clears all registered types back to ' ' (space). */
   virtual void ClearRegisteredImages() {
-    for (int i = 0; i < SCI_TYPEMAX; i++) types[i] = ' ';
+    for (int i = 0; i <= IMAGE_MAX; i++) types[i][0] = ' ', types[i][1] = '\0';
   }
   /** Enable double-click to select a list item. */
   virtual void SetDoubleClickAction(CallBackAction action, void *data) {
