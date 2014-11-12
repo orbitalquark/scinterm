@@ -67,11 +67,11 @@
 // These are specific to curses implementations.
 #if NCURSES_VERSION_MAJOR
 #if (defined(NCURSES_WIDECHAR) || defined(_XOPEN_SOURCE_EXTENDED))
-#define wattrget(w, y, x) (w)->_line[(y)].text[(x)].attr;
+#define wattrget(w, y, x) (w)->_line[(y)].text[(x)].attr
 #undef NCURSES_CH_T
 #define NCURSES_CH_T cchar_t
 #else
-#define wattrget(w, y, x) (w)->_line[(y)].text[(x)];
+#define wattrget(w, y, x) (w)->_line[(y)].text[(x)]
 #endif
 struct ldat {
   NCURSES_CH_T *text;
@@ -80,7 +80,7 @@ struct ldat {
   NCURSES_SIZE_T oldindex;
 };
 #elif PDCURSES
-#define wattrget(w, y, x) (w)->_y[(y)][(x)];
+#define wattrget(w, y, x) (w)->_y[(y)][(x)]
 #else
 #define wattrget(w, y, x) 0
 #endif
@@ -372,6 +372,7 @@ public:
    * the latter is not supported, assume the former.
    */
   void Copy(PRectangle rc, Point from, Surface &surfaceSource) {
+    // TODO: handle indent guide highlighting.
     wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), NULL);
     mvwaddch(win, rc.top, rc.left - 1, '|' | A_BOLD);
   }
