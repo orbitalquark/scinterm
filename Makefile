@@ -1,18 +1,16 @@
 # Copyright 2012-2014 Mitchell mitchell.att.foicica.com. See LICENSE.
 
-.SUFFIXES: .cxx .c .o .h .a
+.SUFFIXES: .cxx .o .h .a
 
 AR = ar
 CXX = g++
 INCLUDEDIRS = -I ../include -I ../src -I ../lexlib
-CXXFLAGS = -Wall -Wno-missing-braces -Wno-char-subscripts -Wno-long-long \
-           -pedantic -DCURSES -DSCI_LEXER $(INCLUDEDIRS)
+CXXFLAGS = -Wall -pedantic -DCURSES -DSCI_LEXER $(INCLUDEDIRS)
 ifdef DEBUG
   CXXFLAGS += -DDEBUG -g
 else
   CXXFLAGS += -DNDEBUG -Os
 endif
-CFLAGS = CXXFLAGS
 
 scintilla = ../bin/scintilla.a
 lexers = $(addsuffix .o,$(basename $(notdir $(wildcard ../lexers/Lex*.cxx))))
@@ -24,14 +22,14 @@ all: $(scintilla)
 .cxx.o:
 	$(CXX) $(CXXFLAGS) -c $<
 $(scintilla): AutoComplete.o CallTip.o CaseConvert.o CaseFolder.o Catalogue.o \
-              CellBuffer.o CharClassify.o ContractionState.o Decoration.o \
-              Document.o EditModel.o Editor.o EditView.o ExternalLexer.o \
-              Indicator.o KeyMap.o LineMarker.o MarginView.o PerLine.o \
-              PositionCache.o RESearch.o RunStyles.o ScintillaBase.o \
-              Selection.o Style.o UniConversion.o ViewStyle.o XPM.o Accessor.o \
-              CharacterSet.o LexerBase.o LexerModule.o LexerNoExceptions.o \
-              LexerSimple.o PropSetSimple.o StyleContext.o WordList.o \
-              $(lexers) ScintillaTerm.o
+              CellBuffer.o CharacterCategory.o CharClassify.o \
+              ContractionState.o Decoration.o Document.o EditModel.o Editor.o \
+              EditView.o ExternalLexer.o Indicator.o KeyMap.o LineMarker.o \
+              MarginView.o PerLine.o PositionCache.o RESearch.o RunStyles.o \
+              ScintillaBase.o Selection.o Style.o UniConversion.o ViewStyle.o \
+              XPM.o Accessor.o CharacterSet.o LexerBase.o LexerModule.o \
+              LexerNoExceptions.o LexerSimple.o PropSetSimple.o StyleContext.o \
+              WordList.o $(lexers) ScintillaTerm.o
 	$(AR) rc $@ $^
 	touch $@
 clean:

@@ -6,9 +6,7 @@
 // order to display UTF-8 characters properly in ncursesw.
 
 #include <math.h>
-#include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include <string>
@@ -18,11 +16,8 @@
 
 #include "Platform.h"
 
-#include "ILexer.h"
 #include "Scintilla.h"
-#ifdef SCI_LEXER
-#include "SciLexer.h"
-#endif
+#include "ILexer.h"
 #include "SplitVector.h"
 #include "Partitioning.h"
 #include "RunStyles.h"
@@ -48,13 +43,7 @@
 #include "Editor.h"
 #include "ScintillaBase.h"
 #include "UniConversion.h"
-#include "CaseConvert.h"
 #include "ScintillaTerm.h"
-
-#if SCI_LEXER
-#include "LexerModule.h"
-#include "ExternalLexer.h"
-#endif
 
 /**
  * Returns the given Scintilla `WindowID` as a curses `WINDOW`.
@@ -105,7 +94,6 @@ Font::~Font() {}
  * there is no `underline` parameter. Instead, you need to manually set the
  * `weight` parameter to be the union of your desired attributes.
  * Scintillua (http://foicica.com/scintillua) has an example of this.
- * @param fp Scintilla font parameters.
  */
 void Font::Create(const FontParameters &fp) {
   Release();
@@ -614,7 +602,7 @@ void Window::Destroy() {
   wid = 0;
 }
 /**
- * Returns the window's boundaries
+ * Returns the window's boundaries.
  * Unlike other platforms, Scintilla paints in coordinates relative to the
  * window in curses. Therefore, this function should always return the window
  * bounds to ensure all of it is painted.
@@ -687,32 +675,32 @@ public:
     ClearRegisteredImages();
   }
   /** Deletes the ListBox. */
-  virtual ~ListBoxImpl() {}
+  ~ListBoxImpl() {}
 
   /** Setting the font is not implemented. */
-  virtual void SetFont(Font &font) {}
+  void SetFont(Font &font) {}
   /**
    * Creates a new listbox.
    * The `Show()` function resizes window with the appropriate height and width.
    */
-  virtual void Create(Window &parent, int ctrlID, Point location_,
-                      int lineHeight_, bool unicodeMode_, int technology_) {
+  void Create(Window &parent, int ctrlID, Point location_, int lineHeight_,
+              bool unicodeMode_, int technology_) {
     wid = newwin(1, 1, 0, 0);
   }
   /**
    * Setting average char width is not implemented since all terminal characters
    * have a width of 1.
    */
-  virtual void SetAverageCharWidth(int width) {}
+  void SetAverageCharWidth(int width) {}
   /** Sets the number of visible rows in the listbox. */
-  virtual void SetVisibleRows(int rows) {
+  void SetVisibleRows(int rows) {
     height = rows;
     wresize(_WINDOW(wid), height + 2, width + 2);
   }
   /** Returns the number of visible rows in the listbox. */
-  virtual int GetVisibleRows() const { return height; }
+  int GetVisibleRows() const { return height; }
   /** Returns the desired size of the listbox. */
-  virtual PRectangle GetDesiredRect() {
+  PRectangle GetDesiredRect() {
     return PRectangle(0, 0, width + 2, height + 2); // add border widths
   }
   /**
@@ -720,9 +708,9 @@ public:
    * Takes into account the border width and type character width.
    * @return 2 to shift the ListBox to the left two characters.
    */
-  virtual int CaretFromEdge() { return 2; }
+  int CaretFromEdge() { return 2; }
   /** Clears the contents of the listbox. */
-  virtual void Clear() {
+  void Clear() {
     list.clear();
     width = 0;
   }
@@ -730,7 +718,7 @@ public:
    * Adds the given string list item to the listbox.
    * Prepends the item's type character (if any) to the list item for display.
    */
-  virtual void Append(char *s, int type = -1) {
+  void Append(char *s, int type = -1) {
     if (type >= 0 && type <= IMAGE_MAX) {
       char *chtype = types[type];
       list.push_back(std::string(chtype, strlen(chtype)) + std::string(s));
@@ -742,9 +730,9 @@ public:
     }
   }
   /** Returns the number of items in the listbox. */
-  virtual int Length() { return list.size(); }
+  int Length() { return list.size(); }
   /** Selects the given item in the listbox and repaints the listbox. */
-  virtual void Select(int n) {
+  void Select(int n) {
     WINDOW *w = _WINDOW(wid);
     wclear(w);
     box(w, '|', '-');
@@ -761,14 +749,14 @@ public:
     selection = n;
   }
   /** Returns the currently selected item in the listbox. */
-  virtual int GetSelection() { return selection; }
+  int GetSelection() { return selection; }
   /**
    * Searches the listbox for the items matching the given prefix string and
    * returns the index of the first match.
    * Since the type is displayed as the first character, the value starts on the
    * second character; match strings starting there.
    */
-  virtual int Find(const char *prefix) {
+  int Find(const char *prefix) {
     int len = strlen(prefix);
     for (unsigned int i = 0; i < list.size(); i++) {
       const char *item = list.at(i).c_str();
@@ -784,7 +772,7 @@ public:
    * Since the type is displayed as the first character, the value starts on the
    * second character.
    */
-  virtual void GetValue(int n, char *value, int len) {
+  void GetValue(int n, char *value, int len) {
     if (len > 0) {
       const char *item = list.at(n).c_str();
       item += UTF8DrawBytes(reinterpret_cast<const unsigned char *>(item),
@@ -800,7 +788,7 @@ public:
    * @usage SCI_REGISTERIMAGE(2, "+") // type 2 shows '+' in front of list item.
    * @usage SCI_REGISTERIMAGE(3, "■") // type 3 shows '■' in front of list item.
    */
-  virtual void RegisterImage(int type, const char *xpm_data) {
+  void RegisterImage(int type, const char *xpm_data) {
     if (type < 0 || type > IMAGE_MAX) return;
     int len = UTF8DrawBytes(reinterpret_cast<const unsigned char *>(xpm_data),
                             strlen(xpm_data));
@@ -808,18 +796,18 @@ public:
     types[type][len] = '\0';
   }
   /** Registering images is not implemented. */
-  virtual void RegisterRGBAImage(int type, int width, int height,
-                                 const unsigned char *pixelsImage) {}
+  void RegisterRGBAImage(int type, int width, int height,
+                         const unsigned char *pixelsImage) {}
   /** Clears all registered types back to ' ' (space). */
-  virtual void ClearRegisteredImages() {
+  void ClearRegisteredImages() {
     for (int i = 0; i <= IMAGE_MAX; i++) types[i][0] = ' ', types[i][1] = '\0';
   }
   /** Enable double-click to select a list item. */
-  virtual void SetDoubleClickAction(CallBackAction action, void *data) {
+  void SetDoubleClickAction(CallBackAction action, void *data) {
     doubleClickAction = action, doubleClickActionData = data;
   }
   /** Sets the list items in the listbox to the given items. */
-  virtual void SetList(const char *listText, char separator, char typesep) {
+  void SetList(const char *listText, char separator, char typesep) {
     Clear();
     int len = strlen(listText);
     char *text = new char[len + 1];
@@ -994,50 +982,22 @@ public:
     ct.verticalOffset = 0; // no extra offset of calltip from line
   }
   /** Deletes the Scintilla instance. */
-  virtual ~ScintillaTerm() {
+  ~ScintillaTerm() {
     delwin(GetWINDOW());
     if (sur) {
       sur->Release();
       delete sur;
     }
   }
-  /**
-   * Sends the given message and parameters to Scintilla unless it is a message
-   * that changes an unsupported property.
-   */
-  virtual sptr_t WndProc(unsigned int iMessage, uptr_t wParam, uptr_t lParam) {
-    try {
-      switch (iMessage) {
-        case SCI_GETDIRECTFUNCTION:
-          return reinterpret_cast<sptr_t>(scintilla_send_message);
-        case SCI_GETDIRECTPOINTER: return reinterpret_cast<sptr_t>(this);
-        // Ignore attempted changes of the following unsupported properties.
-        case SCI_SETBUFFEREDDRAW:
-        case SCI_SETWHITESPACESIZE:
-        case SCI_SETTWOPHASEDRAW: case SCI_SETPHASESDRAW:
-        case SCI_SETEXTRAASCENT: case SCI_SETEXTRADESCENT:
-          return 0;
-        // Pass to Scintilla.
-        default: return ScintillaBase::WndProc(iMessage, wParam, lParam);
-      }
-    } catch (std::bad_alloc&) {
-      errorStatus = SC_STATUS_BADALLOC;
-    } catch (...) {
-      errorStatus = SC_STATUS_FAILURE;
-    }
-    return 0;
-  }
-  /** Extra initializing code is unnecessary. */
-  virtual void Initialise() {}
-  /** Extra finalizing code is unnecessary. */
-  virtual void Finalise() {}
+  /** Initializing code is unnecessary. */
+  void Initialise() {}
   /** Disable drag and drop since it is not implemented. */
-  virtual void StartDrag() {
+  void StartDrag() {
     inDragDrop = ddNone;
     SetDragPosition(SelectionPosition(invalidPosition));
   }
   /** Draws the vertical scroll bar. */
-  virtual void SetVerticalScrollPos() {
+  void SetVerticalScrollPos() {
     if (!verticalScrollBarVisible) return;
     WINDOW *w = GetWINDOW();
     int maxy = getmaxy(w), maxx = getmaxx(w);
@@ -1052,7 +1012,7 @@ public:
       mvwaddch(w, i, maxx - 1, ' ');
   }
   /** Draws the horizontal scroll bar. */
-  virtual void SetHorizontalScrollPos() {
+  void SetHorizontalScrollPos() {
     if (!horizontalScrollBarVisible) return;
     WINDOW *w = GetWINDOW();
     int maxy = getmaxy(w), maxx = getmaxx(w);
@@ -1072,7 +1032,7 @@ public:
    * pages. The width is based on the width of the view and the view's scroll
    * width property.
    */
-  virtual bool ModifyScrollBars(int nMax, int nPage) {
+  bool ModifyScrollBars(int nMax, int nPage) {
     WINDOW *w = GetWINDOW();
     int maxy = getmaxy(w), maxx = getmaxx(w);
     int height = roundf(static_cast<float>(nPage) / nMax * maxy);
@@ -1085,12 +1045,12 @@ public:
    * Copies the selected text to the internal clipboard.
    * The primary and secondary X selections are unaffected.
    */
-  virtual void Copy() { if (!sel.Empty()) CopySelectionRange(&clipboard); }
+  void Copy() { if (!sel.Empty()) CopySelectionRange(&clipboard); }
   /**
    * Pastes text from the internal clipboard, not from primary or secondary X
    * selections.
    */
-  virtual void Paste() {
+  void Paste() {
     if (clipboard.Empty()) return;
     ClearSelection(multiPasteMode == SC_MULTIPASTE_EACH);
     InsertPasteShape(clipboard.Data(), static_cast<int>(clipboard.Length()),
@@ -1098,11 +1058,11 @@ public:
     EnsureCaretVisible();
   }
   /** Setting of the primary and/or secondary X selections is not supported. */
-  virtual void ClaimSelection() {}
+  void ClaimSelection() {}
   /** Notifying the parent of text changes is not yet supported. */
-  virtual void NotifyChange() {}
+  void NotifyChange() {}
   /** Send Scintilla notifications to the parent. */
-  virtual void NotifyParent(SCNotification scn) {
+  void NotifyParent(SCNotification scn) {
     if (callback)
       (*callback)(reinterpret_cast<Scintilla *>(this), 0, (void *)&scn, 0);
   }
@@ -1111,7 +1071,7 @@ public:
    * If a character is being typed, add it to the editor. Otherwise, notify the
    * container.
    */
-  virtual int KeyDefault(int key, int modifiers) {
+  int KeyDefault(int key, int modifiers) {
     if ((IsUnicodeMode() || key < 256) && modifiers == 0) {
       if (IsUnicodeMode()) {
         char utf8[6];
@@ -1131,23 +1091,24 @@ public:
    * Copies the given text to the internal clipboard.
    * Like `Copy()`, does not affect the primary and secondary X selections.
    */
-  virtual void CopyToClipboard(const SelectionText &selectedText) {
+  void CopyToClipboard(const SelectionText &selectedText) {
     clipboard.Copy(selectedText);
   }
   /** A ticking caret is not implemented. */
-  virtual void SetTicking(bool on) {}
+  void SetTicking(bool on) {}
   /**
    * Sets whether or not the mouse is captured.
    * This is used by Scintilla to handle mouse clicks, drags, and releases.
    */
-  virtual void SetMouseCapture(bool on) { capturedMouse = on; }
+  void SetMouseCapture(bool on) { capturedMouse = on; }
   /** Returns whether or not the mouse is captured. */
-  virtual bool HaveMouseCapture() { return capturedMouse; }
+  bool HaveMouseCapture() { return capturedMouse; }
   /** A Scintilla direct pointer is not implemented. */
-  virtual sptr_t DefWndProc(unsigned int iMessage, uptr_t wParam,
-                            sptr_t lParam) { return 0; }
+  sptr_t DefWndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam) {
+    return 0;
+  }
   /** Draws a CallTip, creating the curses window for it if necessary. */
-  virtual void CreateCallTipWindow(PRectangle rc) {
+  void CreateCallTipWindow(PRectangle rc) {
     if (!ct.wCallTip.Created()) {
       rc.right -= 1; // remove right-side padding
       int begx = 0, begy = 0, maxx = 0, maxy = 0;
@@ -1172,7 +1133,33 @@ public:
     }
   }
   /** Adding menu items to the popup menu is not implemented. */
-  virtual void AddToPopUp(const char *label, int cmd=0, bool enabled=true) {}
+  void AddToPopUp(const char *label, int cmd=0, bool enabled=true) {}
+  /**
+   * Sends the given message and parameters to Scintilla unless it is a message
+   * that changes an unsupported property.
+   */
+  sptr_t WndProc(unsigned int iMessage, uptr_t wParam, uptr_t lParam) {
+    try {
+      switch (iMessage) {
+        case SCI_GETDIRECTFUNCTION:
+          return reinterpret_cast<sptr_t>(scintilla_send_message);
+        case SCI_GETDIRECTPOINTER: return reinterpret_cast<sptr_t>(this);
+        // Ignore attempted changes of the following unsupported properties.
+        case SCI_SETBUFFEREDDRAW:
+        case SCI_SETWHITESPACESIZE:
+        case SCI_SETTWOPHASEDRAW: case SCI_SETPHASESDRAW:
+        case SCI_SETEXTRAASCENT: case SCI_SETEXTRADESCENT:
+          return 0;
+        // Pass to Scintilla.
+        default: return ScintillaBase::WndProc(iMessage, wParam, lParam);
+      }
+    } catch (std::bad_alloc&) {
+      errorStatus = SC_STATUS_BADALLOC;
+    } catch (...) {
+      errorStatus = SC_STATUS_FAILURE;
+    }
+    return 0;
+  }
 
   /** Returns the curses `WINDOW` associated with this Scintilla instance. */
   WINDOW *GetWINDOW() { return _WINDOW(wMain.GetID()); }
