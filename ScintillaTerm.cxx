@@ -238,12 +238,8 @@ public:
     Release();
     win = _WINDOW(wid);
   }
-  /**
-   * Initializes the surface with an existing surface for drawing on.
-   * @param sid Existing surface.
-   * @param wid Curses `WINDOW`. Not used.
-   */
-  void Init(SurfaceID sid, WindowID wid) { Init(sid); }
+  /** Identical to `Init()` using the given curses `WINDOW`. */
+  void Init(SurfaceID sid, WindowID wid) { Init(wid); }
   /** Initializing the surface as a pixmap is not implemented. */
   void InitPixMap(int width, int height, Surface *surface_, WindowID wid) {}
 
@@ -1205,6 +1201,7 @@ public:
   /**
    * Handles a mouse button press.
    * @param button The button number pressed, or `0` if none.
+   * @param time The time in milliseconds of the mouse event.
    * @param y The y coordinate of the mouse event relative to this window.
    * @param x The x coordinate of the mouse event relative to this window.
    * @param shift Flag indicating whether or not the shift modifier key is
@@ -1326,6 +1323,7 @@ public:
   }
   /**
    * Sends a mouse release event to Scintilla.
+   * @param time The time in milliseconds of the mouse event.
    * @param y The y coordinate of the mouse event relative to this window.
    * @param x The x coordinate of the mouse event relative to this window.
    * @param ctrl Flag indicating whether or not the control modifier key is
