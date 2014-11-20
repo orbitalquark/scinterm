@@ -938,11 +938,11 @@ public:
     view.drawOverstrikeCaret = false; // always draw normal caret
     view.bufferedDraw = false; // draw directly to the screen
     view.phasesDraw = EditView::phasesOne; // no need for two-phase drawing
-    view.tabArrowPaddingTop = 0; // no padding for tab arrows
+    view.tabArrowHeight = 0; // no additional tab arrow height
     view.customDrawTabArrow = DrawTabArrow; // draw text arrows for tabs
     view.customDrawWrapMarker = DrawWrapVisualMarker; // draw text wrap markers
     mouseSelectionRectangularSwitch = true; // easier rectangular selection
-    clickCloseThreshold = 0; // ignore double-clicks more than 1 character apart
+    doubleClickCloseThreshold = Point(0, 0); // double-clicks only in same cell
     horizontalScrollBarVisible = false; // no horizontal scroll bar
     scrollWidth = 5 * width; // reasonable default for any horizontal scroll bar
     vs.selColours.fore = ColourDesired(0, 0, 0); // black on white selection
