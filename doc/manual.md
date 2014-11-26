@@ -40,15 +40,16 @@ Scinterm lacks some Scintilla features due to the terminal's constraints:
   marker shapes).
 * Mouse cursor types are not supported.
 * Up to 16 colors are supported, regardless of how many colors the terminal
-  supports. They are: black (`0x000000`), red (`0x800000`), green (`0x008000`),
-  yellow (`0x808000`), blue (`0x000080`), magenta (`0x800080`), cyan
-  (`0x008080`), white (`0xC0C0C0`), light black (`0x404040`), light red
-  (`0xFF0000`), light green (`0x00FF00`), light yellow (`0xFFFF00`), light blue
-  (`0x0000FF`), light magenta (`0xFF00FF`), light cyan (`0x00FFFF`), and light
-  white (`0xFFFFFF`). Even if your terminal uses a different color map, you must
-  use these color values with Scintilla; unrecognized colors are set to white by
-  default. For some terminals, you may need to set a lexer style's `bold`
-  attribute in order to use the light color variant.
+  supports. They are (in "0xBBGGRR" format): black (`0x000000`), red
+  (`0x000080`), green (`0x008000`), yellow (`0x008080`), blue (`0x800000`),
+  magenta (`0x800080`), cyan (`0x808000`), white (`0xC0C0C0`), light black
+  (`0x404040`), light red (`0x0000FF`), light green (`0x00FF00`), light yellow
+  (`0x00FFFF`), light blue (`0xFF0000`), light magenta (`0xFF00FF`), light cyan
+  (`0xFFFF00`), and light white (`0xFFFFFF`). Even if your terminal uses a
+  different color map, you must use these color values with Scintilla;
+  unrecognized colors are set to white by default. For some terminals, you may
+  need to set a lexer style's `bold` attribute in order to use the light color
+  variant.
 * Some styles settings like font name, font size, and italic do not display
   properly (terminals use one only font, size and variant).
 * X selections (primary and secondary) are not integrated into the clipboard.
