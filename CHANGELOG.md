@@ -4,6 +4,34 @@
 
 [Atom Feed]: feed
 
+## 1.5 (10 Dec 2014)
+
+Download:
+
+* [Scinterm 1.5][]
+
+Bugfixes:
+
+* Fixed positioning of autocomplete and call tips in some edge cases.
+* Margins are no longer overwritten by long lines.
+* Allow UTF-8 characters as list images.
+
+Changes:
+
+* Added complete mouse support.
+* Added support for drawing call tip arrows.
+* Implemented scrollbars.
+* Added support for drawing tab arrows when visualizing whitespace.
+* Added support for drawing wrap markers. (Requires a font with good
+  glyph support, like DejaVu Sans Mono.)
+* Added support for drawing nearly all line markers. (Requires a font with good
+  glyph support, like DejaVu Sans Mono or Liberation Mono.)
+* Added support for drawing indentation guides.
+* Updated to [Scintilla][] 3.5.2.
+
+[Scinterm 1.5]: download/scinterm_1.5.zip
+[Scintilla]: http://scintilla.org
+
 ## 1.4 (01 Sep 2014)
 
 Download:
