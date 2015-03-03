@@ -85,8 +85,6 @@ function scintilla_refresh(sci) end
 
 ---
 -- Deletes the given Scintilla window.
--- This function does not delete the curses `WINDOW` associated with it. You
--- will have to delete the `WINDOW` manually.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @return `void`
 function scintilla_delete(sci) end
