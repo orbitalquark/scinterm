@@ -936,6 +936,7 @@ public:
     // Defaults for terminals.
     marginView.wrapMarkerPaddingRight = 0; // no padding for margin wrap markers
     marginView.customDrawWrapMarker = DrawWrapVisualMarker; // draw text markers
+    view.tabWidthMinimumPixels = 0; // no proportional fonts
     view.drawOverstrikeCaret = false; // always draw normal caret
     view.bufferedDraw = false; // draw directly to the screen
     view.phasesDraw = EditView::phasesOne; // no need for two-phase drawing
