@@ -335,11 +335,12 @@ public:
   void AlphaRectangle(PRectangle rc, int cornerSize, ColourDesired fill,
                       int alphaFill, ColourDesired outline, int alphaOutline,
                       int flags) {
-    int x = rc.left, y = rc.top - 1, len = rc.right - rc.left;
-    attr_t attrs = wattrget(win, y, x);
-    short pair = PAIR_NUMBER(attrs), fore = COLOR_WHITE;
-    if (pair > 0) pair_content(pair, &fore, NULL);
-    mvwchgat(win, y, x, len, attrs, term_color_pair(fore, fill), NULL);
+    for (int x = rc.left, y = rc.top - 1; x < rc.right; x++) {
+      attr_t attrs = wattrget(win, y, x);
+      short pair = PAIR_NUMBER(attrs), fore = COLOR_WHITE;
+      if (pair > 0) pair_content(pair, &fore, NULL);
+      mvwchgat(win, y, x, 1, attrs, term_color_pair(fore, fill), NULL);
+    }
   }
   /** Drawing images is not implemented. */
   void DrawRGBAImage(PRectangle rc, int width, int height,
