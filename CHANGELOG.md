@@ -4,6 +4,23 @@
 
 [Atom Feed]: feed
 
+## 1.6 (18 Apr 2015)
+
+Download:
+
+* [Scinterm 1.6][]
+
+Bugfixes:
+
+* Fixed indicator drawing over multiple styles.
+
+Changes:
+
+* Updated to [Scintilla][] 3.5.5.
+
+[Scinterm 1.6]: download/scinterm_1.6.zip
+[Scintilla]: http://scintilla.org
+
 ## 1.5 (10 Dec 2014)
 
 Download:
