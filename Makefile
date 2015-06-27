@@ -11,6 +11,7 @@ ifdef DEBUG
 else
   CXXFLAGS += -DNDEBUG -Os
 endif
+CURSES_FLAGS =
 
 scintilla = ../bin/scintilla.a
 lexers = $(addsuffix .o,$(basename $(notdir $(wildcard ../lexers/Lex*.cxx))))
@@ -20,7 +21,7 @@ vpath %.cxx ../src ../lexlib ../lexers
 
 all: $(scintilla)
 .cxx.o:
-	$(CXX) $(CXXFLAGS) -c $<
+	$(CXX) $(CXXFLAGS) $(CURSES_FLAGS) -c $<
 $(scintilla): AutoComplete.o CallTip.o CaseConvert.o CaseFolder.o Catalogue.o \
               CellBuffer.o CharacterCategory.o CharClassify.o \
               ContractionState.o Decoration.o Document.o EditModel.o Editor.o \

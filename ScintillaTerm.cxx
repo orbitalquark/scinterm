@@ -922,17 +922,14 @@ class ScintillaTerm : public ScintillaBase {
 public:
   /**
    * Creates a new Scintilla instance in a curses `WINDOW`.
-   * The `WINDOW` is initially full-screen.
+   * However, the `WINDOW` itself will not be created until it is absolutely
+   * necessary. When the `WINDOW` is created, it will initially be full-screen.
    * @param callback_ Callback function for Scintilla notifications.
    */
   ScintillaTerm(void (*callback_)(Scintilla *, int, void *, void *)) :
-               scrollBarHeight(1), scrollBarWidth(1) {
-    wMain = newwin(0, 0, 0, 0);
-    keypad(GetWINDOW(), TRUE);
+               width(0), height(0), scrollBarHeight(1), scrollBarWidth(1) {
     callback = callback_;
-    if ((sur = Surface::Allocate(SC_TECHNOLOGY_DEFAULT)))
-      sur->Init(GetWINDOW());
-    getmaxyx(GetWINDOW(), height, width);
+    sur = Surface::Allocate(SC_TECHNOLOGY_DEFAULT);
 
     // Defaults for terminals.
     marginView.wrapMarkerPaddingRight = 0; // no padding for margin wrap markers
@@ -982,7 +979,8 @@ public:
   }
   /** Deletes the Scintilla instance. */
   ~ScintillaTerm() {
-    delwin(GetWINDOW());
+    if (wMain.GetID())
+      delwin(GetWINDOW());
     if (sur) {
       sur->Release();
       delete sur;
@@ -997,7 +995,7 @@ public:
   }
   /** Draws the vertical scroll bar. */
   void SetVerticalScrollPos() {
-    if (!verticalScrollBarVisible) return;
+    if (!wMain.GetID() || !verticalScrollBarVisible) return;
     WINDOW *w = GetWINDOW();
     int maxy = getmaxy(w), maxx = getmaxx(w);
     // Draw the gutter.
@@ -1012,7 +1010,7 @@ public:
   }
   /** Draws the horizontal scroll bar. */
   void SetHorizontalScrollPos() {
-    if (!horizontalScrollBarVisible) return;
+    if (!wMain.GetID() || !horizontalScrollBarVisible) return;
     WINDOW *w = GetWINDOW();
     int maxy = getmaxy(w), maxx = getmaxx(w);
     // Draw the gutter.
@@ -1032,6 +1030,7 @@ public:
    * width property.
    */
   bool ModifyScrollBars(int nMax, int nPage) {
+    if (!wMain.GetID()) return false;
     WINDOW *w = GetWINDOW();
     int maxy = getmaxy(w), maxx = getmaxx(w);
     int height = roundf(static_cast<float>(nPage) / nMax * maxy);
@@ -1108,6 +1107,7 @@ public:
   }
   /** Draws a CallTip, creating the curses window for it if necessary. */
   void CreateCallTipWindow(PRectangle rc) {
+    if (!wMain.GetID()) return;
     if (!ct.wCallTip.Created()) {
       rc.right -= 1; // remove right-side padding
       int begx = 0, begy = 0, maxx = 0, maxy = 0;
@@ -1160,8 +1160,23 @@ public:
     return 0;
   }
 
-  /** Returns the curses `WINDOW` associated with this Scintilla instance. */
-  WINDOW *GetWINDOW() { return _WINDOW(wMain.GetID()); }
+  /**
+   * Returns the curses `WINDOW` associated with this Scintilla instance.
+   * If the `WINDOW` has not been created yet, create it now.
+   */
+  WINDOW *GetWINDOW() {
+    if (!wMain.GetID()) {
+      init_colors();
+      wMain = newwin(0, 0, 0, 0);
+      WINDOW *w = _WINDOW(wMain.GetID());
+      keypad(w, TRUE);
+      if (sur)
+        sur->Init(w);
+      getmaxyx(w, height, width);
+      InvalidateStyleRedraw(); // needed to fully initialize Scintilla
+    }
+    return _WINDOW(wMain.GetID());
+  }
   /**
    * Repaints the Scintilla window.
    * If an autocompletion list, user list, or calltip is active, redraw it over
@@ -1216,6 +1231,7 @@ public:
    */
   bool MousePress(int button, unsigned int time, int y, int x, bool shift,
                   bool ctrl, bool alt) {
+    GetWINDOW(); // ensure the curses `WINDOW` has been created
     if (ac.Active() && (button == 1 || button == 4 || button == 5)) {
       // Select an autocompletion list item if possible or scroll the list.
       WINDOW *w = _WINDOW(ac.lb->GetID()), *parent = GetWINDOW();
@@ -1308,6 +1324,7 @@ public:
    * @return whether or not Scintilla handled the mouse event
    */
   bool MouseMove(int y, int x, bool shift, bool ctrl, bool alt) {
+    GetWINDOW(); // ensure the curses `WINDOW` has been created
     if (!draggingVScrollBar && !draggingHScrollBar) {
       int modifiers = (shift ? SCI_SHIFT : 0) | (ctrl ? SCI_CTRL : 0) |
                       (alt ? SCI_ALT : 0);
@@ -1333,6 +1350,7 @@ public:
    *   pressed.
    */
   void MouseRelease(int time, int y, int x, int ctrl) {
+    GetWINDOW(); // ensure the curses `WINDOW` has been created
     if (draggingVScrollBar || draggingHScrollBar)
       draggingVScrollBar = false, draggingHScrollBar = false;
     else if (HaveMouseCapture())
@@ -1354,7 +1372,6 @@ public:
 // Link with C. Documentation in Scintilla.h.
 extern "C" {
 Scintilla *scintilla_new(void (*callback)(Scintilla *, int, void *, void *)) {
-  init_colors();
   return reinterpret_cast<Scintilla *>(new ScintillaTerm(callback));
 }
 WINDOW *scintilla_get_window(Scintilla *sci) {
