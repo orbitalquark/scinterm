@@ -85,7 +85,8 @@ bool scintilla_send_mouse(Scintilla *sci, int event, unsigned int time,
 int scintilla_get_clipboard(Scintilla *sci, char *buffer);
 /**
  * Refreshes the Scintilla window.
- * This should be done along with the normal curses `refresh()`.
+ * This should be done along with the normal curses `refresh()`, as the physical
+ * screen is updated when calling this function.
  * Curses must have been initialized prior to calling this function.
  * @param sci The Scintilla window returned by `scintilla_new()`.
  */
@@ -102,6 +103,8 @@ void scintilla_delete(Scintilla *sci);
  * background `COLOR`s.
  * This is used simply to enumerate every possible color combination.
  * Note: only 256 combinations are possible due to curses portability.
+ * Note: This references the global curses variable `COLORS` and is
+ * not a constant expression.
  * @param f The curses foreground `COLOR`.
  * @param b The curses background `COLOR`.
  * @return int number for defining a curses `COLOR_PAIR`.
