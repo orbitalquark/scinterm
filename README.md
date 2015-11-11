@@ -30,6 +30,11 @@ Download Scinterm from the project's [download page][] or from this quick link:
 
 * [Source][]
 
+If necessary, you can obtain PGP signatures from the [download page][] along
+with a public key in order to verify download integrity. For example on Linux,
+after importing the public key via `gpg --import foicica.pgp` and downloading
+the appropriate signature, run `gpg --verify [signature]`.
+
 [download page]: http://foicica.com/scinterm/download
 [Source]: download/scinterm_LATEST.zip
 

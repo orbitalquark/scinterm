@@ -55,7 +55,7 @@ release: doc
 	hg archive $(release_dir)
 	rm $(release_dir)/.hg*
 	cp -rL doc $(release_dir)
-	zip -r $(package) $(release_dir)
+	zip -r $(package) $(release_dir) && gpg -ab $(package)
 	rm -r $(release_dir)
 
 # External dependencies.

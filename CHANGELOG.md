@@ -1,14 +1,15 @@
 # Changelog
 
-[Atom Feed][]
+[Atom Feed][] | [PGP Public Key][]
 
 [Atom Feed]: feed
+[PGP Public Key]: https://foicica.com/foicica.pgp
 
 ## 1.6 (18 Apr 2015)
 
 Download:
 
-* [Scinterm 1.6][]
+* [Scinterm 1.6][] | [PGP -- 1.6][]
 
 Bugfixes:
 
@@ -19,13 +20,14 @@ Changes:
 * Updated to [Scintilla][] 3.5.5.
 
 [Scinterm 1.6]: download/scinterm_1.6.zip
+[PGP -- 1.6]: download/scinterm_1.6.zip.asc
 [Scintilla]: http://scintilla.org
 
 ## 1.5 (10 Dec 2014)
 
 Download:
 
-* [Scinterm 1.5][]
+* [Scinterm 1.5][] | [PGP -- 1.5][]
 
 Bugfixes:
 
@@ -47,13 +49,14 @@ Changes:
 * Updated to [Scintilla][] 3.5.2.
 
 [Scinterm 1.5]: download/scinterm_1.5.zip
+[PGP -- 1.5]: download/scinterm_1.5.zip.asc
 [Scintilla]: http://scintilla.org
 
 ## 1.4 (01 Sep 2014)
 
 Download:
 
-* [Scinterm 1.4][]
+* [Scinterm 1.4][] | [PGP -- 1.4][]
 
 Bugfixes:
 
@@ -64,13 +67,14 @@ Changes:
 * Updated to [Scintilla][] 3.5.0.
 
 [Scinterm 1.4]: download/scinterm_1.4.zip
+[PGP -- 1.4]: download/scinterm_1.4.zip.asc
 [Scintilla]: http://scintilla.org
 
 ## 1.3 (09 Jul 2014)
 
 Download:
 
-* [Scinterm 1.3][]
+* [Scinterm 1.3][] | [PGP -- 1.3][]
 
 Bugfixes:
 
@@ -82,13 +86,14 @@ Changes:
 * Updated to [Scintilla][] 3.4.2.
 
 [Scinterm 1.3]: download/scinterm_1.3.zip
+[PGP -- 1.3]: download/scinterm_1.3.zip.asc
 [Scintilla]: http://scintilla.org
 
 ## 1.2 (05 Feb 2014)
 
 Download:
 
-* [Scinterm 1.2][]
+* [Scinterm 1.2][] | [PGP -- 1.2][]
 
 Bugfixes:
 
@@ -107,13 +112,14 @@ Changes:
 * Updated to [Scintilla][] 3.3.7.
 
 [Scinterm 1.2]: download/scinterm_1.2.zip
+[PGP -- 1.2]: download/scinterm_1.2.zip.asc
 [Scintilla]: http://scintilla.org
 
 ## 1.1 (11 Dec 2012)
 
 Download:
 
-* [Scinterm 1.1][]
+* [Scinterm 1.1][] | [PGP -- 1.1][]
 
 Bugfixes:
 
@@ -127,14 +133,16 @@ Changes:
 * Expose [`SCI_COLOR_PAIR()`][] macro.
 
 [Scinterm 1.1]: download/scinterm_1.1.zip
+[PGP -- 1.1]: download/scinterm_1.1.zip.asc
 [`SCI_COLOR_PAIR()`]: api.html#SCI_COLOR_PAIR
 
 ## 1.0 (31 Aug 2012)
 
 Download:
 
-* [Scinterm 1.0][]
+* [Scinterm 1.0][] | [PGP -- 1.0][]
 
 Initial release.
 
 [Scinterm 1.0]: download/scinterm_1.0.zip
+[PGP -- 1.0]: download/scinterm_1.0.zip.asc
