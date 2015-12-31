@@ -1,4 +1,4 @@
-// Copyright 2012-2015 Mitchell mitchell.att.foicica.com.
+// Copyright 2012-2016 Mitchell mitchell.att.foicica.com.
 // Header for Scintilla in a UNIX terminal environment.
 
 #ifndef SCINTILLATERM_H
