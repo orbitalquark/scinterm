@@ -838,8 +838,9 @@ void Menu::CreatePopUp() {}
 void Menu::Destroy() {}
 void Menu::Show(Point pt, Window &w) {}
 
-// ElapsedTime is unused. Scintilla has disabled code for profiling paints.
+// ElapsedTime is not implemented.
 ElapsedTime::ElapsedTime() {}
+double ElapsedTime::Duration(bool reset) { return 1; }
 
 /** Dynamic library loading is not implemented. */
 DynamicLibrary *DynamicLibrary::Load(const char *modulePath) {
