@@ -19,6 +19,7 @@
 
 #include "Scintilla.h"
 #include "ILexer.h"
+#include "Position.h"
 #include "SplitVector.h"
 #include "Partitioning.h"
 #include "RunStyles.h"
@@ -1093,8 +1094,6 @@ public:
   void CopyToClipboard(const SelectionText &selectedText) {
     clipboard.Copy(selectedText);
   }
-  /** A ticking caret is not implemented. */
-  void SetTicking(bool on) {}
   /**
    * Sets whether or not the mouse is captured.
    * This is used by Scintilla to handle mouse clicks, drags, and releases.
