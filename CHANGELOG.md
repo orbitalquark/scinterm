@@ -5,6 +5,25 @@
 [Atom Feed]: feed
 [PGP Public Key]: https://foicica.com/foicica.pgp
 
+## 1.7 (03 Feb 2015)
+
+Download:
+
+* [Scinterm 1.7][] | [PGP -- 1.7][]
+
+Bugfixes:
+
+* None.
+
+Changes:
+
+* Delay creation of curses `WINDOW`s for as long as possible.
+* Updated to [Scintilla][] 3.6.3.
+
+[Scinterm 1.7]: download/scinterm_1.7.zip
+[PGP -- 1.7]: download/scinterm_1.7.zip.asc
+[Scintilla]: http://scintilla.org
+
 ## 1.6 (18 Apr 2015)
 
 Download:
