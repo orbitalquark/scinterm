@@ -375,10 +375,24 @@ public:
     intptr_t attrs = reinterpret_cast<intptr_t>(font_.GetID());
     wattr_set(win, static_cast<attr_t>(attrs), term_color_pair(fore, back),
               NULL);
-    if (rc.left < clip.left) // do not overwrite margin text
-      s += static_cast<int>(clip.left - rc.left), rc.left = clip.left;
-    mvwaddnstr(win, rc.top, rc.left, s,
-               Platform::Minimum(len, getmaxx(win) - rc.left));
+    if (rc.left < clip.left) {
+      // Do not overwrite margin text.
+      int clip_chars = static_cast<int>(clip.left - rc.left);
+      int offset = 0;
+      for (int utf8_chars = 0; offset < len; offset++) {
+        if (!UTF8IsTrailByte((unsigned char)s[offset])) utf8_chars++;
+        if (utf8_chars > clip_chars) break;
+      }
+      s += offset, len -= offset, rc.left = clip.left;
+    }
+    // Do not write beyond right window boundary.
+    int clip_chars = getmaxx(win) - rc.left;
+    int bytes = 0;
+    for (int utf8_chars = 0; bytes < len; bytes++) {
+      if (!UTF8IsTrailByte((unsigned char)s[bytes])) utf8_chars++;
+      if (utf8_chars > clip_chars) break;
+    }
+    mvwaddnstr(win, rc.top, rc.left, s, Platform::Minimum(len, bytes));
   }
   /**
    * Similar to `DrawTextNoClip()`.
@@ -722,7 +736,7 @@ public:
       char *chtype = types[type];
       list.push_back(std::string(chtype, strlen(chtype)) + std::string(s));
     } else list.push_back(std::string(" ") + std::string(s));
-    int len = strlen(s);
+    int len = strlen(s); // TODO: UTF-8 awareness?
     if (width < len) {
       width = len + 1; // include type character len
       wresize(_WINDOW(wid), height + 2, width + 2);
