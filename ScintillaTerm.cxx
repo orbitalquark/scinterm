@@ -8,6 +8,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
+#include <wchar.h>
 
 #include <stdexcept>
 #include <string>
@@ -72,6 +73,7 @@ struct ldat {
 };
 #elif PDCURSES
 #define wattrget(w, y, x) (w)->_y[(y)][(x)]
+#define wcwidth(_) 1 // TODO: http://www.cl.cam.ac.uk/~mgk25/ucs/wcwidth.c
 #else
 #define wattrget(w, y, x) 0
 #endif
@@ -225,6 +227,18 @@ static int term_color(int color) { return color; }
 class SurfaceImpl : public Surface {
   WINDOW *win;
   PRectangle clip;
+
+  /**
+   * Returns the number of columns used to display the first UTF-8 character in
+   * `s`, taking into account zero-width combining characters.
+   * @param s The string that contains the first UTF-8 character to display.
+   */
+  int grapheme_width(const char *s) {
+    wchar_t wch;
+    if (mbtowc(&wch, s, MB_CUR_MAX) < 1) return 1;
+    int width = wcwidth(wch);
+    return width >= 0 ? width : 1;
+  }
 public:
   /** Allocates a new Scintilla surface for the terminal. */
   SurfaceImpl() : win(0) {}
@@ -379,18 +393,20 @@ public:
       // Do not overwrite margin text.
       int clip_chars = static_cast<int>(clip.left - rc.left);
       int offset = 0;
-      for (int utf8_chars = 0; offset < len; offset++) {
-        if (!UTF8IsTrailByte((unsigned char)s[offset])) utf8_chars++;
-        if (utf8_chars > clip_chars) break;
+      for (int chars = 0; offset < len; offset++) {
+        if (!UTF8IsTrailByte((unsigned char)s[offset]))
+          chars += grapheme_width(s + offset);
+        if (chars > clip_chars) break;
       }
       s += offset, len -= offset, rc.left = clip.left;
     }
     // Do not write beyond right window boundary.
     int clip_chars = getmaxx(win) - rc.left;
     int bytes = 0;
-    for (int utf8_chars = 0; bytes < len; bytes++) {
-      if (!UTF8IsTrailByte((unsigned char)s[bytes])) utf8_chars++;
-      if (utf8_chars > clip_chars) break;
+    for (int chars = 0; bytes < len; bytes++) {
+      if (!UTF8IsTrailByte((unsigned char)s[bytes]))
+        chars += grapheme_width(s + bytes);
+      if (chars > clip_chars) break;
     }
     mvwaddnstr(win, rc.top, rc.left, s, Platform::Minimum(len, bytes));
   }
@@ -432,7 +448,7 @@ public:
   void MeasureWidths(Font &font_, const char *s, int len,
                      XYPOSITION *positions) {
     for (int i = 0, j = 0; i < len; i++) {
-      if (!UTF8IsTrailByte((unsigned char)s[i])) j++;
+      if (!UTF8IsTrailByte((unsigned char)s[i])) j += grapheme_width(s + i);
       positions[i] = j;
     }
   }
@@ -443,7 +459,7 @@ public:
   XYPOSITION WidthText(Font &font_, const char *s, int len) {
     int width = 0;
     for (int i = 0; i < len; i++)
-      if (!UTF8IsTrailByte((unsigned char)s[i])) width++;
+      if (!UTF8IsTrailByte((unsigned char)s[i])) width += grapheme_width(s + i);
     return width;
   }
   /** Returns 1 since terminal font characters always have a width of 1. */
