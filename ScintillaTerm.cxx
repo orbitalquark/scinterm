@@ -73,9 +73,12 @@ struct ldat {
 };
 #elif PDCURSES
 #define wattrget(w, y, x) (w)->_y[(y)][(x)]
-#define wcwidth(_) 1 // TODO: http://www.cl.cam.ac.uk/~mgk25/ucs/wcwidth.c
 #else
 #define wattrget(w, y, x) 0
+#endif
+
+#if _WIN32
+#define wcwidth(_) 1 // TODO: http://www.cl.cam.ac.uk/~mgk25/ucs/wcwidth.c
 #endif
 
 // Font handling.
