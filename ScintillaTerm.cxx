@@ -59,12 +59,26 @@
 // Defines for getting attributes for INDIC_ROUNDBOX and INDIC_STRAIGHTBOX.
 // These are specific to curses implementations.
 #if NCURSES_VERSION_MAJOR
-#if (defined(NCURSES_WIDECHAR) || defined(_XOPEN_SOURCE_EXTENDED))
-#define wattrget(w, y, x) (w)->_line[(y)].text[(x)].attr
+// Determine whether or not wide-character support is on.
+// Wide-character support is considered off if NCURSES_WIDECHAR is undefined or
+// 0, since some versions of ncurses will define NCURSES_WIDECHAR to be empty.
+#define EXPAND(x) 1##x
+#define EMPTY(x) (EXPAND(x) == 1)
+#ifndef NCURSES_WIDECHAR
+#define NCURSES_WIDECHAR 0
+#elif EMPTY(NCURSES_WIDECHAR)
+#undef NCURSES_WIDECHAR
+#define NCURSES_WIDECHAR 1
+#endif
+#undef EMPTY
+#undef EXPAND
 #undef NCURSES_CH_T
+#if NCURSES_WIDECHAR
+#define wattrget(w, y, x) (w)->_line[(y)].text[(x)].attr
 #define NCURSES_CH_T cchar_t
 #else
 #define wattrget(w, y, x) (w)->_line[(y)].text[(x)]
+#define NCURSES_CH_T chtype
 #endif
 struct ldat {
   NCURSES_CH_T *text;
