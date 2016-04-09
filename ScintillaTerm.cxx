@@ -1171,7 +1171,7 @@ public:
    * Sends the given message and parameters to Scintilla unless it is a message
    * that changes an unsupported property.
    */
-  sptr_t WndProc(unsigned int iMessage, uptr_t wParam, uptr_t lParam) {
+  sptr_t WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam) {
     try {
       switch (iMessage) {
         case SCI_GETDIRECTFUNCTION:
