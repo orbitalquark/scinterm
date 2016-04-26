@@ -77,7 +77,13 @@ function scintilla_send_mouse(sci, event, time, button, y, x, shift, ctrl, alt) 
 function scintilla_get_clipboard(sci, buffer) end
 
 ---
--- Refreshes the Scintilla window.
+-- Refreshes the Scintilla window on the virtual screen.
+-- This should be done along with the normal curses `noutrefresh()`.
+-- @param sci The Scintilla window returned by `scintilla_new()`.
+function scintilla_noutrefresh(sci) end
+
+---
+-- Refreshes the Scintilla window on the physical screen.
 -- This should be done along with the normal curses `refresh()`.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @return `void`
