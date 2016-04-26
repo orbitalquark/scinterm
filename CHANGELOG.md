@@ -5,7 +5,28 @@
 [Atom Feed]: feed
 [PGP Public Key]: https://foicica.com/foicica.pgp
 
-## 1.7 (03 Feb 2015)
+## 1.8 (26 Apr 2016)
+
+Download:
+
+* [Scinterm 1.8][] | [PGP -- 1.8][]
+
+Bugfixes:
+
+* Many improvements to UTF-8 character handling.
+* Fix building on some version of Mac OSX.
+
+Changes:
+
+* Improved ncurses wide-character detection.
+* Added [`scintilla_noutrefresh()`][] for more efficient refreshing.
+
+[Scinterm 1.8]: download/scinterm_1.8.zip
+[PGP -- 1.8]: download/scinterm_1.8.zip.asc
+[Scintilla]: http://scintilla.org
+[`scintilla_noutrefresh()`]: api.html#scintilla_noutrefresh
+
+## 1.7 (03 Feb 2016)
 
 Download:
 
