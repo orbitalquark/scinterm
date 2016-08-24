@@ -5,7 +5,8 @@
 AR = ar
 CXX = g++
 INCLUDEDIRS = -I ../include -I ../src -I ../lexlib
-CXXFLAGS = -Wall -pedantic -DCURSES -DSCI_LEXER $(INCLUDEDIRS)
+CXXFLAGS = -std=c++0x -pedantic -DCURSES -DSCI_LEXER $(INCLUDEDIRS) -W -Wall \
+           -Wno-unused -Wno-missing-field-initializers
 ifdef DEBUG
   CXXFLAGS += -DDEBUG -g
 else
