@@ -1144,6 +1144,8 @@ public:
   void CopyToClipboard(const SelectionText &selectedText) {
     clipboard.Copy(selectedText);
   }
+  /** A ticking caret is not implemented. */
+  void SetTicking(bool on) {}
   /**
    * Sets whether or not the mouse is captured.
    * This is used by Scintilla to handle mouse clicks, drags, and releases.
