@@ -1043,7 +1043,7 @@ public:
   /** Disable drag and drop since it is not implemented. */
   void StartDrag() {
     inDragDrop = ddNone;
-    SetDragPosition(SelectionPosition(invalidPosition));
+    SetDragPosition(SelectionPosition(Sci::invalidPosition));
   }
   /** Draws the vertical scroll bar. */
   void SetVerticalScrollPos() {
