@@ -5,6 +5,26 @@
 [Atom Feed]: feed
 [PGP Public Key]: https://foicica.com/foicica.pgp
 
+## 1.9 (25 Jun 2017)
+
+Download:
+
+* [Scinterm 1.9][] | [PGP -- 1.9][]
+
+Bugfixes:
+
+* Fixed various compiler warnings.
+
+Changes:
+
+* Use a curses primitive instead of implementation-specific workaround when
+  changing text attributes.
+* Updated to [Scintilla][] 3.7.5.
+
+[Scinterm 1.9]: download/scinterm_1.9.zip
+[PGP -- 1.9]: download/scinterm_1.9.zip.asc
+[Scintilla]: http://scintilla.org
+
 ## 1.8 (26 Apr 2016)
 
 Download:
