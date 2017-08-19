@@ -1218,6 +1218,13 @@ public:
       ac.lb->Select(ac.lb->GetSelection()); // redraw
     else if (ct.inCallTipMode)
       CreateCallTipWindow(PRectangle(0, 0, 0, 0)); // redraw
+    if (hasFocus) {
+      // Update cursor position, even if it's not visible, as the container may
+      // have a use for it.
+      int pos = WndProc(SCI_GETCURRENTPOS, 0, 0);
+      move(getbegy(w) + WndProc(SCI_POINTYFROMPOSITION, 0, pos),
+           getbegx(w) + WndProc(SCI_POINTXFROMPOSITION, 0, pos));
+    }
   }
   /**
    * Repaints the Scintilla window on the physical screen.
