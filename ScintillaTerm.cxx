@@ -1,4 +1,4 @@
-// Copyright 2012-2017 Mitchell mitchell.att.foicica.com.
+// Copyright 2012-2018 Mitchell mitchell.att.foicica.com.
 // Scintilla implemented in a UNIX terminal environment.
 // Contains platform facilities and a terminal-specific subclass of
 // ScintillaBase.
