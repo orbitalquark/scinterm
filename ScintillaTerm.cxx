@@ -6,6 +6,9 @@
 // order to display UTF-8 characters properly in ncursesw.
 
 #include <math.h>
+#ifdef SCI_COMPAT_4
+#include <stddef.h> // for ptrdiff_t use in Scintilla
+#endif
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -390,7 +393,7 @@ public:
         chars += grapheme_width(s + bytes);
       if (chars > clip_chars) break;
     }
-    mvwaddnstr(win, rc.top, rc.left, s, Platform::Minimum(len, bytes));
+    mvwaddnstr(win, rc.top, rc.left, s, std::min(len, bytes));
   }
   /**
    * Similar to `DrawTextNoClip()`.
@@ -678,12 +681,21 @@ class ListBoxImpl : public ListBox {
   char types[IMAGE_MAX + 1][5]; // UTF-8 character plus terminating '\0'
   int selection;
 public:
-	CallBackAction doubleClickAction;
-	void *doubleClickActionData;
+#ifndef SCI_COMPAT_4
+  CallBackAction doubleClickAction;
+  void *doubleClickActionData;
+#else
+  IListBoxDelegate *delegate;
+#endif
 
   /** Allocates a new Scintilla ListBox for the terminal. */
-  ListBoxImpl() : height(5), width(10), selection(0), doubleClickAction(NULL),
-                  doubleClickActionData(NULL) {
+  ListBoxImpl() : height(5), width(10), selection(0),
+#ifndef SCI_COMPAT_4
+                  doubleClickAction(NULL), doubleClickActionData(NULL)
+#else
+                  delegate(NULL)
+#endif
+                  {
     list.reserve(10);
     ClearRegisteredImages();
   }
@@ -815,10 +827,17 @@ public:
   void ClearRegisteredImages() {
     for (int i = 0; i <= IMAGE_MAX; i++) types[i][0] = ' ', types[i][1] = '\0';
   }
+#ifndef SCI_COMPAT_4
   /** Enable double-click to select a list item. */
   void SetDoubleClickAction(CallBackAction action, void *data) {
     doubleClickAction = action, doubleClickActionData = data;
   }
+#else
+  /** Defines the delegate for ListBox actions. */
+  void SetDelegate(IListBoxDelegate *lbDelegate) {
+    delegate = lbDelegate;
+  }
+#endif
   /** Sets the list items in the listbox to the given items. */
   void SetList(const char *listText, char separator, char typesep) {
     Clear();
@@ -867,7 +886,9 @@ ColourDesired Platform::ChromeHighlight() { return ColourDesired(0, 0, 0); }
 const char *Platform::DefaultFont() { return "monospace"; }
 int Platform::DefaultFontSize() { return 10; }
 unsigned int Platform::DoubleClickTime() { return 500; /* ms */ }
+#ifndef SCI_COMPAT_4
 bool Platform::MouseButtonBounce() { return true; }
+#endif
 void Platform::DebugDisplay(const char *s) { fprintf(stderr, "%s", s); }
 //bool Platform::IsKeyDown(int key) { return false; }
 //long Platform::SendScintilla(WindowID w, unsigned int msg,
@@ -881,8 +902,10 @@ void Platform::DebugDisplay(const char *s) { fprintf(stderr, "%s", s); }
 //  return (bytes >= 1) ? bytes : 1;
 //}
 //int Platform::DBCSCharMaxLength() { return MB_CUR_MAX; }
+#ifndef SCI_COMPAT_4
 int Platform::Minimum(int a, int b) { return (a < b) ? a : b; }
 int Platform::Maximum(int a, int b) { return (a > b) ? a : b; }
+#endif
 void Platform::DebugPrintf(const char *format, ...) {}
 //bool Platform::ShowAssertionPopUps(bool assertionPopUps_) { return true; }
 void Platform::Assert(const char *c, const char *file, int line) {
@@ -891,11 +914,13 @@ void Platform::Assert(const char *c, const char *file, int line) {
   Platform::DebugDisplay(buffer);
   abort();
 }
+#ifndef SCI_COMPAT_4
 int Platform::Clamp(int val, int minVal, int maxVal) {
   if (val > maxVal) val = maxVal;
   if (val < minVal) val = minVal;
   return val;
 }
+#endif
 
 /** Implementation of Scintilla for the Terminal. */
 class ScintillaTerm : public ScintillaBase {
@@ -1050,9 +1075,17 @@ public:
     WINDOW *w = GetWINDOW();
     int maxy = getmaxy(w), maxx = getmaxx(w);
     int height = roundf(static_cast<float>(nPage) / nMax * maxy);
+#ifndef SCI_COMPAT_4
     scrollBarHeight = Platform::Clamp(height, 1, maxy);
+#else
+    scrollBarHeight = Sci::clamp(height, 1, maxy);
+#endif
     int width = roundf(static_cast<float>(maxx) / scrollWidth * maxx);
+#ifndef SCI_COMPAT_4
     scrollBarWidth = Platform::Clamp(width, 1, maxx);
+#else
+    scrollBarWidth = Sci::clamp(width, 1, maxx);
+#endif
     return true;
   }
   /**
@@ -1252,7 +1285,11 @@ public:
    *   pressed.
    */
   void KeyPress(int key, bool shift, bool ctrl, bool alt) {
+#ifndef SCI_COMPAT_4
     KeyDown(key, shift, ctrl, alt, NULL);
+#else
+    KeyDownWithModifiers(key, ModifierFlags(shift, ctrl, alt), NULL);
+#endif
   }
   /**
    * Handles a mouse button press.
@@ -1292,8 +1329,15 @@ public:
           if (offset == 0 &&
               time - autoCompleteLastClickTime < Platform::DoubleClickTime()) {
             ListBoxImpl* listbox = reinterpret_cast<ListBoxImpl *>(ac.lb);
+#ifndef SCI_COMPAT_4
             if (listbox->doubleClickAction != NULL)
               listbox->doubleClickAction(listbox->doubleClickActionData);
+#else
+            if (listbox->delegate) {
+              ListBoxEvent event(ListBoxEvent::EventType::doubleClick);
+              listbox->delegate->ListNotify(&event);
+            }
+#endif
           } else ac.lb->Select(n + offset);
           autoCompleteLastClickTime = time;
         } else {
@@ -1337,9 +1381,16 @@ public:
           return (HorizontalScrollTo(xOffset + getmaxx(GetWINDOW()) / 2), true);
         else
           draggingHScrollBar = true, dragOffset = x - scrollBarHPos;
-      } else
+      } else {
         // Have Scintilla handle the click.
-        return (ButtonDown(Point(x, y), time, shift, ctrl, alt), true);
+#ifndef SCI_COMPAT_4
+        ButtonDown(Point(x, y), time, shift, ctrl, alt);
+#else
+        ButtonDownWithModifiers(Point(x, y), time,
+                                ModifierFlags(shift, ctrl, alt));
+#endif
+        return true;
+      }
     } else if (button == 4 || button == 5) {
       // Scroll the view.
       int lines = getmaxy(GetWINDOW()) / 4;
@@ -1364,9 +1415,13 @@ public:
   bool MouseMove(int y, int x, bool shift, bool ctrl, bool alt) {
     GetWINDOW(); // ensure the curses `WINDOW` has been created
     if (!draggingVScrollBar && !draggingHScrollBar) {
+#ifndef SCI_COMPAT_4
       int modifiers = (shift ? SCI_SHIFT : 0) | (ctrl ? SCI_CTRL : 0) |
                       (alt ? SCI_ALT : 0);
       ButtonMoveWithModifiers(Point(x, y), modifiers);
+#else
+      ButtonMoveWithModifiers(Point(x, y), 0, ModifierFlags(shift, ctrl, alt));
+#endif
     } else if (draggingVScrollBar) {
       int maxy = getmaxy(GetWINDOW()) - scrollBarHeight, pos = y - dragOffset;
       if (pos >= 0 && pos <= maxy) ScrollTo(pos * MaxScrollPos() / maxy);
@@ -1391,8 +1446,16 @@ public:
     GetWINDOW(); // ensure the curses `WINDOW` has been created
     if (draggingVScrollBar || draggingHScrollBar)
       draggingVScrollBar = false, draggingHScrollBar = false;
-    else if (HaveMouseCapture())
+    else if (HaveMouseCapture()) {
+#ifndef SCI_COMPAT_4
       ButtonUp(Point(x, y), time, ctrl);
+#else
+      ButtonUpWithModifiers(Point(x, y), time,
+                            ModifierFlags(ctrl, false, false));
+      // TODO: ListBoxEvent event(ListBoxEvent::EventType::selectionChange);
+      // TODO: listbox->delegate->ListNotify(&event);
+#endif
+    }
   }
   /**
    * Copies the text of the internal clipboard, not the primary and/or secondary
