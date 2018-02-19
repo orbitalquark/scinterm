@@ -1334,7 +1334,11 @@ public:
               listbox->doubleClickAction(listbox->doubleClickActionData);
 #else
             if (listbox->delegate) {
+#ifndef TA_PATCH
               ListBoxEvent event(ListBoxEvent::EventType::doubleClick);
+#else
+              ListBoxEvent event(ListBoxEvent::doubleClick); // no enum class
+#endif
               listbox->delegate->ListNotify(&event);
             }
 #endif
