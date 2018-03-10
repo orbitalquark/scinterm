@@ -1,17 +1,13 @@
-// Copyright 2012-2018 Mitchell mitchell.att.foicica.com.
-// Scintilla implemented in a UNIX terminal environment.
-// Contains platform facilities and a terminal-specific subclass of
-// ScintillaBase.
+// Copyright 2012-2018 Mitchell mitchell.att.foicica.com. See LICENSE.
+// Scintilla implemented in a curses (terminal) environment.
+// Contains platform facilities and a curses-specific subclass of ScintillaBase.
 // Note: setlocale(LC_CTYPE, "") must be called before initializing curses in
 // order to display UTF-8 characters properly in ncursesw.
 
-#include <math.h>
-#ifdef SCI_COMPAT_4
-#include <stddef.h> // for ptrdiff_t use in Scintilla
-#endif
-#include <stdint.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
+#include <math.h>
 #include <wchar.h>
 
 #include <stdexcept>
@@ -19,12 +15,14 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <memory>
 
 #include "Platform.h"
 
-#include "Scintilla.h"
 #include "ILexer.h"
+#include "Scintilla.h"
 #include "Position.h"
+#include "UniqueString.h"
 #include "SplitVector.h"
 #include "Partitioning.h"
 #include "RunStyles.h"
@@ -36,21 +34,21 @@
 #include "XPM.h"
 #include "LineMarker.h"
 #include "Style.h"
-#include "AutoComplete.h"
 #include "ViewStyle.h"
-#include "Decoration.h"
 #include "CharClassify.h"
+#include "Decoration.h"
 #include "CaseFolder.h"
 #include "Document.h"
+#include "UniConversion.h"
 #include "Selection.h"
 #include "PositionCache.h"
 #include "EditModel.h"
 #include "MarginView.h"
 #include "EditView.h"
 #include "Editor.h"
+#include "AutoComplete.h"
 #include "ScintillaBase.h"
-#include "UniConversion.h"
-#include "ScintillaTerm.h"
+#include "ScintillaCurses.h"
 
 /**
  * Returns the given Scintilla `WindowID` as a curses `WINDOW`.
@@ -66,8 +64,8 @@
 // Font handling.
 
 /**
- * Allocates a new Scintilla font for the terminal.
- * Since the terminal handles fonts on its own, the only use for Scintilla font
+ * Allocates a new Scintilla font for curses.
+ * Since terminals handle fonts on their own, the only use for Scintilla font
  * objects is to indicate which attributes terminal characters have. This is
  * done in `Font::Create()`.
  * @see Font::Create
@@ -82,7 +80,7 @@ Font::~Font() {}
  * The curses attributes are not constructed from various fields in *fp* since
  * there is no `underline` parameter. Instead, you need to manually set the
  * `weight` parameter to be the union of your desired attributes.
- * Scintillua (http://foicica.com/scintillua) has an example of this.
+ * Scintilla's lexers/LexLPeg.cxx has an example of this.
  */
 void Font::Create(const FontParameters &fp) {
   Release();
@@ -204,9 +202,9 @@ static int term_color(int color) { return color; }
 // Surface handling.
 
 /**
- * Implementation of a Scintilla surface for the terminal.
- * The surface is initialized with a curses `WINDOW` for drawing on. Since the
- * terminal can only show text, many of Scintilla's pixel-based functions are
+ * Implementation of a Scintilla surface for curses.
+ * The surface is initialized with a curses `WINDOW` for drawing on. Since
+ * curses can only show text, many of Scintilla's pixel-based functions are
  * not implemented.
  */
 class SurfaceImpl : public Surface {
@@ -225,7 +223,7 @@ class SurfaceImpl : public Surface {
     return width >= 0 ? width : 1;
   }
 public:
-  /** Allocates a new Scintilla surface for the terminal. */
+  /** Allocates a new Scintilla surface for curses. */
   SurfaceImpl() : win(0) {}
   /** Deletes the surface. */
   ~SurfaceImpl() { Release(); }
@@ -258,7 +256,7 @@ public:
   void PenColour(ColourDesired fore) {}
   /** Unused; return value irrelevant. */
   int LogPixelsY() { return 1; }
-  /** Returns 1 since font height is always 1 in the terminal. */
+  /** Returns 1 since font height is always 1 in curses. */
   int DeviceHeightFont(int points) { return 1; }
   /**
    * Moving to a particular position is not implemented because all uses in
@@ -427,8 +425,8 @@ public:
   /**
    * Measures the width of characters in the given string and writes them to the
    * given position list.
-   * Terminal font characters always have a width of 1 if they are not UTF-8
-   * trailing bytes.
+   * Curses characters always have a width of 1 if they are not UTF-8 trailing
+   * bytes.
    */
   void MeasureWidths(Font &font_, const char *s, int len,
                      XYPOSITION *positions) {
@@ -438,8 +436,8 @@ public:
     }
   }
   /**
-   * Returns the number of UTF-8 characters in the given string since terminal
-   * font characters always have a width of 1.
+   * Returns the number of UTF-8 characters in the given string since curses
+   * characters always have a width of 1.
    */
   XYPOSITION WidthText(Font &font_, const char *s, int len) {
     int width = 0;
@@ -447,19 +445,19 @@ public:
       if (!UTF8IsTrailByte((unsigned char)s[i])) width += grapheme_width(s + i);
     return width;
   }
-  /** Returns 1 since terminal font characters always have a width of 1. */
+  /** Returns 1 since curses characters always have a width of 1. */
   XYPOSITION WidthChar(Font &font_, char ch) { return 1; }
-  /** Returns 0 since terminal font characters have no ascent. */
+  /** Returns 0 since curses characters have no ascent. */
   XYPOSITION Ascent(Font &font_) { return 0; }
-  /** Returns 0 since terminal font characters have no descent. */
+  /** Returns 0 since curses characters have no descent. */
   XYPOSITION Descent(Font &font_) { return 0; }
-  /** Returns 0 since terminal font characters have no leading. */
+  /** Returns 0 since curses characters have no leading. */
   XYPOSITION InternalLeading(Font &font_) { return 0; }
-  /** Returns 0 since terminal font characters have no leading. */
+  /** Returns 0 since curses characters have no leading. */
   XYPOSITION ExternalLeading(Font &font_) { return 0; }
-  /** Returns 1 since terminal font characters always have a height of 1. */
+  /** Returns 1 since curses characters always have a height of 1. */
   XYPOSITION Height(Font &font_) { return 1; }
-  /** Returns 1 since terminal font characters always have a width of 1. */
+  /** Returns 1 since curses characters always have a width of 1. */
   XYPOSITION AverageCharWidth(Font &font_) { return 1; }
 
   /**
@@ -575,10 +573,10 @@ public:
   }
 };
 
-/** Creates a new terminal surface. */
+/** Creates a new curses surface. */
 Surface *Surface::Allocate(int) { return new SurfaceImpl(); }
 
-/** Custom function for drawing line markers in the terminal. */
+/** Custom function for drawing line markers in curses. */
 static void DrawLineMarker(Surface *surface, PRectangle &rcWhole,
                            Font &fontForCharacter, int tFold, int marginStyle,
                            const void *data) {
@@ -586,13 +584,13 @@ static void DrawLineMarker(Surface *surface, PRectangle &rcWhole,
                                                            fontForCharacter,
                                                            tFold, data);
 }
-/** Custom function for drawing wrap markers in the terminal. */
+/** Custom function for drawing wrap markers in curses. */
 static void DrawWrapVisualMarker(Surface *surface, PRectangle rcPlace,
                                  bool isEndMarker, ColourDesired wrapColour) {
   reinterpret_cast<SurfaceImpl *>(surface)->DrawWrapMarker(rcPlace, isEndMarker,
                                                            wrapColour);
 }
-/** Custom function for drawing tab arrows in the terminal. */
+/** Custom function for drawing tab arrows in curses. */
 static void DrawTabArrow(Surface *surface, PRectangle rcTab, int ymid) {
   reinterpret_cast<SurfaceImpl *>(surface)->DrawTabArrow(rcTab);
 }
@@ -605,9 +603,9 @@ Window::~Window() {}
  * Releases the window's resources.
  * Since the only Windows created are AutoComplete and CallTip windows, and
  * since those windows are created in `ListBox::Create()` and
- * `ScintillaTerm::CreateCallTipWindow()`, respectively, via `newwin()`, it is
+ * `ScintillaCurses::CreateCallTipWindow()`, respectively, via `newwin()`, it is
  * safe to use `delwin()`.
- * It is important to note that even though `ScintillaTerm::wMain` is a Window,
+ * It is important to note that even though `ScintillaCurses::wMain` is a Window,
  * its `Destroy()` function is never called, hence why `scintilla_delete()` is
  * the complement to `scintilla_new()`.
  */
@@ -671,7 +669,7 @@ void Window::SetCursor(Cursor curs) {}
 PRectangle Window::GetMonitorRect(Point pt) { return GetPosition(); }
 
 /**
- * Implementation of a Scintilla ListBox for the terminal.
+ * Implementation of a Scintilla ListBox for curses.
  * Instead of registering images to types, printable UTF-8 characters are
  * registered to types.
  */
@@ -681,21 +679,12 @@ class ListBoxImpl : public ListBox {
   char types[IMAGE_MAX + 1][5]; // UTF-8 character plus terminating '\0'
   int selection;
 public:
-#ifndef SCI_COMPAT_4
   CallBackAction doubleClickAction;
   void *doubleClickActionData;
-#else
-  IListBoxDelegate *delegate;
-#endif
 
-  /** Allocates a new Scintilla ListBox for the terminal. */
-  ListBoxImpl() : height(5), width(10), selection(0),
-#ifndef SCI_COMPAT_4
-                  doubleClickAction(NULL), doubleClickActionData(NULL)
-#else
-                  delegate(NULL)
-#endif
-                  {
+  /** Allocates a new Scintilla ListBox for curses. */
+  ListBoxImpl() : height(5), width(10), selection(0), doubleClickAction(NULL),
+                  doubleClickActionData(NULL) {
     list.reserve(10);
     ClearRegisteredImages();
   }
@@ -713,7 +702,7 @@ public:
     wid = newwin(1, 1, 0, 0);
   }
   /**
-   * Setting average char width is not implemented since all terminal characters
+   * Setting average char width is not implemented since all curses characters
    * have a width of 1.
    */
   void SetAverageCharWidth(int width) {}
@@ -827,17 +816,10 @@ public:
   void ClearRegisteredImages() {
     for (int i = 0; i <= IMAGE_MAX; i++) types[i][0] = ' ', types[i][1] = '\0';
   }
-#ifndef SCI_COMPAT_4
   /** Enable double-click to select a list item. */
   void SetDoubleClickAction(CallBackAction action, void *data) {
     doubleClickAction = action, doubleClickActionData = data;
   }
-#else
-  /** Defines the delegate for ListBox actions. */
-  void SetDelegate(IListBoxDelegate *lbDelegate) {
-    delegate = lbDelegate;
-  }
-#endif
   /** Sets the list items in the listbox to the given items. */
   void SetList(const char *listText, char separator, char typesep) {
     Clear();
@@ -863,7 +845,7 @@ public:
 ListBox::ListBox() {}
 /** Deletes the ListBox. */
 ListBox::~ListBox() {}
-/** Creates a new Terminal ListBox. */
+/** Creates a new curses ListBox. */
 ListBox *ListBox::Allocate() { return new ListBoxImpl(); }
 
 // Menus are not implemented.
@@ -886,9 +868,7 @@ ColourDesired Platform::ChromeHighlight() { return ColourDesired(0, 0, 0); }
 const char *Platform::DefaultFont() { return "monospace"; }
 int Platform::DefaultFontSize() { return 10; }
 unsigned int Platform::DoubleClickTime() { return 500; /* ms */ }
-#ifndef SCI_COMPAT_4
 bool Platform::MouseButtonBounce() { return true; }
-#endif
 void Platform::DebugDisplay(const char *s) { fprintf(stderr, "%s", s); }
 //bool Platform::IsKeyDown(int key) { return false; }
 //long Platform::SendScintilla(WindowID w, unsigned int msg,
@@ -902,10 +882,8 @@ void Platform::DebugDisplay(const char *s) { fprintf(stderr, "%s", s); }
 //  return (bytes >= 1) ? bytes : 1;
 //}
 //int Platform::DBCSCharMaxLength() { return MB_CUR_MAX; }
-#ifndef SCI_COMPAT_4
 int Platform::Minimum(int a, int b) { return (a < b) ? a : b; }
 int Platform::Maximum(int a, int b) { return (a > b) ? a : b; }
-#endif
 void Platform::DebugPrintf(const char *format, ...) {}
 //bool Platform::ShowAssertionPopUps(bool assertionPopUps_) { return true; }
 void Platform::Assert(const char *c, const char *file, int line) {
@@ -914,16 +892,14 @@ void Platform::Assert(const char *c, const char *file, int line) {
   Platform::DebugDisplay(buffer);
   abort();
 }
-#ifndef SCI_COMPAT_4
 int Platform::Clamp(int val, int minVal, int maxVal) {
   if (val > maxVal) val = maxVal;
   if (val < minVal) val = minVal;
   return val;
 }
-#endif
 
-/** Implementation of Scintilla for the Terminal. */
-class ScintillaTerm : public ScintillaBase {
+/** Implementation of Scintilla for curses. */
+class ScintillaCurses : public ScintillaBase {
   Surface *sur; // window surface to draw on
   int width, height; // window dimensions
   void (*callback)(Scintilla *, int, void *, void *); // SCNotification callback
@@ -967,12 +943,12 @@ public:
    * necessary. When the `WINDOW` is created, it will initially be full-screen.
    * @param callback_ Callback function for Scintilla notifications.
    */
-  ScintillaTerm(void (*callback_)(Scintilla *, int, void *, void *)) :
+  ScintillaCurses(void (*callback_)(Scintilla *, int, void *, void *)) :
                width(0), height(0), scrollBarHeight(1), scrollBarWidth(1) {
     callback = callback_;
     sur = Surface::Allocate(SC_TECHNOLOGY_DEFAULT);
 
-    // Defaults for terminals.
+    // Defaults for curses.
     marginView.wrapMarkerPaddingRight = 0; // no padding for margin wrap markers
     marginView.customDrawWrapMarker = DrawWrapVisualMarker; // draw text markers
     view.tabWidthMinimumPixels = 0; // no proportional fonts
@@ -1019,7 +995,7 @@ public:
     ct.verticalOffset = 0; // no extra offset of calltip from line
   }
   /** Deletes the Scintilla instance. */
-  ~ScintillaTerm() {
+  ~ScintillaCurses() {
     if (wMain.GetID())
       delwin(GetWINDOW());
     if (sur) {
@@ -1075,17 +1051,9 @@ public:
     WINDOW *w = GetWINDOW();
     int maxy = getmaxy(w), maxx = getmaxx(w);
     int height = roundf(static_cast<float>(nPage) / nMax * maxy);
-#ifndef SCI_COMPAT_4
     scrollBarHeight = Platform::Clamp(height, 1, maxy);
-#else
-    scrollBarHeight = Sci::clamp(height, 1, maxy);
-#endif
     int width = roundf(static_cast<float>(maxx) / scrollWidth * maxx);
-#ifndef SCI_COMPAT_4
     scrollBarWidth = Platform::Clamp(width, 1, maxx);
-#else
-    scrollBarWidth = Sci::clamp(width, 1, maxx);
-#endif
     return true;
   }
   /**
@@ -1285,11 +1253,7 @@ public:
    *   pressed.
    */
   void KeyPress(int key, bool shift, bool ctrl, bool alt) {
-#ifndef SCI_COMPAT_4
     KeyDown(key, shift, ctrl, alt, NULL);
-#else
-    KeyDownWithModifiers(key, ModifierFlags(shift, ctrl, alt), NULL);
-#endif
   }
   /**
    * Handles a mouse button press.
@@ -1328,20 +1292,9 @@ public:
           int offset = ry - ny - 1; // -1 ignores list box border
           if (offset == 0 &&
               time - autoCompleteLastClickTime < Platform::DoubleClickTime()) {
-            ListBoxImpl* listbox = reinterpret_cast<ListBoxImpl *>(ac.lb);
-#ifndef SCI_COMPAT_4
+            ListBoxImpl* listbox = reinterpret_cast<ListBoxImpl *>(ac.lb.get());
             if (listbox->doubleClickAction != NULL)
               listbox->doubleClickAction(listbox->doubleClickActionData);
-#else
-            if (listbox->delegate) {
-#ifndef TA_PATCH
-              ListBoxEvent event(ListBoxEvent::EventType::doubleClick);
-#else
-              ListBoxEvent event(ListBoxEvent::doubleClick); // no enum class
-#endif
-              listbox->delegate->ListNotify(&event);
-            }
-#endif
           } else ac.lb->Select(n + offset);
           autoCompleteLastClickTime = time;
         } else {
@@ -1387,12 +1340,7 @@ public:
           draggingHScrollBar = true, dragOffset = x - scrollBarHPos;
       } else {
         // Have Scintilla handle the click.
-#ifndef SCI_COMPAT_4
         ButtonDown(Point(x, y), time, shift, ctrl, alt);
-#else
-        ButtonDownWithModifiers(Point(x, y), time,
-                                ModifierFlags(shift, ctrl, alt));
-#endif
         return true;
       }
     } else if (button == 4 || button == 5) {
@@ -1419,13 +1367,9 @@ public:
   bool MouseMove(int y, int x, bool shift, bool ctrl, bool alt) {
     GetWINDOW(); // ensure the curses `WINDOW` has been created
     if (!draggingVScrollBar && !draggingHScrollBar) {
-#ifndef SCI_COMPAT_4
       int modifiers = (shift ? SCI_SHIFT : 0) | (ctrl ? SCI_CTRL : 0) |
                       (alt ? SCI_ALT : 0);
       ButtonMoveWithModifiers(Point(x, y), modifiers);
-#else
-      ButtonMoveWithModifiers(Point(x, y), 0, ModifierFlags(shift, ctrl, alt));
-#endif
     } else if (draggingVScrollBar) {
       int maxy = getmaxy(GetWINDOW()) - scrollBarHeight, pos = y - dragOffset;
       if (pos >= 0 && pos <= maxy) ScrollTo(pos * MaxScrollPos() / maxy);
@@ -1451,14 +1395,7 @@ public:
     if (draggingVScrollBar || draggingHScrollBar)
       draggingVScrollBar = false, draggingHScrollBar = false;
     else if (HaveMouseCapture()) {
-#ifndef SCI_COMPAT_4
       ButtonUp(Point(x, y), time, ctrl);
-#else
-      ButtonUpWithModifiers(Point(x, y), time,
-                            ModifierFlags(ctrl, false, false));
-      // TODO: ListBoxEvent event(ListBoxEvent::EventType::selectionChange);
-      // TODO: listbox->delegate->ListNotify(&event);
-#endif
     }
   }
   /**
@@ -1477,25 +1414,25 @@ public:
 // Link with C. Documentation in Scintilla.h.
 extern "C" {
 Scintilla *scintilla_new(void (*callback)(Scintilla *, int, void *, void *)) {
-  return reinterpret_cast<Scintilla *>(new ScintillaTerm(callback));
+  return reinterpret_cast<Scintilla *>(new ScintillaCurses(callback));
 }
 WINDOW *scintilla_get_window(Scintilla *sci) {
-  return reinterpret_cast<ScintillaTerm *>(sci)->GetWINDOW();
+  return reinterpret_cast<ScintillaCurses *>(sci)->GetWINDOW();
 }
 sptr_t scintilla_send_message(Scintilla *sci, unsigned int iMessage,
                               uptr_t wParam, sptr_t lParam) {
-  return reinterpret_cast<ScintillaTerm *>(sci)->WndProc(iMessage, wParam,
+  return reinterpret_cast<ScintillaCurses *>(sci)->WndProc(iMessage, wParam,
                                                          lParam);
 }
 void scintilla_send_key(Scintilla *sci, int key, bool shift, bool ctrl,
                         bool alt) {
-  reinterpret_cast<ScintillaTerm *>(sci)->KeyPress(key, shift, ctrl, alt);
+  reinterpret_cast<ScintillaCurses *>(sci)->KeyPress(key, shift, ctrl, alt);
 }
 bool scintilla_send_mouse(Scintilla *sci, int event, unsigned int time,
                           int button, int y, int x, bool shift, bool ctrl,
                           bool alt) {
-  ScintillaTerm *sciterm = reinterpret_cast<ScintillaTerm *>(sci);
-  WINDOW *w = sciterm->GetWINDOW();
+  ScintillaCurses *scicurses = reinterpret_cast<ScintillaCurses *>(sci);
+  WINDOW *w = scicurses->GetWINDOW();
   int begy = getbegy(w), begx = getbegx(w);
   int maxy = getmaxy(w), maxx = getmaxx(w);
   // Ignore most events outside the window.
@@ -1503,23 +1440,23 @@ bool scintilla_send_mouse(Scintilla *sci, int event, unsigned int time,
       button != 4 && button != 5) return false;
   y = y - begy, x = x - begx;
   if (event == SCM_PRESS)
-    return sciterm->MousePress(button, time, y, x, shift, ctrl, alt);
+    return scicurses->MousePress(button, time, y, x, shift, ctrl, alt);
   else if (event == SCM_DRAG)
-    return sciterm->MouseMove(y, x, shift, ctrl, alt);
+    return scicurses->MouseMove(y, x, shift, ctrl, alt);
   else if (event == SCM_RELEASE)
-    return (sciterm->MouseRelease(time, y, x, ctrl), true);
+    return (scicurses->MouseRelease(time, y, x, ctrl), true);
   return false;
 }
 int scintilla_get_clipboard(Scintilla *sci, char *buffer) {
-  return reinterpret_cast<ScintillaTerm *>(sci)->GetClipboard(buffer);
+  return reinterpret_cast<ScintillaCurses *>(sci)->GetClipboard(buffer);
 }
 void scintilla_noutrefresh(Scintilla *sci) {
-  reinterpret_cast<ScintillaTerm *>(sci)->NoutRefresh();
+  reinterpret_cast<ScintillaCurses *>(sci)->NoutRefresh();
 }
 void scintilla_refresh(Scintilla *sci) {
-  reinterpret_cast<ScintillaTerm *>(sci)->Refresh();
+  reinterpret_cast<ScintillaCurses *>(sci)->Refresh();
 }
 void scintilla_delete(Scintilla *sci) {
-  delete reinterpret_cast<ScintillaTerm *>(sci);
+  delete reinterpret_cast<ScintillaCurses *>(sci);
 }
 }

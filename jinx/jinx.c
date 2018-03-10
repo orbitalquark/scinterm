@@ -6,7 +6,7 @@
 
 #include "Scintilla.h"
 #include "SciLexer.h"
-#include "ScintillaTerm.h"
+#include "ScintillaCurses.h"
 
 #define SSM(m, w, l) scintilla_send_message(sci, m, w, l)
 

@@ -1,8 +1,8 @@
-// Copyright 2012-2018 Mitchell mitchell.att.foicica.com.
-// Header for Scintilla in a UNIX terminal environment.
+// Copyright 2012-2018 Mitchell mitchell.att.foicica.com. See LICENSE.
+// Header for Scintilla in a curses (terminal) environment.
 
-#ifndef SCINTILLATERM_H
-#define SCINTILLATERM_H
+#ifndef SCINTILLACURSES_H
+#define SCINTILLACURSES_H
 
 #include <curses.h>
 
