@@ -1,4 +1,4 @@
-# Copyright 2012-2018 Mitchell mitchell.att.foicica.com. See LICENSE.
+# Copyright 2012-2019 Mitchell mitchell.att.foicica.com. See LICENSE.
 
 .SUFFIXES: .cxx .c .o .h .a
 
