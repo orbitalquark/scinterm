@@ -41,32 +41,27 @@ clean:
 
 # Documentation.
 
-doc: manual luadoc
-manual: doc/*.md *.md | doc/bombay
-	doc/bombay -d doc -t doc --title Scinterm $^
-luadoc: doc/scinterm.luadoc
-	luadoc -d doc -t doc --doclet doc/markdowndoc $^
-cleandoc: ; rm -f doc/manual.html doc/api.html
+docs: docs/api.md README.md $(wildcard docs/*.md) | docs/_layouts/default.html
+	for file in $(basename $^); do \
+		cat $| | docs/fill_layout.lua $$file.md > $$file.html; \
+	done
+	mv README.html docs
+docs/api.md: docs/scinterm.luadoc ; luadoc --doclet docs/markdowndoc $^ > $@
+cleandocs: ; rm -f docs/*.html docs/api.md
 
 # Release.
 
-release_dir = scinterm_$(shell grep "^\#\#" CHANGELOG.md | head -1 | \
+release_dir = scinterm_$(shell grep "^\#\#" docs/changelog.md | head -1 | \
                                cut -d ' ' -f 2)
-package = /tmp/$(release_dir).zip
 
-release: doc
-	hg archive $(release_dir)
-	rm $(release_dir)/.hg*
-	cp -rL doc $(release_dir)
-	zip -r $(package) $(release_dir) && gpg -ab $(package)
+ifneq (, $(shell hg summary 2>/dev/null))
+  archive = hg archive -X ".hg*" $(1)
+else
+  archive = git archive HEAD --prefix $(1)/ | tar -xf -
+endif
+
+release: docs
+	$(call archive,$(release_dir))
+	cp -rL docs $(release_dir)
+	zip -r $(release_dir).zip $(release_dir) && gpg -ab $(release_dir).zip
 	rm -r $(release_dir)
-
-# External dependencies.
-
-bombay_zip = bombay.zip
-
-$(bombay_zip):
-	wget "http://foicica.com/hg/bombay/archive/tip.zip" && mv tip.zip $@
-doc/bombay: | $(bombay_zip)
-	mkdir $(notdir $@) && unzip -d $(notdir $@) $| && \
-		mv $(notdir $@)/*/* $(dir $@)
