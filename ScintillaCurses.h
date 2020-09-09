@@ -14,6 +14,7 @@ extern "C" {
  * Creates a new Scintilla window.
  * Curses does not have to be initialized before calling this function.
  * @param callback A callback function for Scintilla notifications.
+ * @param userdata Userdata to pass to *callback*.
  */
 void *scintilla_new(
   void (*callback)(void *sci, int iMessage, SCNotification *n, void *userdata),

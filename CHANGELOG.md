@@ -5,6 +5,27 @@
 [Atom Feed]: feed
 [PGP Public Key]: https://foicica.com/foicica.pgp
 
+## 2.0 (?)
+
+Download:
+
+* ?
+
+Bugfixes:
+
+* Fixed potential crashes with newer versions of ncurses.
+* Fixed overlapping window drawing bug in Windows.
+* Fixed drawing of block caret in overtype mode.
+
+Changes:
+
+* Update the cursor position when drawing focused views.
+* Added userdata pointer for SCNotifications.
+* Enable autoscrolling when clicking and dragging the mouse to make selections.
+* [`scintilla_get_clipboard()`][] now returns a copy of clipboard text directly.
+
+[`scintilla_get_clipboard()`]: api.html#scintilla_get_clipboard
+
 ## 1.9 (25 Jun 2017)
 
 Download:
@@ -34,7 +55,7 @@ Download:
 Bugfixes:
 
 * Many improvements to UTF-8 character handling.
-* Fix building on some version of Mac OSX.
+* Fix building on some versions of Mac OSX.
 
 Changes:
 

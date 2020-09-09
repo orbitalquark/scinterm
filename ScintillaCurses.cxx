@@ -374,13 +374,20 @@ public:
     mvwaddch(win, rc.top, rc.left - 1, '|' | A_BOLD);
   }
 
+  /** Bidirectional input is not implemented. */
+  std::unique_ptr<IScreenLineLayout> Layout(
+    const IScreenLine *screenLine) override
+  {
+    return nullptr;
+  }
+
   /**
    * Draws the given text at the given position on the screen with the given
    * foreground and background colors.
    * Takes into account any clipping boundaries previously specified.
    */
   void DrawTextNoClip(
-    PRectangle rc, Font &font_, XYPOSITION ybase, const char *s, int len,
+    PRectangle rc, Font &font_, XYPOSITION ybase, std::string_view text,
     ColourDesired fore, ColourDesired back) override
   {
     intptr_t attrs = reinterpret_cast<intptr_t>(font_.GetID());
@@ -389,23 +396,25 @@ public:
     if (rc.left < clip.left) {
       // Do not overwrite margin text.
       int clip_chars = static_cast<int>(clip.left - rc.left);
-      int offset = 0;
-      for (int chars = 0; offset < len; offset++) {
-        if (!UTF8IsTrailByte(static_cast<unsigned char>(s[offset])))
-          chars += grapheme_width(s + offset);
+      size_t offset = 0;
+      for (int chars = 0; offset < text.length(); offset++) {
+        if (!UTF8IsTrailByte(static_cast<unsigned char>(text[offset])))
+          chars += grapheme_width(text.data() + offset);
         if (chars > clip_chars) break;
       }
-      s += offset, len -= offset, rc.left = clip.left;
+      text.remove_prefix(offset);
+      rc.left = clip.left;
     }
     // Do not write beyond right window boundary.
     int clip_chars = getmaxx(win) - rc.left;
-    int bytes = 0;
-    for (int chars = 0; bytes < len; bytes++) {
-      if (!UTF8IsTrailByte(static_cast<unsigned char>(s[bytes])))
-        chars += grapheme_width(s + bytes);
+    size_t bytes = 0;
+    for (int chars = 0; bytes < text.length(); bytes++) {
+      if (!UTF8IsTrailByte(static_cast<unsigned char>(text[bytes])))
+        chars += grapheme_width(text.data() + bytes);
       if (chars > clip_chars) break;
     }
-    mvwaddnstr(win, rc.top, rc.left, s, std::min(len, bytes));
+    mvwaddnstr(
+      win, rc.top, rc.left, text.data(), std::min(text.length(), bytes));
   }
   /**
    * Similar to `DrawTextNoClip()`.
@@ -417,12 +426,12 @@ public:
    * @see DrawTextNoClip
    */
   void DrawTextClipped(
-    PRectangle rc, Font &font_, XYPOSITION ybase, const char *s, int len,
+    PRectangle rc, Font &font_, XYPOSITION ybase, std::string_view text,
     ColourDesired fore, ColourDesired back) override
   {
     if (rc.left >= rc.right) // when drawing text blobs
       rc.left -= 2, rc.right -= 2, rc.top -= 1, rc.bottom -= 1;
-    DrawTextNoClip(rc, font_, ybase, s, len, fore, back);
+    DrawTextNoClip(rc, font_, ybase, text, fore, back);
   }
   /**
    * Similar to `DrawTextNoClip()`.
@@ -430,7 +439,7 @@ public:
    * text. However, the latter is not supported.
    */
   void DrawTextTransparent(
-    PRectangle rc, Font &font_, XYPOSITION ybase, const char *s, int len,
+    PRectangle rc, Font &font_, XYPOSITION ybase, std::string_view text,
     ColourDesired fore) override
   {
     if (static_cast<int>(rc.top) >= getmaxy(win) - 1) return;
@@ -438,7 +447,7 @@ public:
       win, static_cast<int>(rc.top), static_cast<int>(rc.left));
     short pair = PAIR_NUMBER(attrs), unused, back;
     if (pair > 0) pair_content(pair, &unused, &back);
-    DrawTextNoClip(rc, font_, ybase, s, len, fore, SCI_COLORS[back]);
+    DrawTextNoClip(rc, font_, ybase, text, fore, SCI_COLORS[back]);
   }
   /**
    * Measures the width of characters in the given string and writes them to the
@@ -447,11 +456,11 @@ public:
    * bytes.
    */
   void MeasureWidths(
-    Font &font_, const char *s, int len, XYPOSITION *positions) override
+    Font &font_, std::string_view text, XYPOSITION *positions) override
   {
-    for (int i = 0, j = 0; i < len; i++) {
-      if (!UTF8IsTrailByte(static_cast<unsigned char>(s[i])))
-        j += grapheme_width(s + i);
+    for (size_t i = 0, j = 0; i < text.length(); i++) {
+      if (!UTF8IsTrailByte(static_cast<unsigned char>(text[i])))
+        j += grapheme_width(text.data() + i);
       positions[i] = j;
     }
   }
@@ -459,11 +468,11 @@ public:
    * Returns the number of UTF-8 characters in the given string since curses
    * characters always have a width of 1.
    */
-  XYPOSITION WidthText(Font &font_, const char *s, int len) override {
+  XYPOSITION WidthText(Font &font_, std::string_view text) override {
     int width = 0;
-    for (int i = 0; i < len; i++)
-      if (!UTF8IsTrailByte(static_cast<unsigned char>(s[i])))
-        width += grapheme_width(s + i);
+    for (size_t i = 0; i < text.length(); i++)
+      if (!UTF8IsTrailByte(static_cast<unsigned char>(text[i])))
+        width += grapheme_width(text.data() + i);
     return width;
   }
   /** Returns 0 since curses characters have no ascent. */
@@ -494,6 +503,8 @@ public:
   void SetUnicodeMode(bool unicodeMode_) override {}
   /** Setting DBCS mode is not implemented. UTF-8 is used. */
   void SetDBCSMode(int codePage) override {}
+  /** Bidirectional input is not implemented. */
+  void SetBidiR2L(bool bidiR2L_) override {}
 
   /** Draws the text representation of a line marker, if possible. */
   void DrawLineMarker(
@@ -571,8 +582,8 @@ public:
     if (marker->markType >= SC_MARK_CHARACTER) {
       char ch = static_cast<char>(marker->markType - SC_MARK_CHARACTER);
       DrawTextClipped(
-        rcWhole, fontForCharacter, rcWhole.bottom, &ch, 1, marker->fore,
-        marker->back);
+        rcWhole, fontForCharacter, rcWhole.bottom, std::string(&ch, 1),
+        marker->fore, marker->back);
       return;
     }
   }
@@ -1050,9 +1061,9 @@ public:
     WINDOW *w = GetWINDOW();
     int maxy = getmaxy(w), maxx = getmaxx(w);
     int height = roundf(static_cast<float>(nPage) / nMax * maxy);
-    scrollBarHeight = Sci::clamp(height, 1, maxy);
+    scrollBarHeight = std::clamp(height, 1, maxy);
     int width = roundf(static_cast<float>(maxx) / scrollWidth * maxx);
-    scrollBarWidth = Sci::clamp(width, 1, maxx);
+    scrollBarWidth = std::clamp(width, 1, maxx);
     return true;
   }
   /**
@@ -1092,11 +1103,13 @@ public:
         char utf8[6];
         int len;
         toutf8(key, utf8, &len);
-        InsertCharacter(utf8, len, EditModel::CharacterSource::directInput);
+        InsertCharacter(
+          std::string(utf8, len), EditModel::CharacterSource::directInput);
         return 1;
       } else {
         char ch = static_cast<char>(key);
-        InsertCharacter(&ch, 1, EditModel::CharacterSource::directInput);
+        InsertCharacter(
+          std::string(&ch, 1), EditModel::CharacterSource::directInput);
         return 1;
       }
     } else {
@@ -1174,7 +1187,6 @@ public:
         // Ignore attempted changes of the following unsupported properties.
         case SCI_SETBUFFEREDDRAW:
         case SCI_SETWHITESPACESIZE:
-        case SCI_SETTWOPHASEDRAW:
         case SCI_SETPHASESDRAW:
         case SCI_SETEXTRAASCENT:
         case SCI_SETEXTRADESCENT:

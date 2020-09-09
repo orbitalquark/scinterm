@@ -12,8 +12,9 @@ module('Scinterm')
 -- Creates a new Scintilla curses window.
 -- @param callback SCNotification callback function of the form:
 --   `void callback(Scintilla *, int, void *, void *)`.
+-- @param userdata (`void *`) Userdata to pass to *callback*.
 -- @return `Scintilla *`
-function scintilla_new(callback) end
+function scintilla_new(callback, userdata) end
 
 ---
 -- Returns the curses `WINDOW` associated with the given Scintilla window.
@@ -65,16 +66,15 @@ function scintilla_send_key(sci, key, shift, ctrl, alt) end
 function scintilla_send_mouse(sci, event, time, button, y, x, shift, ctrl, alt) end
 
 ---
--- Copies the text of Scintilla's internal clipboard, not the primary and/or
--- secondary X selections, into the given buffer and returns the size of the
--- clipboard text.
--- Call with a `null` buffer first to get the size of the buffer needed to store
--- clipboard text.
+-- Returns a null-terminated copy of the text on Scintilla's internal clipboard
+-- (not the primary and/or secondary X selections) and stores its length in
+-- *len*.
+-- The caller is responsible for `free`ing the returned text.
 -- Keep in mind clipboard text may contain null bytes.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
--- @param buffer (`char *`) The buffer to copy clipboard text to.
--- @return `int` size of the clipboard text.
-function scintilla_get_clipboard(sci, buffer) end
+-- @param len (`int *`) The length of the returned text.
+-- @return `char *` clipboard text (caller is responsible for `free`ing it)
+function scintilla_get_clipboard(sci, len) end
 
 ---
 -- Refreshes the Scintilla window on the virtual screen.

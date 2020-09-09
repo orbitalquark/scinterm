@@ -54,6 +54,8 @@ Scinterm lacks some Scintilla features due to the terminal's constraints:
   properly (terminals use one only font, size and variant).
 * X selections (primary and secondary) are not integrated into the clipboard.
 * Zoom is not supported (terminal font size is fixed).
+* When using the mouse in the Windows console, Shift+Double-click extends
+  selections and quadruple-clicking inside a selection collapses it.
 
 [`SCI_REGISTERIMAGE`]: http://scintilla.org/ScintillaDoc.html#SCI_REGISTERIMAGE
 

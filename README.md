@@ -16,10 +16,8 @@ Scinterm is an implementation of [Scintilla][] for curses platforms including:
 
 ## Requirements
 
-At this time, Scinterm is only supported on the Scintilla long term maintenance
-branch (3.x).
-
-* Scinterm 1.9 requires Scintilla 3.7.5 - 3.x (not 4.x).
+* Scinterm 2.0 requires Scintilla 4.2.0 - 4.x.
+* Scinterm 1.9 requires Scintilla 3.7.5 - 3.7.6.
 * Scinterm 1.8 requires Scintilla 3.6.3 - 3.7.4.
 * Scinterm 1.7 requires Scintilla 3.6.3 - 3.7.4.
 * Scinterm 1.6 requires Scintilla 3.5.5 - 3.6.2.

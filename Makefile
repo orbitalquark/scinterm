@@ -7,7 +7,7 @@ CC = gcc
 CXX = g++
 INCLUDEDIRS = -I ../include -I ../src -I ../lexlib
 CFLAGS = -std=c99 -pedantic -Wall
-CXXFLAGS = -std=c++11 -pedantic -DCURSES -DSCI_LEXER $(INCLUDEDIRS) -Wall
+CXXFLAGS = -std=c++17 -pedantic -DCURSES -DSCI_LEXER $(INCLUDEDIRS) -Wall
 ifdef DEBUG
   CXXFLAGS += -DDEBUG -g
 else
