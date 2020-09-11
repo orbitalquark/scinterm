@@ -16,7 +16,7 @@ Changes:
 
 [Scinterm 3.0]: https://github.com/orbitalquark/scinterm/archive/scinterm_3.0.zip
 [Scintilla 3.21.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.21.0/scintilla3210.zip/download
-[`scintilla_get_clipboard()`]: https://orbitalquark.github.io/scinterm/api.html#scintilla_get_clipboard
+[`scintilla_get_clipboard()`]: api.html#scintilla_get_clipboard
 
 ### 2.0 (09 May 2020)
 
@@ -37,7 +37,7 @@ Changes:
 
 [Scinterm 2.0]: https://github.com/orbitalquark/scinterm/archive/scinterm_2.0.zip
 [Scintilla 3.20.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.20.0/scintilla3200.zip/download
-[`scintilla_new()`]: https://orbitalquark.github.io/scinterm/api.html#scintilla_new
+[`scintilla_new()`]: api.html#scintilla_new
 [Scintilla]: https://scintilla.sourceforge.io/LongTermDownload.html
 
 ### 1.12 (30 Aug 2019)
@@ -133,7 +133,7 @@ Changes:
 
 [Scinterm 1.8]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.8.zip
 [Scintilla]: https://scintilla.org
-[`scintilla_noutrefresh()`]: https://orbitalquark.github.io/scinterm/api.html#scintilla_noutrefresh
+[`scintilla_noutrefresh()`]: api.html#scintilla_noutrefresh
 
 ### 1.7 (03 Feb 2016)
 
@@ -276,7 +276,7 @@ Changes:
 * Expose [`SCI_COLOR_PAIR()`][] macro.
 
 [Scinterm 1.1]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.1.zip
-[`SCI_COLOR_PAIR()`]: https://orbitalquark.github.io/scinterm/api.html#SCI_COLOR_PAIR
+[`SCI_COLOR_PAIR()`]: api.html#SCI_COLOR_PAIR
 
 ### 1.0 (31 Aug 2012)
 

@@ -51,12 +51,11 @@ running `make`. Pressing the `q` key quits the demo.
 
 ## Usage
 
-Scinterm's Application Programming Interface (API) documentation is located in
-the project's *docs/* directory and covers how to create and interact with a
-Scintilla widget in a terminal application. This documentation is also available
-[online][].
+Scinterm's Application Programming Interface [(API) documentation][] is located
+in the project's *docs/* directory and covers how to create and interact with a
+Scintilla widget in a terminal application.
 
-[online]: https://orbitalquark.github.io/scinterm/api.html
+[(API) documentation]: api.html
 
 ## Curses Compatibility
 
