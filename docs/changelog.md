@@ -1,15 +1,10 @@
 ## Changelog
 
-[Atom Feed][] | [PGP Public Key][]
-
-[Atom Feed]: feed
-[PGP Public Key]: https://foicica.com/foicica.pgp
-
 ### 3.0 (27 Jul 2020)
 
 Download:
 
-* Released in [Scintillua 3.21.0][]
+* [Scinterm 3.0][] (Released in [Scintilla 3.21.0][])
 
 Bugfixes:
 
@@ -19,14 +14,15 @@ Changes:
 
 * [`scintilla_get_clipboard()`][] now returns a copy of clipboard text directly.
 
+[Scinterm 3.0]: https://github.com/orbitalquark/scinterm/archive/scinterm_3.0.zip
 [Scintilla 3.21.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.21.0/scintilla3210.zip/download
-[`scintilla_get_clipboard()`]: api.html#scintilla_get_clipboard
+[`scintilla_get_clipboard()`]: https://orbitalquark.github.io/scinterm/api.html#scintilla_get_clipboard
 
 ### 2.0 (09 May 2020)
 
 Download:
 
-* Released in [Scintillua 3.20.0][]
+* [Scinterm 2.0][] (Released in [Scintilla 3.20.0][])
 
 Bugfixes:
 
@@ -35,16 +31,20 @@ Bugfixes:
 
 Changes:
 
-* Added userdata pointer for SCNotifications.
+* Added userdata pointer for SCNotifications in [`scintilla_new()`][].
 * Enable autoscrolling when clicking and dragging the mouse to make selections.
+* Updated to [Scintilla][] 3.20.0.
 
+[Scinterm 2.0]: https://github.com/orbitalquark/scinterm/archive/scinterm_2.0.zip
 [Scintilla 3.20.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.20.0/scintilla3200.zip/download
+[`scintilla_new()`]: https://orbitalquark.github.io/scinterm/api.html#scintilla_new
+[Scintilla]: https://scintilla.sourceforge.io/LongTermDownload.html
 
 ### 1.12 (30 Aug 2019)
 
 Download:
 
-* Released in [Scintillua 3.11.0][]
+* [Scinterm 1.12][] (Released in [Scintilla 3.11.0][])
 
 Bugfixes:
 
@@ -52,15 +52,17 @@ Bugfixes:
 
 Changes:
 
-* Updates for Scintilla 3.11.0.
+* Updated to [Scintilla][] 3.11.0.
 
+[Scinterm 1.12]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.12.zip
 [Scintilla 3.11.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.11.0/scintilla3110.zip/download
+[Scintilla]: https://scintilla.sourceforge.io/LongTermDownload.html
 
 ### 1.11 (30 Jun 2018)
 
 Download:
 
-* Released in [Scintillua 3.10.0][]
+* [Scinterm 1.11][] (Released in [Scintilla 3.10.0][])
 
 Bugfixes:
 
@@ -68,15 +70,17 @@ Bugfixes:
 
 Changes:
 
-* None.
+* Updated to [Scintilla][] 3.10.0.
 
+[Scinterm 1.11]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.11.zip
 [Scintilla 3.10.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.10.0/scintilla3100.zip/download
+[Scintilla]: https://scintilla.sourceforge.io/LongTermDownload.html
 
 ### 1.10 (26 Mar 2018)
 
 Download:
 
-* Released in [Scintillua 3.8.0][]
+* [Scinterm 1.10][] (Released in [Scintilla 3.8.0][])
 
 Bugfixes:
 
@@ -86,14 +90,17 @@ Changes:
 
 * Update the cursor position when drawing focused views.
 * Renamed *ScintillaCurses.\** to *ScintillaTerm.\**.
+* Updated to [Scintilla][] 3.8.0.
 
+[Scinterm 1.10]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.10.zip
 [Scintilla 3.8.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.8.0/scintilla380.zip/download
+[Scintilla]: https://scintilla.sourceforge.io/LongTermDownload.html
 
 ### 1.9 (25 Jun 2017)
 
 Download:
 
-* [Scinterm 1.9][] | [PGP -- 1.9][]
+* [Scinterm 1.9][]
 
 Bugfixes:
 
@@ -105,15 +112,14 @@ Changes:
   changing text attributes.
 * Updated to [Scintilla][] 3.7.5.
 
-[Scinterm 1.9]: download/scinterm_1.9.zip
-[PGP -- 1.9]: download/scinterm_1.9.zip.asc
-[Scintilla]: http://scintilla.org
+[Scinterm 1.9]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.9.zip
+[Scintilla]: https://scintilla.org
 
 ### 1.8 (26 Apr 2016)
 
 Download:
 
-* [Scinterm 1.8][] | [PGP -- 1.8][]
+* [Scinterm 1.8][]
 
 Bugfixes:
 
@@ -125,16 +131,15 @@ Changes:
 * Improved ncurses wide-character detection.
 * Added [`scintilla_noutrefresh()`][] for more efficient refreshing.
 
-[Scinterm 1.8]: download/scinterm_1.8.zip
-[PGP -- 1.8]: download/scinterm_1.8.zip.asc
-[Scintilla]: http://scintilla.org
-[`scintilla_noutrefresh()`]: api.html#scintilla_noutrefresh
+[Scinterm 1.8]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.8.zip
+[Scintilla]: https://scintilla.org
+[`scintilla_noutrefresh()`]: https://orbitalquark.github.io/scinterm/api.html#scintilla_noutrefresh
 
 ### 1.7 (03 Feb 2016)
 
 Download:
 
-* [Scinterm 1.7][] | [PGP -- 1.7][]
+* [Scinterm 1.7][]
 
 Bugfixes:
 
@@ -145,15 +150,14 @@ Changes:
 * Delay creation of curses `WINDOW`s for as long as possible.
 * Updated to [Scintilla][] 3.6.3.
 
-[Scinterm 1.7]: download/scinterm_1.7.zip
-[PGP -- 1.7]: download/scinterm_1.7.zip.asc
-[Scintilla]: http://scintilla.org
+[Scinterm 1.7]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.7.zip
+[Scintilla]: https://scintilla.org
 
 ### 1.6 (18 Apr 2015)
 
 Download:
 
-* [Scinterm 1.6][] | [PGP -- 1.6][]
+* [Scinterm 1.6][]
 
 Bugfixes:
 
@@ -163,15 +167,14 @@ Changes:
 
 * Updated to [Scintilla][] 3.5.5.
 
-[Scinterm 1.6]: download/scinterm_1.6.zip
-[PGP -- 1.6]: download/scinterm_1.6.zip.asc
-[Scintilla]: http://scintilla.org
+[Scinterm 1.6]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.6.zip
+[Scintilla]: https://scintilla.org
 
 ### 1.5 (10 Dec 2014)
 
 Download:
 
-* [Scinterm 1.5][] | [PGP -- 1.5][]
+* [Scinterm 1.5][]
 
 Bugfixes:
 
@@ -192,15 +195,14 @@ Changes:
 * Added support for drawing indentation guides.
 * Updated to [Scintilla][] 3.5.2.
 
-[Scinterm 1.5]: download/scinterm_1.5.zip
-[PGP -- 1.5]: download/scinterm_1.5.zip.asc
-[Scintilla]: http://scintilla.org
+[Scinterm 1.5]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.5.zip
+[Scintilla]: https://scintilla.org
 
 ### 1.4 (01 Sep 2014)
 
 Download:
 
-* [Scinterm 1.4][] | [PGP -- 1.4][]
+* [Scinterm 1.4][]
 
 Bugfixes:
 
@@ -210,15 +212,14 @@ Changes:
 
 * Updated to [Scintilla][] 3.5.0.
 
-[Scinterm 1.4]: download/scinterm_1.4.zip
-[PGP -- 1.4]: download/scinterm_1.4.zip.asc
-[Scintilla]: http://scintilla.org
+[Scinterm 1.4]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.4.zip
+[Scintilla]: https://scintilla.org
 
 ### 1.3 (09 Jul 2014)
 
 Download:
 
-* [Scinterm 1.3][] | [PGP -- 1.3][]
+* [Scinterm 1.3][]
 
 Bugfixes:
 
@@ -229,15 +230,14 @@ Changes:
 
 * Updated to [Scintilla][] 3.4.2.
 
-[Scinterm 1.3]: download/scinterm_1.3.zip
-[PGP -- 1.3]: download/scinterm_1.3.zip.asc
-[Scintilla]: http://scintilla.org
+[Scinterm 1.3]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.3.zip
+[Scintilla]: https://scintilla.org
 
 ### 1.2 (05 Feb 2014)
 
 Download:
 
-* [Scinterm 1.2][] | [PGP -- 1.2][]
+* [Scinterm 1.2][]
 
 Bugfixes:
 
@@ -255,15 +255,14 @@ Changes:
 * Recognize up to 16 separate colors for terminals that support it.
 * Updated to [Scintilla][] 3.3.7.
 
-[Scinterm 1.2]: download/scinterm_1.2.zip
-[PGP -- 1.2]: download/scinterm_1.2.zip.asc
-[Scintilla]: http://scintilla.org
+[Scinterm 1.2]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.2.zip
+[Scintilla]: https://scintilla.org
 
 ### 1.1 (11 Dec 2012)
 
 Download:
 
-* [Scinterm 1.1][] | [PGP -- 1.1][]
+* [Scinterm 1.1][]
 
 Bugfixes:
 
@@ -276,17 +275,15 @@ Changes:
 
 * Expose [`SCI_COLOR_PAIR()`][] macro.
 
-[Scinterm 1.1]: download/scinterm_1.1.zip
-[PGP -- 1.1]: download/scinterm_1.1.zip.asc
-[`SCI_COLOR_PAIR()`]: api.html#SCI_COLOR_PAIR
+[Scinterm 1.1]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.1.zip
+[`SCI_COLOR_PAIR()`]: https://orbitalquark.github.io/scinterm/api.html#SCI_COLOR_PAIR
 
 ### 1.0 (31 Aug 2012)
 
 Download:
 
-* [Scinterm 1.0][] | [PGP -- 1.0][]
+* [Scinterm 1.0][]
 
 Initial release.
 
-[Scinterm 1.0]: download/scinterm_1.0.zip
-[PGP -- 1.0]: download/scinterm_1.0.zip.asc
+[Scinterm 1.0]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.0.zip

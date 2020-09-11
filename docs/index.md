@@ -1,4 +1,4 @@
-# Scinterm
+## Introduction
 
 Scinterm is a curses platform for [Scintilla][] that supports [ncurses][],
 [PDCurses][], and X/Open Curses.
@@ -17,8 +17,8 @@ symbols, and call tip arrows.
 ## Requirements
 
 * Scinterm 3.1 requires Scintilla 4.2.0 - 4.x.
-* Scinterm 3.0 requires Scintilla 3.21.0.
-* Scinterm 2.0 requires Scintilla 3.20.0.
+* Scinterm 3.0 requires Scintilla 3.20.0 - 3.21.0.
+* Scinterm 2.0 requires Scintilla 3.20.0 - 3.21.0.
 * Scinterm 1.12 requires Scintilla 3.11.0 - 3.11.2.
 * Scinterm 1.11 requires Scintilla 3.10.0 - 3.10.6.
 * Scinterm 1.10 requires Scintilla 3.8.0.
@@ -39,7 +39,7 @@ Scinterm releases can be found [here][].
 
 [here]: https://github.com/orbitalquark/scinterm/releases
 
-## Compiling
+## Compile
 
 After downloading Scinterm, it is recommended to unzip it into the top-level
 directory of an instance of Scintilla, similar to other Scintilla platforms like
@@ -103,7 +103,7 @@ Scinterm lacks some Scintilla features due to the terminal's constraints:
 * When using the mouse in the Windows console, Shift+Double-click extends
   selections and quadruple-clicking inside a selection collapses it.
 
-[`SCI_REGISTERIMAGE`]: http://scintilla.org/ScintillaDoc.html#SCI_REGISTERIMAGE
+[`SCI_REGISTERIMAGE`]: https://scintilla.org/ScintillaDoc.html#SCI_REGISTERIMAGE
 
 ## Contribute
 

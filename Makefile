@@ -36,8 +36,7 @@ $(sci) $(lexers) ScintillaCurses.o: %.o: %.cxx
 $(scintilla): $(sci) $(lexers) ScintillaCurses.o
 	$(AR) rc $@ $^
 	touch $@
-clean:
-	rm -f *.o $(scintilla)
+clean: ; rm -f *.o $(scintilla)
 
 # Documentation.
 
@@ -46,23 +45,6 @@ docs: docs/index.md docs/api.md $(wildcard docs/*.md) | \
 	for file in $(basename $^); do \
 		cat $| | docs/fill_layout.lua $$file.md > $$file.html; \
 	done
-docs/index.md: README.md ; cp $< $@
+docs/index.md: README.md ; sed 's/^\# Scinterm/## Introduction/;' $< > $@
 docs/api.md: docs/scinterm.luadoc ; luadoc --doclet docs/markdowndoc $^ > $@
 cleandocs: ; rm -f docs/*.html docs/index.md docs/api.md
-
-# Release.
-
-release_dir = scinterm_$(shell grep "^\#\#" docs/changelog.md | head -1 | \
-                               cut -d ' ' -f 2)
-
-ifneq (, $(shell hg summary 2>/dev/null))
-  archive = hg archive -X ".hg*" $(1)
-else
-  archive = git archive HEAD --prefix $(1)/ | tar -xf -
-endif
-
-release: docs
-	$(call archive,$(release_dir))
-	cp -rL docs $(release_dir)
-	zip -r $(release_dir).zip $(release_dir) && gpg -ab $(release_dir).zip
-	rm -r $(release_dir)
