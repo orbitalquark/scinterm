@@ -1,9 +1,9 @@
-# Thanks
+## Thanks
 
 Thank you everyone for your contributions and feedback. They have helped improve
 Scinterm.
 
-## Code Contributors
+### Code Contributors
 
 * Chad Voegele
 * Chris Emerson

@@ -1,16 +1,62 @@
-# Usage
+# Scinterm
+
+Scinterm is a curses platform for [Scintilla][] that supports [ncurses][],
+[PDCurses][], and X/Open Curses.
+
+![Scinterm](images/scinterm.png)
 
 It is highly recommended to run Scinterm in a UTF-8-aware terminal with a font
-that supports many UTF-8 characters ("DejaVu Sans Mono" is one of them) because
+that supports many UTF-8 characters ("DejaVu Sans Mono" is one of them), since
 Scinterm makes use of UTF-8 characters when drawing wrap symbols, some marker
 symbols, and call tip arrows.
+
+[Scintilla]: https://scintilla.org
+[ncurses]: https://invisible-island.net/ncurses/
+[PDCurses]: https://pdcurses.org
+
+## Requirements
+
+* Scinterm 3.1 requires Scintilla 4.2.0 - 4.x.
+* Scinterm 3.0 requires Scintilla 3.21.0.
+* Scinterm 2.0 requires Scintilla 3.20.0.
+* Scinterm 1.12 requires Scintilla 3.11.0 - 3.11.2.
+* Scinterm 1.11 requires Scintilla 3.10.0 - 3.10.6.
+* Scinterm 1.10 requires Scintilla 3.8.0.
+* Scinterm 1.9 requires Scintilla 3.7.5 - 3.7.6.
+* Scinterm 1.8 requires Scintilla 3.6.3 - 3.7.4.
+* Scinterm 1.7 requires Scintilla 3.6.3 - 3.7.4.
+* Scinterm 1.6 requires Scintilla 3.5.5 - 3.6.2.
+* Scinterm 1.5 requires Scintilla 3.5.2 - 3.5.4.
+* Scinterm 1.4 requires Scintilla 3.5.0 - 3.5.1.
+* Scinterm 1.3 requires Scintilla 3.4.2 - 3.4.4.
+* Scinterm 1.2 requires Scintilla 3.3.7 - 3.4.1.
+* Scinterm 1.1 requires Scintilla 3.2.2 - 3.3.6.
+* Scinterm 1.0 requires Scintilla 3.2.2 - 3.3.6.
+
+## Download
+
+Scinterm releases can be found [here][].
+
+[here]: https://github.com/orbitalquark/scinterm/releases
 
 ## Compiling
 
 After downloading Scinterm, it is recommended to unzip it into the top-level
 directory of an instance of Scintilla, similar to other Scintilla platforms like
-`gtk/` and `win32/`. After that, go into the Scinterm directory and run `make`
-to build the usual `../bin/scintilla.a`.
+*gtk/* and *win32/*. After that, go into the Scinterm directory and run `make`
+to build the usual *../bin/scintilla.a*.
+
+You can optionally build the demo application, jinx, by going into *jinx/* and
+running `make`. Pressing the `q` key quits the demo.
+
+## Usage
+
+Scinterm's Application Programming Interface (API) documentation is located in
+the project's *docs/* directory and covers how to create and interact with a
+Scintilla widget in a terminal application. This documentation is also available
+[online][].
+
+[online]: https://orbitalquark.github.io/scinterm/api.html
 
 ## Curses Compatibility
 
@@ -59,7 +105,10 @@ Scinterm lacks some Scintilla features due to the terminal's constraints:
 
 [`SCI_REGISTERIMAGE`]: http://scintilla.org/ScintillaDoc.html#SCI_REGISTERIMAGE
 
-## `jinx`
+## Contribute
 
-`jinx` is an example of using Scintilla with curses. You can build it by going
-into `jinx/` and running `make`.
+Scinterm is [open source][]. Feel free to report bugs and submit patches either
+to the [mailing list][], or to me personally (mitchell.att.foicica.com).
+
+[open source]: https://github.com/orbitalquark/scinterm
+[mailing list]: https://foicica.com/lists

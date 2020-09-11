@@ -1,32 +1,95 @@
-# Changelog
+## Changelog
 
 [Atom Feed][] | [PGP Public Key][]
 
 [Atom Feed]: feed
 [PGP Public Key]: https://foicica.com/foicica.pgp
 
-## 2.0 (?)
+### 3.0 (27 Jul 2020)
 
 Download:
 
-* ?
+* Released in [Scintillua 3.21.0][]
 
 Bugfixes:
 
-* Fixed potential crashes with newer versions of ncurses.
+* None.
+
+Changes:
+
+* [`scintilla_get_clipboard()`][] now returns a copy of clipboard text directly.
+
+[Scintilla 3.21.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.21.0/scintilla3210.zip/download
+[`scintilla_get_clipboard()`]: api.html#scintilla_get_clipboard
+
+### 2.0 (09 May 2020)
+
+Download:
+
+* Released in [Scintillua 3.20.0][]
+
+Bugfixes:
+
 * Fixed overlapping window drawing bug in Windows.
 * Fixed drawing of block caret in overtype mode.
 
 Changes:
 
-* Update the cursor position when drawing focused views.
 * Added userdata pointer for SCNotifications.
 * Enable autoscrolling when clicking and dragging the mouse to make selections.
-* [`scintilla_get_clipboard()`][] now returns a copy of clipboard text directly.
 
-[`scintilla_get_clipboard()`]: api.html#scintilla_get_clipboard
+[Scintilla 3.20.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.20.0/scintilla3200.zip/download
 
-## 1.9 (25 Jun 2017)
+### 1.12 (30 Aug 2019)
+
+Download:
+
+* Released in [Scintillua 3.11.0][]
+
+Bugfixes:
+
+* None.
+
+Changes:
+
+* Updates for Scintilla 3.11.0.
+
+[Scintilla 3.11.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.11.0/scintilla3110.zip/download
+
+### 1.11 (30 Jun 2018)
+
+Download:
+
+* Released in [Scintillua 3.10.0][]
+
+Bugfixes:
+
+* Fixed potential crashes with newer versions of ncurses.
+
+Changes:
+
+* None.
+
+[Scintilla 3.10.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.10.0/scintilla3100.zip/download
+
+### 1.10 (26 Mar 2018)
+
+Download:
+
+* Released in [Scintillua 3.8.0][]
+
+Bugfixes:
+
+* None.
+
+Changes:
+
+* Update the cursor position when drawing focused views.
+* Renamed *ScintillaCurses.\** to *ScintillaTerm.\**.
+
+[Scintilla 3.8.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.8.0/scintilla380.zip/download
+
+### 1.9 (25 Jun 2017)
 
 Download:
 
@@ -46,7 +109,7 @@ Changes:
 [PGP -- 1.9]: download/scinterm_1.9.zip.asc
 [Scintilla]: http://scintilla.org
 
-## 1.8 (26 Apr 2016)
+### 1.8 (26 Apr 2016)
 
 Download:
 
@@ -67,7 +130,7 @@ Changes:
 [Scintilla]: http://scintilla.org
 [`scintilla_noutrefresh()`]: api.html#scintilla_noutrefresh
 
-## 1.7 (03 Feb 2016)
+### 1.7 (03 Feb 2016)
 
 Download:
 
@@ -86,7 +149,7 @@ Changes:
 [PGP -- 1.7]: download/scinterm_1.7.zip.asc
 [Scintilla]: http://scintilla.org
 
-## 1.6 (18 Apr 2015)
+### 1.6 (18 Apr 2015)
 
 Download:
 
@@ -104,7 +167,7 @@ Changes:
 [PGP -- 1.6]: download/scinterm_1.6.zip.asc
 [Scintilla]: http://scintilla.org
 
-## 1.5 (10 Dec 2014)
+### 1.5 (10 Dec 2014)
 
 Download:
 
@@ -133,7 +196,7 @@ Changes:
 [PGP -- 1.5]: download/scinterm_1.5.zip.asc
 [Scintilla]: http://scintilla.org
 
-## 1.4 (01 Sep 2014)
+### 1.4 (01 Sep 2014)
 
 Download:
 
@@ -151,7 +214,7 @@ Changes:
 [PGP -- 1.4]: download/scinterm_1.4.zip.asc
 [Scintilla]: http://scintilla.org
 
-## 1.3 (09 Jul 2014)
+### 1.3 (09 Jul 2014)
 
 Download:
 
@@ -170,7 +233,7 @@ Changes:
 [PGP -- 1.3]: download/scinterm_1.3.zip.asc
 [Scintilla]: http://scintilla.org
 
-## 1.2 (05 Feb 2014)
+### 1.2 (05 Feb 2014)
 
 Download:
 
@@ -196,7 +259,7 @@ Changes:
 [PGP -- 1.2]: download/scinterm_1.2.zip.asc
 [Scintilla]: http://scintilla.org
 
-## 1.1 (11 Dec 2012)
+### 1.1 (11 Dec 2012)
 
 Download:
 
@@ -217,7 +280,7 @@ Changes:
 [PGP -- 1.1]: download/scinterm_1.1.zip.asc
 [`SCI_COLOR_PAIR()`]: api.html#SCI_COLOR_PAIR
 
-## 1.0 (31 Aug 2012)
+### 1.0 (31 Aug 2012)
 
 Download:
 

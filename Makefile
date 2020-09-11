@@ -41,13 +41,14 @@ clean:
 
 # Documentation.
 
-docs: docs/api.md README.md $(wildcard docs/*.md) | docs/_layouts/default.html
+docs: docs/index.md docs/api.md $(wildcard docs/*.md) | \
+      docs/_layouts/default.html
 	for file in $(basename $^); do \
 		cat $| | docs/fill_layout.lua $$file.md > $$file.html; \
 	done
-	mv README.html docs
+docs/index.md: README.md ; cp $< $@
 docs/api.md: docs/scinterm.luadoc ; luadoc --doclet docs/markdowndoc $^ > $@
-cleandocs: ; rm -f docs/*.html docs/api.md
+cleandocs: ; rm -f docs/*.html docs/index.md docs/api.md
 
 # Release.
 

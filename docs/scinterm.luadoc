@@ -2,10 +2,11 @@
 -- This is a DUMMY FILE used for making LuaDoc for the Scinterm API.
 
 ---
--- An implementation of [Scintilla][] for curses platforms like [ncurses][].
+-- A curses platform for [Scintilla][] that supports curses platforms like
+-- [ncurses][].
 --
--- [Scintilla]: http://scintilla.org
--- [ncurses]: http://invisible-island.net/ncurses/
+-- [Scintilla]: https://scintilla.org
+-- [ncurses]: https://invisible-island.net/ncurses/
 module('Scinterm')
 
 ---
