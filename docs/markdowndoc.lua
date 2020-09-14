@@ -116,7 +116,6 @@ function M.start(doc)
         write_list(f, SEE, tbl.see)
       end
     end
-    f:write('- - -\n\n')
   end
 end
 

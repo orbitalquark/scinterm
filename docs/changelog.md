@@ -1,5 +1,7 @@
 ## Changelog
 
+[Atom Feed](https://github.com/orbitalquark/scinterm/releases.atom)
+
 ### 3.0 (27 Jul 2020)
 
 Download:
