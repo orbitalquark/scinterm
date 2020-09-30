@@ -172,5 +172,3 @@ Return:
 * `bool` whether or not Scintilla handled the mouse event.
 
 
-- - -
-
