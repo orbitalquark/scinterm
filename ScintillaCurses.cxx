@@ -595,12 +595,13 @@ public:
     mvwaddstr(win, rcPlace.top, rcPlace.left, isEndMarker ? "↩" : "↪");
   }
   /** Draws the text representation of a tab arrow. */
-  void DrawTabArrow(PRectangle rcTab) {
+  void DrawTabArrow(PRectangle rcTab, const ViewStyle &vsDraw) {
     // TODO: set color to vs.whitespaceColours.fore and back.
     wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
     for (int i = rcTab.left - 1; i < rcTab.right; i++)
       mvwaddch(win, rcTab.top, i, '-' | A_BOLD);
-    mvwaddch(win, rcTab.top, rcTab.right, '>' | A_BOLD);
+    char tail = vsDraw.tabDrawMode == tdLongArrow ? '>' : '-';
+    mvwaddch(win, rcTab.top, rcTab.right, tail | A_BOLD);
   }
 };
 
@@ -624,8 +625,10 @@ static void DrawWrapVisualMarker(
     rcPlace, isEndMarker, wrapColour);
 }
 /** Custom function for drawing tab arrows in curses. */
-static void DrawTabArrow(Surface *surface, PRectangle rcTab, int ymid) {
-  reinterpret_cast<SurfaceImpl *>(surface)->DrawTabArrow(rcTab);
+static void DrawTabArrow(
+  Surface *surface, PRectangle rcTab, int ymid, const ViewStyle &vsDraw)
+{
+  reinterpret_cast<SurfaceImpl *>(surface)->DrawTabArrow(rcTab, vsDraw);
 }
 
 // Window handling.
