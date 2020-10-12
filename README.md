@@ -106,10 +106,8 @@ Scinterm lacks some Scintilla features due to the terminal's constraints:
 
 ## Contribute
 
-Scinterm is [open source][]. Feel free to report bugs and submit patches either
-to the [mailing list][], or to me personally (mitchell.att.foicica.com). Thanks
+Scinterm is [open source][]. Feel free to report bugs and submit patches. Thanks
 to [everyone][] who has contributed.
 
 [open source]: https://github.com/orbitalquark/scinterm
-[mailing list]: https://foicica.com/lists
 [everyone]: https://orbitalquark.github.io/scinterm/thanks.html
