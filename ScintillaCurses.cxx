@@ -442,10 +442,10 @@ public:
     PRectangle rc, Font &font_, XYPOSITION ybase, std::string_view text,
     ColourDesired fore) override
   {
-    if (static_cast<int>(rc.top) >= getmaxy(win) - 1) return;
+    if (static_cast<int>(rc.top) > getmaxy(win) - 1) return;
     attr_t attrs = mvwinch(
       win, static_cast<int>(rc.top), static_cast<int>(rc.left));
-    short pair = PAIR_NUMBER(attrs), unused, back;
+    short pair = PAIR_NUMBER(attrs), unused, back = COLOR_BLACK;
     if (pair > 0) pair_content(pair, &unused, &back);
     DrawTextNoClip(rc, font_, ybase, text, fore, SCI_COLORS[back]);
   }
