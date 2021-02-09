@@ -436,7 +436,7 @@ public:
   /**
    * Similar to `DrawTextNoClip()`.
    * Scintilla calls this method for drawing CallTip text and two-phase buffer
-   * text. However, the latter is not supported.
+   * text.
    */
   void DrawTextTransparent(
     PRectangle rc, Font &font_, XYPOSITION ybase, std::string_view text,
@@ -968,7 +968,6 @@ public:
     view.tabWidthMinimumPixels = 0; // no proportional fonts
     view.drawOverstrikeCaret = false; // always draw normal caret
     view.bufferedDraw = false; // draw directly to the screen
-    view.phasesDraw = EditView::phasesOne; // no need for two-phase drawing
     view.tabArrowHeight = 0; // no additional tab arrow height
     view.customDrawTabArrow = DrawTabArrow; // draw text arrows for tabs
     view.customDrawWrapMarker = DrawWrapVisualMarker; // draw text wrap markers
