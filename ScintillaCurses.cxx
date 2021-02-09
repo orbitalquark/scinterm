@@ -1,4 +1,4 @@
-// Copyright 2012-2020 Mitchell. See LICENSE.
+// Copyright 2012-2021 Mitchell. See LICENSE.
 // Scintilla implemented in a curses (terminal) environment.
 // Contains platform facilities and a curses-specific subclass of ScintillaBase.
 // Note: setlocale(LC_CTYPE, "") must be called before initializing curses in
@@ -647,7 +647,7 @@ Window::~Window() {}
  */
 void Window::Destroy() {
   if (wid) delwin(_WINDOW(wid));
-  wid = 0;
+  wid = nullptr;
 }
 /**
  * Returns the window's boundaries.

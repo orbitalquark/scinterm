@@ -1,4 +1,4 @@
-# Copyright 2012-2020 Mitchell. See LICENSE.
+# Copyright 2012-2021 Mitchell. See LICENSE.
 
 CC = gcc
 CXX = g++
