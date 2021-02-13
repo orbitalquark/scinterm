@@ -43,8 +43,8 @@ Scinterm releases can be found [here][].
 
 After downloading Scinterm, it is recommended to unzip it into the top-level
 directory of an instance of Scintilla, similar to other Scintilla platforms like
-*gtk/* and *win32/*. After that, go into the Scinterm directory and run `make`
-to build the usual *../bin/scintilla.a*.
+*gtk/* and *win32/*. After that, go into the Scinterm directory and run
+`make patch` followed by `make` to build the usual *../bin/scintilla.a*.
 
 You can optionally build the demo application, jinx, by going into *jinx/* and
 running `make`. Pressing the `q` key quits the demo.

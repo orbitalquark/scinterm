@@ -36,6 +36,11 @@ $(sci) $(lexers) ScintillaCurses.o: %.o: %.cxx
 $(scintilla): $(sci) $(lexers) ScintillaCurses.o
 	$(AR) rc $@ $^
 	touch $@
+patch: $(wildcard patches/*.patch)
+	@for patch in $^; do \
+		echo "Applying $$patch"; \
+		patch -d ../ -p1 < $$patch; \
+	done
 clean: ; rm -f *.o $(scintilla)
 
 # Documentation.
