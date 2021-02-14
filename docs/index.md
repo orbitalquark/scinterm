@@ -65,7 +65,7 @@ Scinterm lacks some Scintilla features due to the terminal's constraints:
 * Autocompletion lists cannot show images (pixmap surfaces are not supported).
   Instead, they show the first character in the string passed to
   [`SCI_REGISTERIMAGE`][].
-* Buffered and two-phase drawing is not supported.
+* Buffered drawing is not supported.
 * Caret settings like period, line style, and width are not supported
   (terminals use block carets with their own period definitions).
 * Code pages other than UTF-8 have not been tested and it is possible some
