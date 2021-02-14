@@ -39,7 +39,7 @@ $(scintilla): $(sci) $(lexers) ScintillaCurses.o
 patch: $(wildcard patches/*.patch)
 	@for patch in $^; do \
 		echo "Applying $$patch"; \
-		patch -d ../ -p1 < $$patch; \
+		patch -d ../ -N -p1 < $$patch; \
 	done
 clean: ; rm -f *.o $(scintilla)
 

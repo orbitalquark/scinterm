@@ -21,7 +21,6 @@ int main(int argc, char **argv) {
   setlocale(LC_CTYPE, ""); // for displaying UTF-8 characters properly
   initscr(), raw(), cbreak(), noecho(), start_color();
   Scintilla *sci = scintilla_new(scnotification, NULL);
-  curs_set(0); // Scintilla draws its own cursor
 
   SSM(SCI_STYLESETFORE, STYLE_DEFAULT, 0xFFFFFF);
   SSM(SCI_STYLESETBACK, STYLE_DEFAULT, 0);
@@ -79,6 +78,7 @@ int main(int argc, char **argv) {
                            mouse.bstate & BUTTON_ALT);
     }
     scintilla_refresh(sci);
+    //scintilla_update_cursor(sci); // use this when doing other curses drawing
   }
   // UTF-8 input.
   //SSM(SCI_SETCODEPAGE, SC_CP_UTF8, 0);

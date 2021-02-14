@@ -171,4 +171,21 @@ Return:
 
 * `bool` whether or not Scintilla handled the mouse event.
 
+<a id="scintilla_update_cursor"></a>
+#### `scintilla_update_cursor`(*sci*)
+
+Updates the curses window cursor for the Scintilla window so the terminal
+draws the cursor in the correct position.
+This only needs to be called when `scintilla_refresh()` or
+`scintilla_noutrefresh()` is not the last curses draw command issued (for
+any window, not just the Scintilla window).
+
+Parameters:
+
+* *`sci`*: The Scintilla window returned by `scintilla_new()`.
+
+Return:
+
+* `void`
+
 

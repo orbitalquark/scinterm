@@ -97,6 +97,14 @@ void scintilla_noutrefresh(void *sci);
  */
 void scintilla_refresh(void *sci);
 /**
+ * Updates the curses window cursor for the Scintilla window so the terminal
+ * draws the cursor in the correct position.
+ * This only needs to be called when `scintilla_refresh()` or
+ * `scintilla_noutrefresh()` is not the last curses draw command issued (for
+ * any window, not just the Scintilla window).
+ */
+void scintilla_update_cursor(void *sci);
+/**
  * Deletes the given Scintilla window.
  * Curses must have been initialized prior to calling this function.
  * @param sci The Scintilla window returned by `scintilla_new()`.

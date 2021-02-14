@@ -977,8 +977,10 @@ public:
     scrollWidth = 5 * width; // reasonable default for any horizontal scroll bar
     vs.selColours.fore = ColourDesired(0, 0, 0); // black on white selection
     vs.selColours.fore.isSet = true; // setting selection foreground above
+    vs.selAdditionalForeground = ColourDesired(0, 0, 0);
+    vs.selAdditionalBackground = ColourDesired(0xFF, 0xFF, 0xFF);
     vs.caretcolour = ColourDesired(0xFF, 0xFF, 0xFF); // white caret
-    vs.caretStyle = CARETSTYLE_BLOCK | CARETSTYLE_OVERSTRIKE_BLOCK; // blk caret
+    vs.caretStyle = CARETSTYLE_CURSES; // block carets
     vs.leftMarginWidth = 0, vs.rightMarginWidth = 0; // no margins
     vs.ms[1].width = 1; // marker margin width should be 1
     vs.extraDescent = -1; // hack to make lineHeight 1 instead of 2
@@ -1221,6 +1223,21 @@ public:
     return _WINDOW(wMain.GetID());
   }
   /**
+   * Updates the cursor position, even if it's not visible, as the container may
+   * have a use for it.
+   */
+  void UpdateCursor() {
+    int pos = WndProc(SCI_GETCURRENTPOS, 0, 0);
+    if (!WndProc(SCI_GETSELECTIONEMPTY, 0, 0) &&
+        (WndProc(SCI_GETCARETSTYLE, 0, 0) & CARETSTYLE_BLOCK_AFTER) == 0 &&
+        WndProc(SCI_GETCURRENTPOS, 0, 0) > WndProc(SCI_GETANCHOR, 0, 0))
+      pos = WndProc(SCI_POSITIONBEFORE, pos, 0); // draw inside selection
+    int y = WndProc(SCI_POINTYFROMPOSITION, 0, pos);
+    int x = WndProc(SCI_POINTXFROMPOSITION, 0, pos);
+    wmove(GetWINDOW(), y, x);
+    wrefresh(GetWINDOW());
+  }
+  /**
    * Repaints the Scintilla window on the virtual screen.
    * If an autocompletion list, user list, or calltip is active, redraw it over
    * the buffer's contents.
@@ -1246,14 +1263,7 @@ public:
     else
       touchwin(w); // pdcurses has problems after drawing overlapping windows
 #endif
-    if (hasFocus) {
-      // Update cursor position, even if it's not visible, as the container may
-      // have a use for it.
-      int pos = WndProc(SCI_GETCURRENTPOS, 0, 0);
-      move(
-        getbegy(w) + WndProc(SCI_POINTYFROMPOSITION, 0, pos),
-        getbegx(w) + WndProc(SCI_POINTXFROMPOSITION, 0, pos));
-    }
+    if (hasFocus) UpdateCursor();
   }
   /**
    * Repaints the Scintilla window on the physical screen.
@@ -1296,8 +1306,10 @@ public:
    * @param alt Flag indicating whether or not the alt modifier key is pressed.
    * @return whether or not the mouse event was handled
    */
-  bool MousePress(int button, unsigned int time, int y, int x, bool shift,
-                  bool ctrl, bool alt) {
+  bool MousePress(
+    int button, unsigned int time, int y, int x, bool shift, bool ctrl,
+    bool alt)
+  {
     GetWINDOW(); // ensure the curses `WINDOW` has been created
     if (ac.Active() && (button == 1 || button == 4 || button == 5)) {
       // Select an autocompletion list item if possible or scroll the list.
@@ -1492,6 +1504,9 @@ void scintilla_noutrefresh(void *sci) {
 }
 void scintilla_refresh(void *sci) {
   reinterpret_cast<ScintillaCurses *>(sci)->Refresh();
+}
+void scintilla_update_cursor(void *sci) {
+  reinterpret_cast<ScintillaCurses *>(sci)->UpdateCursor();
 }
 void scintilla_delete(void *sci) {
   delete reinterpret_cast<ScintillaCurses *>(sci);

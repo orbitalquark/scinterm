@@ -1,0 +1,275 @@
+Added CARETSTYLE_CURSES to allow for terminal drawing of the main caret.
+diff -r 22b6bbb36280 doc/ScintillaDoc.html
+--- a/doc/ScintillaDoc.html	Sat Sep 05 07:55:08 2020 +1000
++++ b/doc/ScintillaDoc.html	Sat Feb 13 11:22:53 2021 -0500
+@@ -3304,16 +3304,52 @@
+ 
+     <p><b id="SCI_SETCARETSTYLE">SCI_SETCARETSTYLE(int caretStyle)</b><br />
+      <b id="SCI_GETCARETSTYLE">SCI_GETCARETSTYLE &rarr; int</b><br />
+-     The style of the caret can be set with <code>SCI_SETCARETSTYLE</code> to be a line caret
+-    (CARETSTYLE_LINE=1) or a block caret (CARETSTYLE_BLOCK=2) for insert mode (lower 4-bits, CARETSTYLE_INS_MASK) combined with
+-    a bar caret (CARETSTYLE_OVERSTRIKE_BAR=0) or a block caret (CARETSTYLE_OVERSTRIKE_BLOCK=16) for overtype mode (bit 4),
+-    or to not draw at all (CARETSTYLE_INVISIBLE=0). The default value for insert mode is the line caret (CARETSTYLE_LINE=1),
+-    for overtype mode is the bar caret (CARETSTYLE_OVERSTRIKE_BAR=0).
+-    You can determine the current caret style setting using <code>SCI_GETCARETSTYLE</code>.</p>
+-
+-    <p>When the caret end of a range is at the end and a block caret style is chosen, the block is
+-    drawn just inside the selection instead of after.
+-    This can be switched with an option (CARETSTYLE_BLOCK_AFTER=256).</p>
++     The style of the caret can be set with <code>SCI_SETCARETSTYLE</code>.
++     There are separate styles for insert mode (lower 4-bits, CARETSTYLE_INS_MASK),
++     overtype mode (bit 4), and curses mode (bit 5).
++
++     <table class="standard" summary="Caret Styles">
++       <tbody valign="top">
++         <tr>
++           <th align="left"><code>CARETSTYLE_INVISIBLE</code></th>
++           <td>0</td>
++           <td>Carets are not drawn at all.</td>
++         </tr>
++         <tr>
++           <th align="left"><code>CARETSTYLE_LINE</code></th>
++           <td>1</td>
++           <td>Draws insertion carets as lines. This is the default.</td>
++         </tr>
++         <tr>
++           <th align="left"><code>CARETSTYLE_BLOCK</code></th>
++           <td>2</td>
++           <td>Draws insertion carets as blocks.</td>
++         </tr>
++         <tr>
++           <th align="left"><code>CARETSTYLE_OVERSTRIKE_BAR</code></th>
++           <td>0</td>
++           <td>Draws an overstrike caret as a bar. This is the default.</td>
++         </tr>
++         <tr>
++           <th align="left"><code>CARETSTYLE_OVERSTRIKE_BLOCK</code></th>
++           <td>16</td>
++           <td>Draws an overstrike caret as a block. This should be ored with one of the first three styles.</td>
++         </tr>
++         <tr>
++           <th align="left"><code>CARETSTYLE_CURSES</code></th>
++           <td>32</td>
++           <td>Draws carets that cannot be drawn in a curses (terminal) environment (such as additional carets),
++           and draws them as blocks. The main caret is left to be drawn by the terminal itself. This setting is
++           typically a standalone setting.</td>
++         </tr>
++         <tr>
++           <th align="left"><code>CARETSTYLE_BLOCK_AFTER</code></th>
++           <td>256</td>
++           <td>When the caret end of a range is at the end and a block caret style is chosen, draws the block
++           outside the selection instead of inside. This can be ored with <code>CARETSTYLE_BLOCK</code> or <code>CARETSTYLE_CURSES</code>.</td>
++         </tr>
++       </tbody>
++     </table>
+ 
+     <p>The block caret draws most combining and multibyte character sequences successfully,
+     though some fonts like Thai Fonts (and possibly others) can sometimes appear strange when
+diff -r 22b6bbb36280 include/Scintilla.h
+--- a/include/Scintilla.h	Sat Sep 05 07:55:08 2020 +1000
++++ b/include/Scintilla.h	Sat Feb 13 11:22:53 2021 -0500
+@@ -848,6 +848,7 @@
+ #define CARETSTYLE_BLOCK 2
+ #define CARETSTYLE_OVERSTRIKE_BAR 0
+ #define CARETSTYLE_OVERSTRIKE_BLOCK 0x10
++#define CARETSTYLE_CURSES 0x20
+ #define CARETSTYLE_INS_MASK 0xF
+ #define CARETSTYLE_BLOCK_AFTER 0x100
+ #define SCI_SETCARETSTYLE 2512
+diff -r 22b6bbb36280 src/EditView.cxx
+--- a/src/EditView.cxx	Sat Sep 05 07:55:08 2020 +1000
++++ b/src/EditView.cxx	Sat Feb 13 11:22:53 2021 -0500
+@@ -1542,7 +1542,7 @@
+ 			}
+ 			const bool caretBlinkState = (model.caret.active && model.caret.on) || (!additionalCaretsBlink && !mainCaret);
+ 			const bool caretVisibleState = additionalCaretsVisible || mainCaret;
+-			if ((xposCaret >= 0) && vsDraw.IsCaretVisible() &&
++			if ((xposCaret >= 0) && vsDraw.IsCaretVisible(mainCaret) &&
+ 				(drawDrag || (caretBlinkState && caretVisibleState))) {
+ 				bool canDrawBlockCaret = true;
+ 				bool drawBlockCaret = false;
+@@ -1566,7 +1566,8 @@
+ 				if (xposCaret > 0)
+ 					caretWidthOffset = 0.51f;	// Move back so overlaps both character cells.
+ 				xposCaret += xStart;
+-				const ViewStyle::CaretShape caretShape = drawDrag ? ViewStyle::CaretShape::line : vsDraw.CaretShapeForMode(model.inOverstrike);
++				const ViewStyle::CaretShape caretShape = drawDrag ? ViewStyle::CaretShape::line :
++					vsDraw.CaretShapeForMode(model.inOverstrike, mainCaret);
+ 				if (drawDrag) {
+ 					/* Dragging text, use a line caret */
+ 					rcCaret.left = std::round(xposCaret - caretWidthOffset);
+@@ -1638,6 +1639,22 @@
+ 	}
+ }
+ 
++// On the curses platform, the terminal is drawing its own caret, so if the
++// caret is within the main selection, do not draw the selection at that
++// position.
++// Use iDoc from DrawBackground and DrawForeground here because PositionCache
++// has broken up the line such that, if the caret is inside the main selection,
++// the beginning or end of that selection is at the end of a text segment.
++// This function should only be called if iDoc is within the main selection.
++static int characterInCursesSelection(Sci::Position iDoc, const EditModel &model, const ViewStyle &vsDraw) {
++	const SelectionPosition& posCaret = model.sel.RangeMain().caret;
++	const bool caretAtStart = posCaret < model.sel.RangeMain().anchor && posCaret.Position() == iDoc;
++	const bool caretAtEnd = posCaret > model.sel.RangeMain().anchor &&
++		vsDraw.DrawCaretInsideSelection(false, false) &&
++		model.pdoc->MovePositionOutsideChar(posCaret.Position()-1, -1) == iDoc;
++	return (caretAtStart || caretAtEnd) ? 0 : 1;
++}
++
+ void EditView::DrawBackground(Surface *surface, const EditModel &model, const ViewStyle &vsDraw, const LineLayout *ll,
+ 	PRectangle rcLine, Range lineRange, Sci::Position posLineStart, int xStart,
+ 	int subLine, ColourOptional background) const {
+@@ -1648,7 +1665,7 @@
+ 	// Does not take margin into account but not significant
+ 	const int xStartVisible = static_cast<int>(subLineStart)-xStart;
+ 
+-	BreakFinder bfBack(ll, &model.sel, lineRange, posLineStart, xStartVisible, selBackDrawn, model.pdoc, &model.reprs, nullptr);
++	BreakFinder bfBack(ll, &model.sel, lineRange, posLineStart, xStartVisible, selBackDrawn, model.pdoc, &model.reprs, &vsDraw);
+ 
+ 	const bool drawWhitespaceBackground = vsDraw.WhitespaceBackgroundDrawn() && !background.isSet;
+ 
+@@ -1671,7 +1688,9 @@
+ 			if (rcSegment.right > rcLine.right)
+ 				rcSegment.right = rcLine.right;
+ 
+-			const int inSelection = hideSelection ? 0 : model.sel.CharacterInSelection(iDoc);
++			int inSelection = hideSelection ? 0 : model.sel.CharacterInSelection(iDoc);
++			if (vsDraw.IsMainCursesCaret(inSelection == 1))
++				inSelection = characterInCursesSelection(iDoc, model, vsDraw);
+ 			const bool inHotspot = (ll->hotspot.Valid()) && ll->hotspot.ContainsCharacter(iDoc);
+ 			ColourDesired textBack = TextBackground(model, vsDraw, ll, background, inSelection,
+ 				inHotspot, ll->styles[i], i);
+@@ -1916,7 +1935,9 @@
+ 					}
+ 				}
+ 			}
+-			const int inSelection = hideSelection ? 0 : model.sel.CharacterInSelection(iDoc);
++			int inSelection = hideSelection ? 0 : model.sel.CharacterInSelection(iDoc);
++			if (vsDraw.IsMainCursesCaret(inSelection == 1))
++				inSelection = characterInCursesSelection(iDoc, model, vsDraw);
+ 			if (inSelection && (vsDraw.selColours.fore.isSet)) {
+ 				textFore = (inSelection == 1) ? vsDraw.selColours.fore : vsDraw.selAdditionalForeground;
+ 			}
+diff -r 22b6bbb36280 src/Editor.cxx
+--- a/src/Editor.cxx	Sat Sep 05 07:55:08 2020 +1000
++++ b/src/Editor.cxx	Sat Feb 13 11:22:53 2021 -0500
+@@ -7386,7 +7386,7 @@
+ 		return vs.caretcolour.AsInteger();
+ 
+ 	case SCI_SETCARETSTYLE:
+-		if (wParam <= (CARETSTYLE_BLOCK | CARETSTYLE_OVERSTRIKE_BLOCK | CARETSTYLE_BLOCK_AFTER))
++		if (wParam <= (CARETSTYLE_BLOCK | CARETSTYLE_OVERSTRIKE_BLOCK | CARETSTYLE_CURSES | CARETSTYLE_BLOCK_AFTER))
+ 			vs.caretStyle = static_cast<int>(wParam);
+ 		else
+ 			/* Default to the line caret */
+diff -r 22b6bbb36280 src/PositionCache.cxx
+--- a/src/PositionCache.cxx	Sat Sep 05 07:55:08 2020 +1000
++++ b/src/PositionCache.cxx	Sat Feb 13 11:22:53 2021 -0500
+@@ -582,10 +582,38 @@
+ 		for (size_t r=0; r<psel->Count(); r++) {
+ 			const SelectionSegment portion = psel->Range(r).Intersect(segmentLine);
+ 			if (!(portion.start == portion.end)) {
+-				if (portion.start.IsValid())
+-					Insert(portion.start.Position() - posLineStart);
+-				if (portion.end.IsValid())
+-					Insert(portion.end.Position() - posLineStart);
++				if (portion.start.IsValid()) {
++					const bool skipFirstSelectedCharacter = pvsDraw && pvsDraw->IsMainCursesCaret(r == 0) &&
++						psel->Range(r).caret < psel->Range(r).anchor;
++					if (!skipFirstSelectedCharacter) {
++						Insert(portion.start.Position() - posLineStart);
++					} else {
++						// On the curses platform, the terminal is drawing its own caret, so
++						// make sure the main selection is not drawn on its first character
++						// if the caret is currently on it.
++						// While the caret is still inside the selection, it will be at the
++						// end of this text segment (instead of the beginning of the next
++						// one), so testing against this condition allows it to be drawn
++						// as not selected.
++						const Sci::Position next = pdoc->MovePositionOutsideChar(portion.start.Position()+1, 1);
++						Insert(next - posLineStart);
++					}
++				}
++				if (portion.end.IsValid()) {
++					const bool skipLastSelectedCharacter = pvsDraw && pvsDraw->IsMainCursesCaret(r == 0) &&
++						psel->Range(r).caret > psel->Range(r).anchor && pvsDraw->DrawCaretInsideSelection(false, false);
++					if (!skipLastSelectedCharacter) {
++						Insert(portion.end.Position() - posLineStart);
++					} else {
++						// On the curses platform, the terminal is drawing its own caret, so
++						// make sure the main selection is not drawn on its last character
++						// if the caret is currently on it. The caret will be its own text
++						// segment and at the end of said segment, so testing against this
++						// condition allows it to be drawn as not selected.
++						const Sci::Position prev = pdoc->MovePositionOutsideChar(portion.end.Position()-1, -1);
++						Insert(prev - posLineStart);
++					}
++				}
+ 			}
+ 		}
+ 	}
+diff -r 22b6bbb36280 src/ViewStyle.cxx
+--- a/src/ViewStyle.cxx	Sat Sep 05 07:55:08 2020 +1000
++++ b/src/ViewStyle.cxx	Sat Feb 13 11:22:53 2021 -0500
+@@ -562,11 +562,18 @@
+ 
+ bool ViewStyle::IsBlockCaretStyle() const noexcept {
+ 	return ((caretStyle & CARETSTYLE_INS_MASK) == CARETSTYLE_BLOCK) ||
+-		(caretStyle & CARETSTYLE_OVERSTRIKE_BLOCK) != 0;
++		(caretStyle & CARETSTYLE_OVERSTRIKE_BLOCK) != 0 ||
++		(caretStyle & CARETSTYLE_CURSES) != 0;
+ }
+ 
+-bool ViewStyle::IsCaretVisible() const noexcept {
+-	return caretWidth > 0 && caretStyle != CARETSTYLE_INVISIBLE;
++bool ViewStyle::IsCaretVisible(bool isMainSelection) const noexcept {
++	return caretWidth > 0 &&
++		((caretStyle & CARETSTYLE_INS_MASK) != CARETSTYLE_INVISIBLE ||
++		((caretStyle & CARETSTYLE_CURSES) != 0 && !isMainSelection)); // only draw additional selections in curses mode
++}
++
++bool ViewStyle::IsMainCursesCaret(bool isMainSelection) const noexcept {
++	return isMainSelection && (caretStyle & CARETSTYLE_CURSES) != 0;
+ }
+ 
+ bool ViewStyle::DrawCaretInsideSelection(bool inOverstrike, bool imeCaretBlockOverride) const noexcept {
+@@ -574,14 +581,19 @@
+ 		return false;
+ 	return ((caretStyle & CARETSTYLE_INS_MASK) == CARETSTYLE_BLOCK) ||
+ 		(inOverstrike && (caretStyle & CARETSTYLE_OVERSTRIKE_BLOCK) != 0) ||
+-		imeCaretBlockOverride;
++		imeCaretBlockOverride ||
++		((caretStyle & CARETSTYLE_CURSES) != 0);
+ }
+ 
+-ViewStyle::CaretShape ViewStyle::CaretShapeForMode(bool inOverstrike) const noexcept {
++ViewStyle::CaretShape ViewStyle::CaretShapeForMode(bool inOverstrike, bool isMainSelection) const noexcept {
+ 	if (inOverstrike) {
+ 		return (caretStyle & CARETSTYLE_OVERSTRIKE_BLOCK) ? CaretShape::block : CaretShape::bar;
+ 	}
+ 
++	if ((caretStyle & CARETSTYLE_CURSES) != 0 && !isMainSelection) {
++		return CaretShape::block;
++	}
++
+ 	const int caret = caretStyle & CARETSTYLE_INS_MASK;
+ 	return (caret <= CARETSTYLE_BLOCK) ? static_cast<CaretShape>(caret) : CaretShape::line;
+ }
+diff -r 22b6bbb36280 src/ViewStyle.h
+--- a/src/ViewStyle.h	Sat Sep 05 07:55:08 2020 +1000
++++ b/src/ViewStyle.h	Sat Feb 13 11:22:53 2021 -0500
+@@ -205,9 +205,10 @@
+ 
+ 	enum class CaretShape { invisible, line, block, bar };
+ 	bool IsBlockCaretStyle() const noexcept;
+-	bool IsCaretVisible() const noexcept;
++	bool IsCaretVisible(bool isMainSelection) const noexcept;
++	bool IsMainCursesCaret(bool isMainSelection) const noexcept;
+ 	bool DrawCaretInsideSelection(bool inOverstrike, bool imeCaretBlockOverride) const noexcept;
+-	CaretShape CaretShapeForMode(bool inOverstrike) const noexcept;
++	CaretShape CaretShapeForMode(bool inOverstrike, bool isMainSelection) const noexcept;
+ 
+ private:
+ 	void AllocStyles(size_t sizeNew);
