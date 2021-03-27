@@ -1,53 +1,22 @@
 Added CARETSTYLE_CURSES to allow for terminal drawing of the main caret.
-diff -r 22b6bbb36280 doc/ScintillaDoc.html
---- a/doc/ScintillaDoc.html	Sat Sep 05 07:55:08 2020 +1000
-+++ b/doc/ScintillaDoc.html	Sat Feb 13 11:22:53 2021 -0500
-@@ -3304,16 +3304,52 @@
- 
+diff -r 8c2f906208a2 doc/ScintillaDoc.html
+--- a/doc/ScintillaDoc.html	Sat Mar 06 13:45:16 2021 +1100
++++ b/doc/ScintillaDoc.html	Fri Mar 26 21:27:12 2021 -0400
+@@ -3315,8 +3315,8 @@
      <p><b id="SCI_SETCARETSTYLE">SCI_SETCARETSTYLE(int caretStyle)</b><br />
       <b id="SCI_GETCARETSTYLE">SCI_GETCARETSTYLE &rarr; int</b><br />
--     The style of the caret can be set with <code>SCI_SETCARETSTYLE</code> to be a line caret
--    (CARETSTYLE_LINE=1) or a block caret (CARETSTYLE_BLOCK=2) for insert mode (lower 4-bits, CARETSTYLE_INS_MASK) combined with
--    a bar caret (CARETSTYLE_OVERSTRIKE_BAR=0) or a block caret (CARETSTYLE_OVERSTRIKE_BLOCK=16) for overtype mode (bit 4),
--    or to not draw at all (CARETSTYLE_INVISIBLE=0). The default value for insert mode is the line caret (CARETSTYLE_LINE=1),
--    for overtype mode is the bar caret (CARETSTYLE_OVERSTRIKE_BAR=0).
--    You can determine the current caret style setting using <code>SCI_GETCARETSTYLE</code>.</p>
--
--    <p>When the caret end of a range is at the end and a block caret style is chosen, the block is
--    drawn just inside the selection instead of after.
--    This can be switched with an option (CARETSTYLE_BLOCK_AFTER=256).</p>
-+     The style of the caret can be set with <code>SCI_SETCARETSTYLE</code>.
+      The style of the caret can be set with <code>SCI_SETCARETSTYLE</code>.
+-     There are separate styles for insert mode (lower 4-bits, CARETSTYLE_INS_MASK) and
+-     overtype mode (bit 4).
 +     There are separate styles for insert mode (lower 4-bits, CARETSTYLE_INS_MASK),
 +     overtype mode (bit 4), and curses mode (bit 5).
-+
-+     <table class="standard" summary="Caret Styles">
-+       <tbody valign="top">
-+         <tr>
-+           <th align="left"><code>CARETSTYLE_INVISIBLE</code></th>
-+           <td>0</td>
-+           <td>Carets are not drawn at all.</td>
-+         </tr>
-+         <tr>
-+           <th align="left"><code>CARETSTYLE_LINE</code></th>
-+           <td>1</td>
-+           <td>Draws insertion carets as lines. This is the default.</td>
-+         </tr>
-+         <tr>
-+           <th align="left"><code>CARETSTYLE_BLOCK</code></th>
-+           <td>2</td>
-+           <td>Draws insertion carets as blocks.</td>
-+         </tr>
-+         <tr>
-+           <th align="left"><code>CARETSTYLE_OVERSTRIKE_BAR</code></th>
-+           <td>0</td>
-+           <td>Draws an overstrike caret as a bar. This is the default.</td>
-+         </tr>
-+         <tr>
-+           <th align="left"><code>CARETSTYLE_OVERSTRIKE_BLOCK</code></th>
-+           <td>16</td>
-+           <td>Draws an overstrike caret as a block. This should be ored with one of the first three styles.</td>
-+         </tr>
-+         <tr>
+ 
+      <table class="standard" summary="Caret Styles">
+        <tbody valign="top">
+@@ -3346,6 +3346,13 @@
+            <td>Draws an overstrike caret as a block. This should be ored with one of the first three styles.</td>
+          </tr>
+          <tr>
 +           <th align="left"><code>CARETSTYLE_CURSES</code></th>
 +           <td>32</td>
 +           <td>Draws carets that cannot be drawn in a curses (terminal) environment (such as additional carets),
@@ -55,16 +24,9 @@ diff -r 22b6bbb36280 doc/ScintillaDoc.html
 +           typically a standalone setting.</td>
 +         </tr>
 +         <tr>
-+           <th align="left"><code>CARETSTYLE_BLOCK_AFTER</code></th>
-+           <td>256</td>
-+           <td>When the caret end of a range is at the end and a block caret style is chosen, draws the block
-+           outside the selection instead of inside. This can be ored with <code>CARETSTYLE_BLOCK</code> or <code>CARETSTYLE_CURSES</code>.</td>
-+         </tr>
-+       </tbody>
-+     </table>
- 
-     <p>The block caret draws most combining and multibyte character sequences successfully,
-     though some fonts like Thai Fonts (and possibly others) can sometimes appear strange when
+            <th align="left"><code>CARETSTYLE_BLOCK_AFTER</code></th>
+            <td>256</td>
+            <td>When the caret end of a range is at the end and a block caret style is chosen, draws the block
 diff -r 22b6bbb36280 include/Scintilla.h
 --- a/include/Scintilla.h	Sat Sep 05 07:55:08 2020 +1000
 +++ b/include/Scintilla.h	Sat Feb 13 11:22:53 2021 -0500

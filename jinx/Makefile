@@ -2,11 +2,11 @@
 
 CC = gcc
 CXX = g++
-INCLUDEDIRS = -I ../../include -I ../../src -I ../../lexlib -I ../
-CFLAGS = -DCURSES -DSCI_LEXER -Wall $(INCLUDEDIRS)
+CFLAGS = -DCURSES -DSCI_LEXER -Wall -I../../include -I../../src \
+         -I../../../lexilla/include -I../../../lexilla/lexlib -I ../
 CXXFLAGS = $(CFLAGS)
 
-scintilla = ../../bin/scintilla.a
+scintilla = ../../bin/scintilla.a ../../../lexilla/bin/liblexilla.a
 
 all: jinx
 jinx.o: jinx.c ; $(CC) $(CFLAGS) -c $<

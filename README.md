@@ -47,7 +47,11 @@ directory of an instance of Scintilla, similar to other Scintilla platforms like
 `make patch` followed by `make` to build the usual *../bin/scintilla.a*.
 
 You can optionally build the demo application, jinx, by going into *jinx/* and
-running `make`. Pressing the `q` key quits the demo.
+running `make`. Pressing the `q` key quits the demo. Note that the demo assumes
+[lexilla][] is a sibling to the *../../../scintilla* directory, and that it has
+been built (i.e. *../../../lexilla/bin/liblexilla.so* exists).
+
+[lexilla]: https://www.scintilla.org/Lexilla.html
 
 ## Usage
 

@@ -1,11 +1,13 @@
 // Copyright 2012-2021 Mitchell. See LICENSE.
 
+#include <dlfcn.h>
 #include <locale.h>
 #include <sys/time.h>
 #include <curses.h>
 
 #include "Scintilla.h"
 #include "SciLexer.h"
+#include "Lexilla.h"
 #include "ScintillaCurses.h"
 
 #define SSM(m, w, l) scintilla_send_message(sci, m, w, l)
@@ -21,11 +23,14 @@ int main(int argc, char **argv) {
   setlocale(LC_CTYPE, ""); // for displaying UTF-8 characters properly
   initscr(), raw(), cbreak(), noecho(), start_color();
   Scintilla *sci = scintilla_new(scnotification, NULL);
+  char lexilla_path[] = "../../../lexilla/bin/" LEXILLA_LIB LEXILLA_EXTENSION;
+  void *lexilla = dlopen(lexilla_path, RTLD_LAZY);
+  CreateLexerFn lexer = (CreateLexerFn)dlsym(lexilla, LEXILLA_CREATELEXER);
 
   SSM(SCI_STYLESETFORE, STYLE_DEFAULT, 0xFFFFFF);
   SSM(SCI_STYLESETBACK, STYLE_DEFAULT, 0);
   SSM(SCI_STYLECLEARALL, 0, 0);
-  SSM(SCI_SETLEXER, SCLEX_CPP, 0);
+  SSM(SCI_SETILEXER, 0, (sptr_t)lexer("cpp"));
   SSM(SCI_SETKEYWORDS, 0, (sptr_t)"int char");
   SSM(SCI_STYLESETFORE, SCE_C_COMMENT, 0x00FF00);
   SSM(SCI_STYLESETFORE, SCE_C_COMMENTLINE, 0x00FF00);
