@@ -15,8 +15,8 @@ local SEE = '* [`%s`](#%s)\n'
 local TABLE = '<a id="%s"></a>\n#### `%s`\n\n'
 local TFIELD = '* `%s`: %s\n'
 local titles = {
-  [PARAM] = 'Parameters', [USAGE] = 'Usage', [RETURN] = 'Return',
-  [SEE] = 'See also', [TFIELD] = 'Fields'
+  [PARAM] = 'Parameters', [USAGE] = 'Usage', [RETURN] = 'Return', [SEE] = 'See also',
+  [TFIELD] = 'Fields'
 }
 
 -- Writes a LuaDoc description to the given file.
@@ -45,9 +45,7 @@ end
 local function write_hashmap(f, fmt, hashmap)
   if not hashmap or #hashmap == 0 then return end
   f:write(string.format(LIST_TITLE, titles[fmt]))
-  for _, name in ipairs(hashmap) do
-    f:write(string.format(fmt, name, hashmap[name] or ''))
-  end
+  for _, name in ipairs(hashmap) do f:write(string.format(fmt, name, hashmap[name] or '')) end
   f:write('\n')
 end
 
@@ -91,8 +89,7 @@ function M.start(doc)
       f:write('### Functions defined by `', name, '`\n\n')
       for _, fname in ipairs(funcs) do
         local func = funcs[fname]
-        f:write(string.format(
-          FUNCTION, func.name, func.name,
+        f:write(string.format(FUNCTION, func.name, func.name,
           table.concat(func.param, ', '):gsub('_', '\\_')))
         write_description(f, func.description)
         write_hashmap(f, PARAM, func.param)

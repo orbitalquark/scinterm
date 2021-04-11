@@ -15,12 +15,10 @@ endif
 CURSES_FLAGS =
 
 scintilla = ../bin/scintilla.a
-sci = AutoComplete.o CallTip.o CaseConvert.o CaseFolder.o CellBuffer.o \
-      CharacterCategory.o CharClassify.o ContractionState.o DBCS.o \
-      Decoration.o Document.o EditModel.o Editor.o EditView.o Geometry.o \
-      Indicator.o KeyMap.o LineMarker.o MarginView.o PerLine.o PositionCache.o \
-      RESearch.o RunStyles.o ScintillaBase.o Selection.o Style.o \
-      UniConversion.o UniqueString.o ViewStyle.o XPM.o
+sci = AutoComplete.o CallTip.o CaseConvert.o CaseFolder.o CellBuffer.o CharacterCategory.o \
+  CharClassify.o ContractionState.o DBCS.o Decoration.o Document.o EditModel.o Editor.o EditView.o \
+  Geometry.o Indicator.o KeyMap.o LineMarker.o MarginView.o PerLine.o PositionCache.o RESearch.o \
+  RunStyles.o ScintillaBase.o Selection.o Style.o UniConversion.o UniqueString.o ViewStyle.o XPM.o
 
 vpath %.h ../src ../include
 vpath %.cxx ../src
@@ -40,11 +38,8 @@ clean: ; rm -f *.o $(scintilla)
 
 # Documentation.
 
-docs: docs/index.md docs/api.md $(wildcard docs/*.md) | \
-      docs/_layouts/default.html
-	for file in $(basename $^); do \
-		cat $| | docs/fill_layout.lua $$file.md > $$file.html; \
-	done
+docs: docs/index.md docs/api.md $(wildcard docs/*.md) | docs/_layouts/default.html
+	for file in $(basename $^); do cat $| | docs/fill_layout.lua $$file.md > $$file.html; done
 docs/index.md: README.md
 	sed -e 's/^\# [[:alpha:]]\+/## Introduction/;' -e \
 		's|https://[[:alpha:]]\+\.github\.io/[[:alpha:]]\+/||;' $< > $@

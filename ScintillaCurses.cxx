@@ -1,8 +1,8 @@
 // Copyright 2012-2021 Mitchell. See LICENSE.
 // Scintilla implemented in a curses (terminal) environment.
 // Contains platform facilities and a curses-specific subclass of ScintillaBase.
-// Note: setlocale(LC_CTYPE, "") must be called before initializing curses in
-// order to display UTF-8 characters properly in ncursesw.
+// Note: setlocale(LC_CTYPE, "") must be called before initializing curses in order to display
+// UTF-8 characters properly in ncursesw.
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -73,19 +73,17 @@ using namespace Scintilla;
 
 /**
  * Allocates a new Scintilla font for curses.
- * Since terminals handle fonts on their own, the only use for Scintilla font
- * objects is to indicate which attributes terminal characters have.
+ * Since terminals handle fonts on their own, the only use for Scintilla font objects is to
+ * indicate which attributes terminal characters have.
  */
 class FontImpl : public Font {
 public:
   /**
    * Sets terminal character attributes for a particular font.
-   * These attributes are a union of curses attributes and stored in the font's
-   * `attrs`.
-   * The curses attributes are not constructed from various fields in *fp* since
-   * there is no `underline` parameter. Instead, you need to manually set the
-   * `weight` parameter to be the union of your desired attributes.
-   * Scintilla's lexers/LexLPeg.cxx has an example of this.
+   * These attributes are a union of curses attributes and stored in the font's `attrs`.
+   * The curses attributes are not constructed from various fields in *fp* since there is no
+   * `underline` parameter. Instead, you need to manually set the `weight` parameter to be the
+   * union of your desired attributes. Scintilla's lexers/LexLPeg.cxx has an example of this.
    */
   FontImpl(const FontParameters &fp) {
     if (fp.weight == SC_WEIGHT_BOLD)
@@ -154,44 +152,55 @@ static ColourDesired LBLUE(0, 0, 0xFF);
 static ColourDesired LMAGENTA(0xFF, 0, 0xFF);
 static ColourDesired LCYAN(0, 0xFF, 0xFF);
 static ColourDesired LWHITE(0xFF, 0xFF, 0xFF);
-static ColourDesired SCI_COLORS[] = {
-  BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, LBLACK, LRED, LGREEN,
-  LYELLOW, LBLUE, LMAGENTA, LCYAN, LWHITE
-};
+static ColourDesired SCI_COLORS[] = {BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, LBLACK,
+  LRED, LGREEN, LYELLOW, LBLUE, LMAGENTA, LCYAN, LWHITE};
 
 /**
  * Returns a curses color for the given Scintilla color.
- * Recognized colors are: black (0x000000), red (0x800000), green (0x008000),
- * yellow (0x808000), blue (0x000080), magenta (0x800080), cyan (0x008080),
- * white (0xc0c0c0), light black (0x404040), light red (0xff0000), light green
- * (0x00ff00), light yellow (0xffff00), light blue (0x0000ff), light magenta
- * (0xff00ff), light cyan (0x00ffff), and light white (0xffffff). If the color
+ * Recognized colors are: black (0x000000), red (0x800000), green (0x008000), yellow (0x808000),
+ * blue (0x000080), magenta (0x800080), cyan (0x008080), white (0xc0c0c0), light black (0x404040),
+ * light red (0xff0000), light green (0x00ff00), light yellow (0xffff00), light blue (0x0000ff),
+ * light magenta (0xff00ff), light cyan (0x00ffff), and light white (0xffffff). If the color
  * is not recognized, returns `COLOR_WHITE` by default.
  * @param color Color to get a curses color for.
  * @return curses color
  */
 static int term_color(ColourDesired color) {
-  if (color == BLACK) return COLOR_BLACK;
-  else if (color == RED) return COLOR_RED;
-  else if (color == GREEN) return COLOR_GREEN;
-  else if (color == YELLOW) return COLOR_YELLOW;
-  else if (color == BLUE) return COLOR_BLUE;
-  else if (color == MAGENTA) return COLOR_MAGENTA;
-  else if (color == CYAN) return COLOR_CYAN;
-  else if (color == LBLACK) return COLOR_LBLACK;
-  else if (color == LRED) return COLOR_LRED;
-  else if (color == LGREEN) return COLOR_LGREEN;
-  else if (color == LYELLOW) return COLOR_LYELLOW;
-  else if (color == LBLUE) return COLOR_LBLUE;
-  else if (color == LMAGENTA) return COLOR_LMAGENTA;
-  else if (color == LCYAN) return COLOR_LCYAN;
-  else if (color == LWHITE) return COLOR_LWHITE;
-  else return COLOR_WHITE;
+  if (color == BLACK)
+    return COLOR_BLACK;
+  else if (color == RED)
+    return COLOR_RED;
+  else if (color == GREEN)
+    return COLOR_GREEN;
+  else if (color == YELLOW)
+    return COLOR_YELLOW;
+  else if (color == BLUE)
+    return COLOR_BLUE;
+  else if (color == MAGENTA)
+    return COLOR_MAGENTA;
+  else if (color == CYAN)
+    return COLOR_CYAN;
+  else if (color == LBLACK)
+    return COLOR_LBLACK;
+  else if (color == LRED)
+    return COLOR_LRED;
+  else if (color == LGREEN)
+    return COLOR_LGREEN;
+  else if (color == LYELLOW)
+    return COLOR_LYELLOW;
+  else if (color == LBLUE)
+    return COLOR_LBLUE;
+  else if (color == LMAGENTA)
+    return COLOR_LMAGENTA;
+  else if (color == LCYAN)
+    return COLOR_LCYAN;
+  else if (color == LWHITE)
+    return COLOR_LWHITE;
+  else
+    return COLOR_WHITE;
 }
 /** Returns a curses color for the given Scintilla color. */
-static int term_color(ColourAlpha color) {
-  return term_color(color.GetColour());
-}
+static int term_color(ColourAlpha color) { return term_color(color.GetColour()); }
 
 /**
  * Returns a curses color for the given curses color.
@@ -211,17 +220,16 @@ static int term_color(int color) { return color; }
 
 /**
  * Implementation of a Scintilla surface for curses.
- * The surface is initialized with a curses `WINDOW` for drawing on. Since
- * curses can only show text, many of Scintilla's pixel-based functions are
- * not implemented.
+ * The surface is initialized with a curses `WINDOW` for drawing on. Since curses can only show
+ * text, many of Scintilla's pixel-based functions are not implemented.
  */
 class SurfaceImpl : public Surface {
   WINDOW *win = nullptr;
   PRectangle clip;
 
   /**
-   * Returns the number of columns used to display the first UTF-8 character in
-   * `s`, taking into account zero-width combining characters.
+   * Returns the number of columns used to display the first UTF-8 character in `s`, taking
+   * into account zero-width combining characters.
    * @param s The string that contains the first UTF-8 character to display.
    */
   int grapheme_width(const char *s) {
@@ -230,6 +238,7 @@ class SurfaceImpl : public Surface {
     int width = wcwidth(wch);
     return width >= 0 ? width : 1;
   }
+
 public:
   /** Allocates a new Scintilla surface for curses. */
   SurfaceImpl() = default;
@@ -237,8 +246,7 @@ public:
   ~SurfaceImpl() noexcept override { Release(); }
 
   /**
-   * Initializes/reinitializes the surface with a curses `WINDOW` for drawing
-   * on.
+   * Initializes/reinitializes the surface with a curses `WINDOW` for drawing on.
    * @param wid Curses `WINDOW`.
    */
   void Init(WindowID wid) override {
@@ -255,22 +263,16 @@ public:
     return std::make_unique<SurfaceImpl>();
   }
 
-  /**
-   * Surface modes other than UTF-8 (like DBCS and bidirectional) are not
-   * implemented.
-   */
+  /** Surface modes other than UTF-8 (like DBCS and bidirectional) are not implemented. */
   void SetMode(SurfaceMode mode) override {}
 
   /** Releases the surface's resources. */
   void Release() noexcept override { win = nullptr; }
-  /**
-   * Extra graphics features are ill-suited for drawing in the terminal and not
-   * implemented.
-   */
+  /** Extra graphics features are ill-suited for drawing in the terminal and not implemented. */
   int Supports(int feature) noexcept { return 0; }
   /**
-   * Returns `true` since this method is only called for pixmap surfaces and
-   * those surfaces are not implemented.
+   * Returns `true` since this method is only called for pixmap surfaces and those surfaces
+   * are not implemented.
    */
   bool Initialised() override { return true; }
   /** Unused; return value irrelevant. */
@@ -280,18 +282,15 @@ public:
   /** Returns 1 since font height is always 1 in curses. */
   int DeviceHeightFont(int points) override { return 1; }
   /**
-   * Drawing lines is not implemented because more often than not lines are
-   * being drawn for decoration (e.g. line markers, underlines, indicators,
-   * arrows, etc.).
+   * Drawing lines is not implemented because more often than not lines are being drawn for
+   * decoration (e.g. line markers, underlines, indicators, arrows, etc.).
    */
   void LineDraw(Point start, Point end, Stroke stroke) override {}
   void PolyLine(const Point *pts, size_t npts, Stroke stroke) override {}
   /**
-   * Draws the character equivalent of shape outlined by the given polygon's
-   * points.
-   * Scintilla only calls this method for CallTip arrows and
-   * INDIC_POINT[CHARACTER]. Assume the former.
-   * Line markers that Scintilla would normally draw as polygons are handled in
+   * Draws the character equivalent of shape outlined by the given polygon's points.
+   * Scintilla only calls this method for CallTip arrows and INDIC_POINT[CHARACTER]. Assume
+   * the former. Line markers that Scintilla would normally draw as polygons are handled in
    * `DrawLineMarker()`.
    */
   void Polygon(const Point *pts, size_t npts, FillStroke fillStroke) override {
@@ -304,65 +303,57 @@ public:
   }
   /**
    * Scintilla will never call this method.
-   * Line markers that Scintilla would normally draw as rectangles are handled
-   * in `DrawLineMarker()`.
+   * Line markers that Scintilla would normally draw as rectangles are handled in
+   * `DrawLineMarker()`.
    */
   void RectangleDraw(PRectangle rc, FillStroke fillStroke) override {}
   /**
-   * Drawing framed rectangles like fold display text, EOL annotations, and
-   * INDIC_BOX is not implemented.
+   * Drawing framed rectangles like fold display text, EOL annotations, and INDIC_BOX is not
+   * implemented.
    */
   void RectangleFrame(PRectangle rc, Stroke stroke) override {}
   /**
    * Clears the given portion of the screen with the given background color.
-   * In some cases, it can be determined that whitespace is being drawn. If so,
-   * draw it appropriately instead of clearing the given portion of the screen.
+   * In some cases, it can be determined that whitespace is being drawn. If so, draw it
+   * appropriately instead of clearing the given portion of the screen.
    */
   void FillRectangle(PRectangle rc, Fill fill) override {
     if (!win) return; // surface pixmaps not supported
     wattr_set(win, 0, term_color_pair(COLOR_WHITE, fill.colour), nullptr);
     chtype ch = ' ';
     if (fabs(rc.left - static_cast<int>(rc.left)) > 0.1) {
-      // If rc.left is a fractional value (e.g. 4.5) then whitespace dots are
-      // being drawn. Draw them appropriately.
+      // If rc.left is a fractional value (e.g. 4.5) then whitespace dots are being drawn. Draw
+      // them appropriately.
       // TODO: set color to vs.whitespaceColours.fore and back.
       wcolor_set(win, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
       rc.right = static_cast<int>(rc.right), ch = ACS_BULLET | A_BOLD;
     }
     for (int y = rc.top; y < rc.bottom; y++)
-      for (int x = rc.left; x < rc.right; x++)
-        mvwaddch(win, y, x, ch);
+      for (int x = rc.left; x < rc.right; x++) mvwaddch(win, y, x, ch);
   }
   /**
-   * Identical to `FillRectangle()` since special alignment to pixel boundaries
-   * is not needed.
+   * Identical to `FillRectangle()` since special alignment to pixel boundaries is not needed.
    */
-  void FillRectangleAligned(PRectangle rc, Fill fill) override {
-    FillRectangle(rc, fill);
-  }
+  void FillRectangleAligned(PRectangle rc, Fill fill) override { FillRectangle(rc, fill); }
   /**
-   * Instead of filling a portion of the screen with a surface pixmap, fills the
-   * the screen portion with black.
+   * Instead of filling a portion of the screen with a surface pixmap, fills the the screen
+   * portion with black.
    */
-  void FillRectangle(PRectangle rc, Surface &surfacePattern) override {
-    FillRectangle(rc, BLACK);
-  }
+  void FillRectangle(PRectangle rc, Surface &surfacePattern) override { FillRectangle(rc, BLACK); }
   /**
    * Scintilla will never call this method.
-   * Line markers that Scintilla would normally draw as rounded rectangles are
-   * handled in `DrawLineMarker()`.
+   * Line markers that Scintilla would normally draw as rounded rectangles are handled in
+   * `DrawLineMarker()`.
    */
   void RoundedRectangle(PRectangle rc, FillStroke fillStroke) override {}
   /**
    * Drawing alpha rectangles is not fully supported.
-   * Instead, fills the background color of the given rectangle with the fill
-   * color, emulating INDIC_STRAIGHTBOX with no transparency.
-   * This is called by Scintilla to draw INDIC_ROUNDBOX and INDIC_STRAIGHTBOX
-   * indicators, text blobs, and translucent line states and selections.
+   * Instead, fills the background color of the given rectangle with the fill color, emulating
+   * INDIC_STRAIGHTBOX with no transparency.
+   * This is called by Scintilla to draw INDIC_ROUNDBOX and INDIC_STRAIGHTBOX indicators,
+   * text blobs, and translucent line states and selections.
    */
-  void AlphaRectangle(
-    PRectangle rc, XYPOSITION cornerSize, FillStroke fillStroke) override
-  {
+  void AlphaRectangle(PRectangle rc, XYPOSITION cornerSize, FillStroke fillStroke) override {
     ColourAlpha &fill = fillStroke.fill.colour;
     for (int x = rc.left, y = rc.top - 1; x < rc.right; x++) {
       attr_t attrs = mvwinch(win, y, x) & A_ATTRIBUTES;
@@ -373,25 +364,22 @@ public:
   }
   /** Drawing gradients is not implemented. */
   void GradientRectangle(
-    PRectangle rc, const std::vector<ColourStop> &stops,
-    GradientOptions options) override {}
+    PRectangle rc, const std::vector<ColourStop> &stops, GradientOptions options) override {}
   /** Drawing images is not implemented. */
   void DrawRGBAImage(
-    PRectangle rc, int width, int height, const unsigned char *pixelsImage)
-    override {}
+    PRectangle rc, int width, int height, const unsigned char *pixelsImage) override {}
   /**
    * Scintilla will never call this method.
-   * Line markers that Scintilla would normally draw as circles are handled in
-   * `DrawLineMarker()`.
+   * Line markers that Scintilla would normally draw as circles are handled in `DrawLineMarker()`.
    */
   void Ellipse(PRectangle rc, FillStroke fillStroke) override {}
   /** Drawing curved ends on EOL annotations is not implemented. */
   void Stadium(PRectangle rc, FillStroke fillStroke, Ends ends) override {}
   /**
    * Draw an indentation guide.
-   * Scintilla will only call this method when drawing indentation guides or
-   * during certain drawing operations when double buffering is enabled. Since
-   * the latter is not supported, assume the former.
+   * Scintilla will only call this method when drawing indentation guides or during certain
+   * drawing operations when double buffering is enabled. Since the latter is not supported,
+   * assume the former.
    */
   void Copy(PRectangle rc, Point from, Surface &surfaceSource) override {
     // TODO: handle indent guide highlighting.
@@ -400,21 +388,17 @@ public:
   }
 
   /** Bidirectional input is not implemented. */
-  std::unique_ptr<IScreenLineLayout> Layout(
-    const IScreenLine *screenLine) override
-  {
+  std::unique_ptr<IScreenLineLayout> Layout(const IScreenLine *screenLine) override {
     return nullptr;
   }
 
   /**
-   * Draws the given text at the given position on the screen with the given
-   * foreground and background colors.
+   * Draws the given text at the given position on the screen with the given foreground and
+   * background colors.
    * Takes into account any clipping boundaries previously specified.
    */
-  void DrawTextNoClip(
-    PRectangle rc, const Font *font_, XYPOSITION ybase, std::string_view text,
-    ColourAlpha fore, ColourAlpha back) override
-  {
+  void DrawTextNoClip(PRectangle rc, const Font *font_, XYPOSITION ybase, std::string_view text,
+    ColourAlpha fore, ColourAlpha back) override {
     attr_t attrs = dynamic_cast<const FontImpl *>(font_)->attrs;
     wattr_set(win, attrs, term_color_pair(fore, back), nullptr);
     if (rc.left < clip.left) {
@@ -437,51 +421,40 @@ public:
         chars += grapheme_width(text.data() + bytes);
       if (chars > clip_chars) break;
     }
-    mvwaddnstr(
-      win, rc.top, rc.left, text.data(), std::min(text.length(), bytes));
+    mvwaddnstr(win, rc.top, rc.left, text.data(), std::min(text.length(), bytes));
   }
   /**
    * Similar to `DrawTextNoClip()`.
-   * Scintilla calls this method for drawing the caret, text blobs, and
-   * `SC_MARKCHARACTER` line markers.
-   * When drawing control characters, *rc* needs to have its pixel padding
-   * removed since curses has smaller resolution. Similarly when drawing line
-   * markers, *rc* needs to be reshaped.
+   * Scintilla calls this method for drawing the caret, text blobs, and `SC_MARKCHARACTER`
+   * line markers.
+   * When drawing control characters, *rc* needs to have its pixel padding removed since curses
+   * has smaller resolution. Similarly when drawing line markers, *rc* needs to be reshaped.
    * @see DrawTextNoClip
    */
-  void DrawTextClipped(
-    PRectangle rc, const Font *font_, XYPOSITION ybase, std::string_view text,
-    ColourAlpha fore, ColourAlpha back) override
-  {
+  void DrawTextClipped(PRectangle rc, const Font *font_, XYPOSITION ybase, std::string_view text,
+    ColourAlpha fore, ColourAlpha back) override {
     if (rc.left >= rc.right) // when drawing text blobs
       rc.left -= 2, rc.right -= 2, rc.top -= 1, rc.bottom -= 1;
     DrawTextNoClip(rc, font_, ybase, text, fore, back);
   }
   /**
    * Similar to `DrawTextNoClip()`.
-   * Scintilla calls this method for drawing CallTip text and two-phase buffer
-   * text.
+   * Scintilla calls this method for drawing CallTip text and two-phase buffer text.
    */
-  void DrawTextTransparent(
-    PRectangle rc, const Font *font_, XYPOSITION ybase, std::string_view text,
-    ColourAlpha fore) override
-  {
+  void DrawTextTransparent(PRectangle rc, const Font *font_, XYPOSITION ybase,
+    std::string_view text, ColourAlpha fore) override {
     if (static_cast<int>(rc.top) > getmaxy(win) - 1) return;
-    attr_t attrs = mvwinch(
-      win, static_cast<int>(rc.top), static_cast<int>(rc.left));
+    attr_t attrs = mvwinch(win, static_cast<int>(rc.top), static_cast<int>(rc.left));
     short pair = PAIR_NUMBER(attrs), unused, back = COLOR_BLACK;
     if (pair > 0) pair_content(pair, &unused, &back);
     DrawTextNoClip(rc, font_, ybase, text, fore, SCI_COLORS[back]);
   }
   /**
-   * Measures the width of characters in the given string and writes them to the
-   * given position list.
-   * Curses characters always have a width of 1 if they are not UTF-8 trailing
-   * bytes.
+   * Measures the width of characters in the given string and writes them to the given position
+   * list.
+   * Curses characters always have a width of 1 if they are not UTF-8 trailing bytes.
    */
-  void MeasureWidths(
-    const Font *font_, std::string_view text, XYPOSITION *positions) override
-  {
+  void MeasureWidths(const Font *font_, std::string_view text, XYPOSITION *positions) override {
     for (size_t i = 0, j = 0; i < text.length(); i++) {
       if (!UTF8IsTrailByte(static_cast<unsigned char>(text[i])))
         j += grapheme_width(text.data() + i);
@@ -489,8 +462,8 @@ public:
     }
   }
   /**
-   * Returns the number of UTF-8 characters in the given string since curses
-   * characters always have a width of 1.
+   * Returns the number of UTF-8 characters in the given string since curses characters always
+   * have a width of 1.
    */
   XYPOSITION WidthText(const Font *font_, std::string_view text) override {
     int width = 0;
@@ -500,30 +473,22 @@ public:
     return width;
   }
   /** Identical to `DrawTextNoClip()` since UTF-8 is assumed. */
-  void DrawTextNoClipUTF8(
-    PRectangle rc, const Font *font_, XYPOSITION ybase, std::string_view text,
-    ColourAlpha fore, ColourAlpha back) override
-  {
+  void DrawTextNoClipUTF8(PRectangle rc, const Font *font_, XYPOSITION ybase, std::string_view text,
+    ColourAlpha fore, ColourAlpha back) override {
     DrawTextNoClip(rc, font_, ybase, text, fore, back);
   }
   /** Identical to `DrawTextClipped()` since UTF-8 is assumed. */
-  void DrawTextClippedUTF8(
-    PRectangle rc, const Font *font_, XYPOSITION ybase, std::string_view text,
-    ColourAlpha fore, ColourAlpha back) override
-  {
+  void DrawTextClippedUTF8(PRectangle rc, const Font *font_, XYPOSITION ybase,
+    std::string_view text, ColourAlpha fore, ColourAlpha back) override {
     DrawTextClipped(rc, font_, ybase, text, fore, back);
   }
   /** Identical to `DrawTextTransparent()` since UTF-8 is assumed. */
-  void DrawTextTransparentUTF8(
-    PRectangle rc, const Font *font_, XYPOSITION ybase, std::string_view text,
-    ColourAlpha fore) override
-  {
+  void DrawTextTransparentUTF8(PRectangle rc, const Font *font_, XYPOSITION ybase,
+    std::string_view text, ColourAlpha fore) override {
     DrawTextTransparent(rc, font_, ybase, text, fore);
   }
   /** Identical to `MeasureWidths()` since UTF-8 is assumed. */
-  void MeasureWidthsUTF8(
-    const Font *font_, std::string_view text, XYPOSITION *positions) override
-  {
+  void MeasureWidthsUTF8(const Font *font_, std::string_view text, XYPOSITION *positions) override {
     MeasureWidths(font_, text, positions);
   }
   /** Identical to `WidthText()` since UTF-8 is assumed. */
@@ -542,19 +507,17 @@ public:
   XYPOSITION AverageCharWidth(const Font *font_) override { return 1; }
 
   /**
-   * Ensure text to be drawn in subsequent calls to `DrawText*()` is drawn
-   * within the given rectangle.
-   * This is needed in order to prevent long lines from overwriting margin text
-   * when scrolling to the right.
+   * Ensure text to be drawn in subsequent calls to `DrawText*()` is drawn within the given
+   * rectangle.
+   * This is needed in order to prevent long lines from overwriting margin text when scrolling
+   * to the right.
    */
   void SetClip(PRectangle rc) override {
     clip.left = rc.left, clip.top = rc.top;
     clip.right = rc.right, clip.bottom = rc.bottom;
   }
   /** Remove the clip set in `SetClip()`. */
-  void PopClip() override {
-    clip.left = 0, clip.top = 0, clip.right = 0, clip.bottom = 0;
-  }
+  void PopClip() override { clip.left = 0, clip.top = 0, clip.right = 0, clip.bottom = 0; }
   /** Flushing cache is not implemented. */
   void FlushCachedState() override {}
   /** Flushing is not implemented since surface pixmaps are not implemented. */
@@ -562,90 +525,47 @@ public:
 
   /** Draws the text representation of a line marker, if possible. */
   void DrawLineMarker(
-    const PRectangle &rcWhole, const Font *fontForCharacter, int tFold,
-    const void *data)
-  {
+    const PRectangle &rcWhole, const Font *fontForCharacter, int tFold, const void *data) {
     // TODO: handle fold marker highlighting.
     const LineMarker *marker = reinterpret_cast<const LineMarker *>(data);
     wattr_set(win, 0, term_color_pair(marker->fore, marker->back), nullptr);
     switch (marker->markType) {
-    case SC_MARK_CIRCLE:
-      mvwaddstr(win, rcWhole.top, rcWhole.left, "●");
-      return;
+    case SC_MARK_CIRCLE: mvwaddstr(win, rcWhole.top, rcWhole.left, "●"); return;
     case SC_MARK_SMALLRECT:
-    case SC_MARK_ROUNDRECT:
-      mvwaddstr(win, rcWhole.top, rcWhole.left, "■");
-      return;
-    case SC_MARK_ARROW:
-      mvwaddstr(win, rcWhole.top, rcWhole.left, "►");
-      return;
-    case SC_MARK_SHORTARROW:
-      mvwaddstr(win, rcWhole.top, rcWhole.left, "→");
-      return;
-    case SC_MARK_ARROWDOWN:
-      mvwaddstr(win, rcWhole.top, rcWhole.left, "▼");
-      return;
-    case SC_MARK_MINUS:
-      mvwaddch(win, rcWhole.top, rcWhole.left, '-');
-      return;
+    case SC_MARK_ROUNDRECT: mvwaddstr(win, rcWhole.top, rcWhole.left, "■"); return;
+    case SC_MARK_ARROW: mvwaddstr(win, rcWhole.top, rcWhole.left, "►"); return;
+    case SC_MARK_SHORTARROW: mvwaddstr(win, rcWhole.top, rcWhole.left, "→"); return;
+    case SC_MARK_ARROWDOWN: mvwaddstr(win, rcWhole.top, rcWhole.left, "▼"); return;
+    case SC_MARK_MINUS: mvwaddch(win, rcWhole.top, rcWhole.left, '-'); return;
     case SC_MARK_BOXMINUS:
-    case SC_MARK_BOXMINUSCONNECTED:
-      mvwaddstr(win, rcWhole.top, rcWhole.left, "⊟");
-      return;
+    case SC_MARK_BOXMINUSCONNECTED: mvwaddstr(win, rcWhole.top, rcWhole.left, "⊟"); return;
     case SC_MARK_CIRCLEMINUS:
-    case SC_MARK_CIRCLEMINUSCONNECTED:
-      mvwaddstr(win, rcWhole.top, rcWhole.left, "⊖");
-      return;
-    case SC_MARK_PLUS:
-      mvwaddch(win, rcWhole.top, rcWhole.left, '+');
-      return;
+    case SC_MARK_CIRCLEMINUSCONNECTED: mvwaddstr(win, rcWhole.top, rcWhole.left, "⊖"); return;
+    case SC_MARK_PLUS: mvwaddch(win, rcWhole.top, rcWhole.left, '+'); return;
     case SC_MARK_BOXPLUS:
-    case SC_MARK_BOXPLUSCONNECTED:
-      mvwaddstr(win, rcWhole.top, rcWhole.left, "⊞");
-      return;
+    case SC_MARK_BOXPLUSCONNECTED: mvwaddstr(win, rcWhole.top, rcWhole.left, "⊞"); return;
     case SC_MARK_CIRCLEPLUS:
-    case SC_MARK_CIRCLEPLUSCONNECTED:
-      mvwaddstr(win, rcWhole.top, rcWhole.left, "⊕");
-      return;
-    case SC_MARK_VLINE:
-      mvwaddch(win, rcWhole.top, rcWhole.left, ACS_VLINE);
-      return;
+    case SC_MARK_CIRCLEPLUSCONNECTED: mvwaddstr(win, rcWhole.top, rcWhole.left, "⊕"); return;
+    case SC_MARK_VLINE: mvwaddch(win, rcWhole.top, rcWhole.left, ACS_VLINE); return;
     case SC_MARK_LCORNER:
-    case SC_MARK_LCORNERCURVE:
-      mvwaddch(win, rcWhole.top, rcWhole.left, ACS_LLCORNER);
-      return;
+    case SC_MARK_LCORNERCURVE: mvwaddch(win, rcWhole.top, rcWhole.left, ACS_LLCORNER); return;
     case SC_MARK_TCORNER:
-    case SC_MARK_TCORNERCURVE:
-      mvwaddch(win, rcWhole.top, rcWhole.left, ACS_LTEE);
-      return;
-    case SC_MARK_DOTDOTDOT:
-      mvwaddstr(win, rcWhole.top, rcWhole.left, "…");
-      return;
-    case SC_MARK_ARROWS:
-      mvwaddstr(win, rcWhole.top, rcWhole.left, "»");
-      return;
-    case SC_MARK_FULLRECT:
-      FillRectangle(rcWhole, marker->back);
-      return;
-    case SC_MARK_LEFTRECT:
-      mvwaddstr(win, rcWhole.top, rcWhole.left, "▌");
-      return;
-    case SC_MARK_BOOKMARK:
-      mvwaddstr(win, rcWhole.top, rcWhole.left, "Σ");
-      return;
+    case SC_MARK_TCORNERCURVE: mvwaddch(win, rcWhole.top, rcWhole.left, ACS_LTEE); return;
+    case SC_MARK_DOTDOTDOT: mvwaddstr(win, rcWhole.top, rcWhole.left, "…"); return;
+    case SC_MARK_ARROWS: mvwaddstr(win, rcWhole.top, rcWhole.left, "»"); return;
+    case SC_MARK_FULLRECT: FillRectangle(rcWhole, marker->back); return;
+    case SC_MARK_LEFTRECT: mvwaddstr(win, rcWhole.top, rcWhole.left, "▌"); return;
+    case SC_MARK_BOOKMARK: mvwaddstr(win, rcWhole.top, rcWhole.left, "Σ"); return;
     }
     if (marker->markType >= SC_MARK_CHARACTER) {
       char ch = static_cast<char>(marker->markType - SC_MARK_CHARACTER);
       DrawTextClipped(
-        rcWhole, fontForCharacter, rcWhole.bottom, std::string(&ch, 1),
-        marker->fore, marker->back);
+        rcWhole, fontForCharacter, rcWhole.bottom, std::string(&ch, 1), marker->fore, marker->back);
       return;
     }
   }
   /** Draws the text representation of a wrap marker. */
-  void DrawWrapMarker(
-    PRectangle rcPlace, bool isEndMarker, ColourDesired wrapColour)
-  {
+  void DrawWrapMarker(PRectangle rcPlace, bool isEndMarker, ColourDesired wrapColour) {
     wattr_set(win, 0, term_color_pair(wrapColour, COLOR_BLACK), nullptr);
     mvwaddstr(win, rcPlace.top, rcPlace.left, isEndMarker ? "↩" : "↪");
   }
@@ -653,39 +573,28 @@ public:
   void DrawTabArrow(PRectangle rcTab, const ViewStyle &vsDraw) {
     // TODO: set color to vs.whitespaceColours.fore and back.
     wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
-    for (int i = rcTab.left - 1; i < rcTab.right; i++)
-      mvwaddch(win, rcTab.top, i, '-' | A_BOLD);
+    for (int i = rcTab.left - 1; i < rcTab.right; i++) mvwaddch(win, rcTab.top, i, '-' | A_BOLD);
     char tail = vsDraw.tabDrawMode == TabDrawMode::longArrow ? '>' : '-';
     mvwaddch(win, rcTab.top, rcTab.right, tail | A_BOLD);
   }
 };
 
 /** Creates a new curses surface. */
-std::unique_ptr<Surface> Surface::Allocate(int) {
-  return std::make_unique<SurfaceImpl>();
-}
+std::unique_ptr<Surface> Surface::Allocate(int) { return std::make_unique<SurfaceImpl>(); }
 
 /** Custom function for drawing line markers in curses. */
-static void DrawLineMarker(
-  Surface *surface, const PRectangle &rcWhole, const Font *fontForCharacter,
-  int tFold, int marginStyle, const void *data)
-{
-  reinterpret_cast<SurfaceImpl *>(surface)->DrawLineMarker(
-    rcWhole, fontForCharacter, tFold, data);
+static void DrawLineMarker(Surface *surface, const PRectangle &rcWhole,
+  const Font *fontForCharacter, int tFold, int marginStyle, const void *data) {
+  reinterpret_cast<SurfaceImpl *>(surface)->DrawLineMarker(rcWhole, fontForCharacter, tFold, data);
 }
 /** Custom function for drawing wrap markers in curses. */
 static void DrawWrapVisualMarker(
-  Surface *surface, PRectangle rcPlace, bool isEndMarker,
-  ColourDesired wrapColour)
-{
-  reinterpret_cast<SurfaceImpl *>(surface)->DrawWrapMarker(
-    rcPlace, isEndMarker, wrapColour);
+  Surface *surface, PRectangle rcPlace, bool isEndMarker, ColourDesired wrapColour) {
+  reinterpret_cast<SurfaceImpl *>(surface)->DrawWrapMarker(rcPlace, isEndMarker, wrapColour);
 }
 /** Custom function for drawing tab arrows in curses. */
 static void DrawTabArrow(
-  Surface *surface, PRectangle rcTab, int ymid, const ViewStyle &vsDraw,
-  Stroke stroke)
-{
+  Surface *surface, PRectangle rcTab, int ymid, const ViewStyle &vsDraw, Stroke stroke) {
   reinterpret_cast<SurfaceImpl *>(surface)->DrawTabArrow(rcTab, vsDraw);
 }
 
@@ -695,13 +604,11 @@ static void DrawTabArrow(
 Window::~Window() noexcept {}
 /**
  * Releases the window's resources.
- * Since the only Windows created are AutoComplete and CallTip windows, and
- * since those windows are created in `ListBox::Create()` and
- * `ScintillaCurses::CreateCallTipWindow()`, respectively, via `newwin()`, it is
- * safe to use `delwin()`.
- * It is important to note that even though `ScintillaCurses::wMain` is a Window,
- * its `Destroy()` function is never called, hence why `scintilla_delete()` is
- * the complement to `scintilla_new()`.
+ * Since the only Windows created are AutoComplete and CallTip windows, and since those windows
+ * are created in `ListBox::Create()` and `ScintillaCurses::CreateCallTipWindow()`, respectively,
+ * via `newwin()`, it is safe to use `delwin()`.
+ * It is important to note that even though `ScintillaCurses::wMain` is a Window, its `Destroy()`
+ * function is never called, hence why `scintilla_delete()` is the complement to `scintilla_new()`.
  */
 void Window::Destroy() noexcept {
   if (wid) delwin(_WINDOW(wid));
@@ -709,9 +616,9 @@ void Window::Destroy() noexcept {
 }
 /**
  * Returns the window's boundaries.
- * Unlike other platforms, Scintilla paints in coordinates relative to the
- * window in curses. Therefore, this function should always return the window
- * bounds to ensure all of it is painted.
+ * Unlike other platforms, Scintilla paints in coordinates relative to the window in
+ * curses. Therefore, this function should always return the window bounds to ensure all of it
+ * is painted.
  * @return PRectangle with the window's boundaries.
  */
 PRectangle Window::GetPosition() const {
@@ -752,9 +659,9 @@ void Window::SetPositionRelative(PRectangle rc, const Window *relativeTo) {
 }
 /** Identical to `Window::GetPosition()`. */
 PRectangle Window::GetClientPosition() const { return GetPosition(); }
-void Window::Show(bool show) { /* TODO: */ }
-void Window::InvalidateAll() { /* notify repaint */ }
-void Window::InvalidateRectangle(PRectangle rc) { /* notify repaint*/ }
+void Window::Show(bool show) {} // TODO:
+void Window::InvalidateAll() {} // notify repaint
+void Window::InvalidateRectangle(PRectangle rc) {} // notify repaint
 /** Setting the cursor icon is not implemented. */
 void Window::SetCursor(Cursor curs) {}
 /** Identical to `Window::GetPosition()`. */
@@ -762,14 +669,14 @@ PRectangle Window::GetMonitorRect(Point pt) { return GetPosition(); }
 
 /**
  * Implementation of a Scintilla ListBox for curses.
- * Instead of registering images to types, printable UTF-8 characters are
- * registered to types.
+ * Instead of registering images to types, printable UTF-8 characters are registered to types.
  */
 class ListBoxImpl : public ListBox {
   int height = 5, width = 10;
   std::vector<std::string> list;
   char types[IMAGE_MAX + 1][5]; // UTF-8 character plus terminating '\0'
   int selection = 0;
+
 public:
   IListBoxDelegate *delegate = nullptr;
 
@@ -787,15 +694,12 @@ public:
    * Creates a new listbox.
    * The `Show()` function resizes window with the appropriate height and width.
    */
-  void Create(
-    Window &parent, int ctrlID, Point location_, int lineHeight_,
-    bool unicodeMode_, int technology_) override
-  {
+  void Create(Window &parent, int ctrlID, Point location_, int lineHeight_, bool unicodeMode_,
+    int technology_) override {
     wid = newwin(1, 1, 0, 0);
   }
   /**
-   * Setting average char width is not implemented since all curses characters
-   * have a width of 1.
+   * Setting average char width is not implemented since all curses characters have a width of 1.
    */
   void SetAverageCharWidth(int width) override {}
   /** Sets the number of visible rows in the listbox. */
@@ -828,7 +732,8 @@ public:
     if (type >= 0 && type <= IMAGE_MAX) {
       char *chtype = types[type];
       list.push_back(std::string(chtype, strlen(chtype)) + s);
-    } else list.push_back(std::string(" ") + s);
+    } else
+      list.push_back(std::string(" ") + s);
     int len = strlen(s); // TODO: UTF-8 awareness?
     if (width < len + 1) {
       width = len + 1; // include type character len
@@ -857,30 +762,27 @@ public:
   /** Returns the currently selected item in the listbox. */
   int GetSelection() override { return selection; }
   /**
-   * Searches the listbox for the items matching the given prefix string and
-   * returns the index of the first match.
-   * Since the type is displayed as the first character, the value starts on the
-   * second character; match strings starting there.
+   * Searches the listbox for the items matching the given prefix string and returns the index
+   * of the first match.
+   * Since the type is displayed as the first character, the value starts on the second character;
+   * match strings starting there.
    */
   int Find(const char *prefix) override {
     int len = strlen(prefix);
     for (unsigned int i = 0; i < list.size(); i++) {
       const char *item = list.at(i).c_str();
-      item += UTF8DrawBytes(
-        reinterpret_cast<const unsigned char *>(item), strlen(item));
+      item += UTF8DrawBytes(reinterpret_cast<const unsigned char *>(item), strlen(item));
       if (strncmp(prefix, item, len) == 0) return i;
     }
     return -1;
   }
   /**
    * Returns the string item in the listbox at the given index.
-   * Since the type is displayed as the first character, the value starts on the
-   * second character.
+   * Since the type is displayed as the first character, the value starts on the second character.
    */
   std::string GetValue(int n) override {
     const char *item = list.at(n).c_str();
-    item += UTF8DrawBytes(
-      reinterpret_cast<const unsigned char *>(item), strlen(item));
+    item += UTF8DrawBytes(reinterpret_cast<const unsigned char *>(item), strlen(item));
     return item;
   }
   /**
@@ -892,23 +794,19 @@ public:
    */
   void RegisterImage(int type, const char *xpm_data) override {
     if (type < 0 || type > IMAGE_MAX) return;
-    int len = UTF8DrawBytes(
-      reinterpret_cast<const unsigned char *>(xpm_data), strlen(xpm_data));
+    int len = UTF8DrawBytes(reinterpret_cast<const unsigned char *>(xpm_data), strlen(xpm_data));
     for (int i = 0; i < len; i++) types[type][i] = xpm_data[i];
     types[type][len] = '\0';
   }
   /** Registering images is not implemented. */
   void RegisterRGBAImage(
-    int type, int width, int height, const unsigned char *pixelsImage)
-    override {}
+    int type, int width, int height, const unsigned char *pixelsImage) override {}
   /** Clears all registered types back to ' ' (space). */
   void ClearRegisteredImages() override {
     for (int i = 0; i <= IMAGE_MAX; i++) types[i][0] = ' ', types[i][1] = '\0';
   }
   /** Defines the delegate for ListBox actions. */
-  void SetDelegate(IListBoxDelegate *lbDelegate) override {
-    delegate = lbDelegate;
-  }
+  void SetDelegate(IListBoxDelegate *lbDelegate) override { delegate = lbDelegate; }
   /** Sets the list items in the listbox to the given items. */
   void SetList(const char *listText, char separator, char typesep) override {
     Clear();
@@ -926,7 +824,7 @@ public:
       } else if (text[i] == typesep)
         type = text + i;
     }
-    delete []text;
+    delete[] text;
   }
   /** List options are not implemented. */
   void SetOptions(ListOptions options_) override {}
@@ -937,9 +835,7 @@ ListBox::ListBox() noexcept = default;
 /** Deletes the ListBox. */
 ListBox::~ListBox() noexcept = default;
 /** Creates a new curses ListBox. */
-std::unique_ptr<ListBox> ListBox::Allocate() {
-  return std::make_unique<ListBoxImpl>();
-}
+std::unique_ptr<ListBox> ListBox::Allocate() { return std::make_unique<ListBoxImpl>(); }
 
 // Menus are not implemented.
 Menu::Menu() noexcept : mid(nullptr) {}
@@ -952,13 +848,9 @@ ColourDesired Platform::ChromeHighlight() { return ColourDesired(0, 0, 0); }
 const char *Platform::DefaultFont() { return "monospace"; }
 int Platform::DefaultFontSize() { return 10; }
 unsigned int Platform::DoubleClickTime() { return 500; /* ms */ }
-void Platform::DebugDisplay(const char *s) noexcept {
-  fprintf(stderr, "%s", s);
-}
+void Platform::DebugDisplay(const char *s) noexcept { fprintf(stderr, "%s", s); }
 void Platform::DebugPrintf(const char *format, ...) noexcept {}
-//bool Platform::ShowAssertionPopUps(bool assertionPopUps_) noexcept {
-//  return true;
-//}
+// bool Platform::ShowAssertionPopUps(bool assertionPopUps_) noexcept { return true; }
 void Platform::Assert(const char *c, const char *file, int line) noexcept {
   char buffer[2000];
   sprintf(buffer, "Assertion [%s] failed at %s %d\r\n", c, file, line);
@@ -981,42 +873,50 @@ class ScintillaCurses : public ScintillaBase {
   int dragOffset; // the distance to the position of the scrollbar being dragged
 
   /**
-   * Uses the given UTF-8 code point to fill the given UTF-8 byte sequence and
-   * length.
+   * Uses the given UTF-8 code point to fill the given UTF-8 byte sequence and length.
    * This algorithm was inspired by Paul Evans' libtermkey.
    * (http://www.leonerd.org.uk/code/libtermkey)
    * @param code The UTF-8 code point.
-   * @param s The string to write the UTF-8 byte sequence in. Must be at least
-   *   6 bytes in size.
+   * @param s The string to write the UTF-8 byte sequence in. Must be at least 6 bytes in size.
    * @param len The integer to put the number of UTF-8 bytes written in.
    */
   void toutf8(int code, char *s, int *len) {
-    if (code < 0x80) *len = 1;
-    else if (code < 0x800) *len = 2;
-    else if (code < 0x10000) *len = 3;
-    else if (code < 0x200000) *len = 4;
-    else if (code < 0x4000000) *len = 5;
-    else *len = 6;
+    if (code < 0x80)
+      *len = 1;
+    else if (code < 0x800)
+      *len = 2;
+    else if (code < 0x10000)
+      *len = 3;
+    else if (code < 0x200000)
+      *len = 4;
+    else if (code < 0x4000000)
+      *len = 5;
+    else
+      *len = 6;
     for (int b = *len - 1; b > 0; b--) s[b] = 0x80 | (code & 0x3F), code >>= 6;
-    if (*len == 1) s[0] = code & 0x7F;
-    else if (*len == 2) s[0] = 0xC0 | (code & 0x1F);
-    else if (*len == 3) s[0] = 0xE0 | (code & 0x0F);
-    else if (*len == 4) s[0] = 0xF0 | (code & 0x07);
-    else if (*len == 5) s[0] = 0xF8 | (code & 0x03);
-    else if (*len == 6) s[0] = 0xFC | (code & 0x01);
+    if (*len == 1)
+      s[0] = code & 0x7F;
+    else if (*len == 2)
+      s[0] = 0xC0 | (code & 0x1F);
+    else if (*len == 3)
+      s[0] = 0xE0 | (code & 0x0F);
+    else if (*len == 4)
+      s[0] = 0xF0 | (code & 0x07);
+    else if (*len == 5)
+      s[0] = 0xF8 | (code & 0x03);
+    else if (*len == 6)
+      s[0] = 0xFC | (code & 0x01);
   }
+
 public:
   /**
    * Creates a new Scintilla instance in a curses `WINDOW`.
-   * However, the `WINDOW` itself will not be created until it is absolutely
-   * necessary. When the `WINDOW` is created, it will initially be full-screen.
+   * However, the `WINDOW` itself will not be created until it is absolutely necessary. When the
+   * `WINDOW` is created, it will initially be full-screen.
    * @param callback_ Callback function for Scintilla notifications.
    */
-  ScintillaCurses(
-    void (*callback_)(void *, int, SCNotification *, void *), void *userdata_) :
-    sur(Surface::Allocate(SC_TECHNOLOGY_DEFAULT)), callback(callback_),
-    userdata(userdata_)
-  {
+  ScintillaCurses(void (*callback_)(void *, int, SCNotification *, void *), void *userdata_)
+      : sur(Surface::Allocate(SC_TECHNOLOGY_DEFAULT)), callback(callback_), userdata(userdata_) {
     // Defaults for curses.
     marginView.wrapMarkerPaddingRight = 0; // no padding for margin wrap markers
     marginView.customDrawWrapMarker = DrawWrapVisualMarker; // draw text markers
@@ -1084,8 +984,7 @@ public:
     wattr_set(w, 0, term_color_pair(COLOR_WHITE, COLOR_BLACK), nullptr);
     for (int i = 0; i < maxy; i++) mvwaddch(w, i, maxx - 1, ACS_CKBOARD);
     // Draw the bar.
-    scrollBarVPos = static_cast<float>(topLine) /
-      (MaxScrollPos() + LinesOnScreen() - 1) * maxy;
+    scrollBarVPos = static_cast<float>(topLine) / (MaxScrollPos() + LinesOnScreen() - 1) * maxy;
     wattr_set(w, 0, term_color_pair(COLOR_BLACK, COLOR_WHITE), nullptr);
     for (int i = scrollBarVPos; i < scrollBarVPos + scrollBarHeight; i++)
       mvwaddch(w, i, maxx - 1, ' ');
@@ -1105,11 +1004,9 @@ public:
       mvwaddch(w, maxy - 1, i, ' ');
   }
   /**
-   * Sets the height of the vertical scroll bar and width of the horizontal
-   * scroll bar.
-   * The height is based on the given size of a page and the total number of
-   * pages. The width is based on the width of the view and the view's scroll
-   * width property.
+   * Sets the height of the vertical scroll bar and width of the horizontal scroll bar.
+   * The height is based on the given size of a page and the total number of pages. The width
+   * is based on the width of the view and the view's scroll width property.
    */
   bool ModifyScrollBars(Sci::Line nMax, Sci::Line nPage) override {
     if (!wMain.GetID()) return false;
@@ -1125,16 +1022,14 @@ public:
    * Copies the selected text to the internal clipboard.
    * The primary and secondary X selections are unaffected.
    */
-  void Copy() override { if (!sel.Empty()) CopySelectionRange(&clipboard); }
-  /**
-   * Pastes text from the internal clipboard, not from primary or secondary X
-   * selections.
-   */
+  void Copy() override {
+    if (!sel.Empty()) CopySelectionRange(&clipboard);
+  }
+  /** Pastes text from the internal clipboard, not from primary or secondary X selections. */
   void Paste() override {
     if (clipboard.Empty()) return;
     ClearSelection(multiPasteMode == SC_MULTIPASTE_EACH);
-    InsertPasteShape(
-      clipboard.Data(), static_cast<int>(clipboard.Length()),
+    InsertPasteShape(clipboard.Data(), static_cast<int>(clipboard.Length()),
       !clipboard.rectangular ? PasteShape::stream : PasteShape::rectangular);
     EnsureCaretVisible();
   }
@@ -1144,13 +1039,11 @@ public:
   void NotifyChange() override {}
   /** Send Scintilla notifications to the parent. */
   void NotifyParent(SCNotification scn) override {
-    if (callback)
-      (*callback)(reinterpret_cast<void *>(this), 0, &scn, userdata);
+    if (callback) (*callback)(reinterpret_cast<void *>(this), 0, &scn, userdata);
   }
   /**
    * Handles an unconsumed key.
-   * If a character is being typed, add it to the editor. Otherwise, notify the
-   * container.
+   * If a character is being typed, add it to the editor. Otherwise, notify the container.
    */
   int KeyDefault(int key, int modifiers) override {
     if ((IsUnicodeMode() || key < 256) && modifiers == 0) {
@@ -1158,13 +1051,11 @@ public:
         char utf8[6];
         int len;
         toutf8(key, utf8, &len);
-        InsertCharacter(
-          std::string(utf8, len), EditModel::CharacterSource::directInput);
+        InsertCharacter(std::string(utf8, len), EditModel::CharacterSource::directInput);
         return 1;
       } else {
         char ch = static_cast<char>(key);
-        InsertCharacter(
-          std::string(&ch, 1), EditModel::CharacterSource::directInput);
+        InsertCharacter(std::string(&ch, 1), EditModel::CharacterSource::directInput);
         return 1;
       }
     } else {
@@ -1179,9 +1070,7 @@ public:
    * Copies the given text to the internal clipboard.
    * Like `Copy()`, does not affect the primary and secondary X selections.
    */
-  void CopyToClipboard(const SelectionText &selectedText) override {
-    clipboard.Copy(selectedText);
-  }
+  void CopyToClipboard(const SelectionText &selectedText) override { clipboard.Copy(selectedText); }
   /** A ticking caret is not implemented. */
   bool FineTickerRunning(TickReason reason) override { return false; }
   /** A ticking caret is not implemented. */
@@ -1200,15 +1089,9 @@ public:
     return std::string(encoded);
   }
   /** All text is assumed to be in UTF-8. */
-  std::string EncodedFromUTF8(std::string_view utf8) const override {
-    return std::string(utf8);
-  }
+  std::string EncodedFromUTF8(std::string_view utf8) const override { return std::string(utf8); }
   /** A Scintilla direct pointer is not implemented. */
-  sptr_t DefWndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam)
-    override
-  {
-    return 0;
-  }
+  sptr_t DefWndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam) override { return 0; }
   /** Draws a CallTip, creating the curses window for it if necessary. */
   void CreateCallTipWindow(PRectangle rc) override {
     if (!wMain.GetID()) return;
@@ -1234,28 +1117,26 @@ public:
     }
   }
   /** Adding menu items to the popup menu is not implemented. */
-  void AddToPopUp(const char *label, int cmd=0, bool enabled=true) override {}
+  void AddToPopUp(const char *label, int cmd = 0, bool enabled = true) override {}
   /**
-   * Sends the given message and parameters to Scintilla unless it is a message
-   * that changes an unsupported property.
+   * Sends the given message and parameters to Scintilla unless it is a message that changes
+   * an unsupported property.
    */
   sptr_t WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam) override {
     try {
       switch (iMessage) {
-        case SCI_GETDIRECTFUNCTION:
-          return reinterpret_cast<sptr_t>(scintilla_send_message);
-        case SCI_GETDIRECTPOINTER: return reinterpret_cast<sptr_t>(this);
-        // Ignore attempted changes of the following unsupported properties.
-        case SCI_SETBUFFEREDDRAW:
-        case SCI_SETWHITESPACESIZE:
-        case SCI_SETPHASESDRAW:
-        case SCI_SETEXTRAASCENT:
-        case SCI_SETEXTRADESCENT:
-          return 0;
-        // Pass to Scintilla.
-        default: return ScintillaBase::WndProc(iMessage, wParam, lParam);
+      case SCI_GETDIRECTFUNCTION: return reinterpret_cast<sptr_t>(scintilla_send_message);
+      case SCI_GETDIRECTPOINTER: return reinterpret_cast<sptr_t>(this);
+      // Ignore attempted changes of the following unsupported properties.
+      case SCI_SETBUFFEREDDRAW:
+      case SCI_SETWHITESPACESIZE:
+      case SCI_SETPHASESDRAW:
+      case SCI_SETEXTRAASCENT:
+      case SCI_SETEXTRADESCENT: return 0;
+      // Pass to Scintilla.
+      default: return ScintillaBase::WndProc(iMessage, wParam, lParam);
       }
-    } catch (std::bad_alloc&) {
+    } catch (std::bad_alloc &) {
       errorStatus = SC_STATUS_BADALLOC;
     } catch (...) {
       errorStatus = SC_STATUS_FAILURE;
@@ -1280,14 +1161,13 @@ public:
     return _WINDOW(wMain.GetID());
   }
   /**
-   * Updates the cursor position, even if it's not visible, as the container may
-   * have a use for it.
+   * Updates the cursor position, even if it's not visible, as the container may have a use for it.
    */
   void UpdateCursor() {
     int pos = WndProc(SCI_GETCURRENTPOS, 0, 0);
     if (!WndProc(SCI_GETSELECTIONEMPTY, 0, 0) &&
-        (WndProc(SCI_GETCARETSTYLE, 0, 0) & CARETSTYLE_BLOCK_AFTER) == 0 &&
-        WndProc(SCI_GETCURRENTPOS, 0, 0) > WndProc(SCI_GETANCHOR, 0, 0))
+      (WndProc(SCI_GETCARETSTYLE, 0, 0) & CARETSTYLE_BLOCK_AFTER) == 0 &&
+      (WndProc(SCI_GETCURRENTPOS, 0, 0) > WndProc(SCI_GETANCHOR, 0, 0)))
       pos = WndProc(SCI_POSITIONBEFORE, pos, 0); // draw inside selection
     int y = WndProc(SCI_POINTYFROMPOSITION, 0, pos);
     int x = WndProc(SCI_POINTXFROMPOSITION, 0, pos);
@@ -1296,11 +1176,10 @@ public:
   }
   /**
    * Repaints the Scintilla window on the virtual screen.
-   * If an autocompletion list, user list, or calltip is active, redraw it over
-   * the buffer's contents.
-   * It is the application's responsibility to call the curses `doupdate()` in
-   * order to refresh the physical screen.
-   * To paint to the physical screen instead, use `Refresh()`.
+   * If an autocompletion list, user list, or calltip is active, redraw it over the buffer's
+   * contents.
+   * It is the application's responsibility to call the curses `doupdate()` in order to refresh
+   * the physical screen. To paint to the physical screen instead, use `Refresh()`.
    * @see Refresh
    */
   void NoutRefresh() {
@@ -1324,8 +1203,8 @@ public:
   }
   /**
    * Repaints the Scintilla window on the physical screen.
-   * If an autocompletion list, user list, or calltip is active, redraw it over
-   * the buffer's contents.
+   * If an autocompletion list, user list, or calltip is active, redraw it over the buffer's
+   * contents.
    * To paint to the virtual screen instead, use `NoutRefresh()`.
    * @see NoutRefresh
    */
@@ -1335,17 +1214,13 @@ public:
   }
   /**
    * Sends a key to Scintilla.
-   * Usually if a key is consumed, the screen should be repainted. However, when
-   * autocomplete is active, that window is consuming the keys and any
-   * repainting of the main Scintilla window will overwrite the autocomplete
-   * window.
+   * Usually if a key is consumed, the screen should be repainted. However, when autocomplete is
+   * active, that window is consuming the keys and any repainting of the main Scintilla window
+   * will overwrite the autocomplete window.
    * @param key The key pressed.
-   * @param shift Flag indicating whether or not the shift modifier key is
-   *   pressed.
-   * @param shift Flag indicating whether or not the control modifier key is
-   *   pressed.
-   * @param shift Flag indicating whether or not the alt modifier key is
-   *   pressed.
+   * @param shift Flag indicating whether or not the shift modifier key is pressed.
+   * @param shift Flag indicating whether or not the control modifier key is pressed.
+   * @param shift Flag indicating whether or not the alt modifier key is pressed.
    */
   void KeyPress(int key, bool shift, bool ctrl, bool alt) {
     KeyDownWithModifiers(key, ModifierFlags(shift, ctrl, alt), nullptr);
@@ -1356,17 +1231,12 @@ public:
    * @param time The time in milliseconds of the mouse event.
    * @param y The y coordinate of the mouse event relative to this window.
    * @param x The x coordinate of the mouse event relative to this window.
-   * @param shift Flag indicating whether or not the shift modifier key is
-   *   pressed.
-   * @param ctrl Flag indicating whether or not the control modifier key is
-   *   pressed.
+   * @param shift Flag indicating whether or not the shift modifier key is pressed.
+   * @param ctrl Flag indicating whether or not the control modifier key is pressed.
    * @param alt Flag indicating whether or not the alt modifier key is pressed.
    * @return whether or not the mouse event was handled
    */
-  bool MousePress(
-    int button, unsigned int time, int y, int x, bool shift, bool ctrl,
-    bool alt)
-  {
+  bool MousePress(int button, unsigned int time, int y, int x, bool shift, bool ctrl, bool alt) {
     GetWINDOW(); // ensure the curses `WINDOW` has been created
     if (ac.Active() && (button == 1 || button == 4 || button == 5)) {
       // Select an autocompletion list item if possible or scroll the list.
@@ -1387,14 +1257,14 @@ public:
             ny = (n - 1) % ac.lb->GetVisibleRows(); // it's near the end
           // Compute the index of the item to select.
           int offset = ry - ny - 1; // -1 ignores list box border
-          if (offset == 0 &&
-              time - autoCompleteLastClickTime < Platform::DoubleClickTime()) {
-            ListBoxImpl* listbox = reinterpret_cast<ListBoxImpl *>(ac.lb.get());
+          if (offset == 0 && time - autoCompleteLastClickTime < Platform::DoubleClickTime()) {
+            ListBoxImpl *listbox = reinterpret_cast<ListBoxImpl *>(ac.lb.get());
             if (listbox->delegate) {
               ListBoxEvent event(ListBoxEvent::EventType::doubleClick);
               listbox->delegate->ListNotify(&event);
             }
-          } else ac.lb->Select(n + offset);
+          } else
+            ac.lb->Select(n + offset);
           autoCompleteLastClickTime = time;
         } else {
           // Scroll the list.
@@ -1439,8 +1309,7 @@ public:
           draggingHScrollBar = true, dragOffset = x - scrollBarHPos;
       } else {
         // Have Scintilla handle the click.
-        ButtonDownWithModifiers(
-          Point(x, y), time, ModifierFlags(shift, ctrl, alt));
+        ButtonDownWithModifiers(Point(x, y), time, ModifierFlags(shift, ctrl, alt));
         return true;
       }
     } else if (button == 4 || button == 5) {
@@ -1452,14 +1321,12 @@ public:
     return false;
   }
   /**
-   * Sends a mouse move event to Scintilla, returning whether or not Scintilla
-   * handled the mouse event.
+   * Sends a mouse move event to Scintilla, returning whether or not Scintilla handled the
+   * mouse event.
    * @param y The y coordinate of the mouse event relative to this window.
    * @param x The x coordinate of the mouse event relative to this window.
-   * @param shift Flag indicating whether or not the shift modifier key is
-   *   pressed.
-   * @param ctrl Flag indicating whether or not the control modifier key is
-   *   pressed.
+   * @param shift Flag indicating whether or not the shift modifier key is pressed.
+   * @param ctrl Flag indicating whether or not the control modifier key is pressed.
    * @param alt Flag indicating whether or not the alt modifier key is pressed.
    * @return whether or not Scintilla handled the mouse event
    */
@@ -1484,23 +1351,21 @@ public:
    * @param time The time in milliseconds of the mouse event.
    * @param y The y coordinate of the mouse event relative to this window.
    * @param x The x coordinate of the mouse event relative to this window.
-   * @param ctrl Flag indicating whether or not the control modifier key is
-   *   pressed.
+   * @param ctrl Flag indicating whether or not the control modifier key is pressed.
    */
   void MouseRelease(int time, int y, int x, int ctrl) {
     GetWINDOW(); // ensure the curses `WINDOW` has been created
     if (draggingVScrollBar || draggingHScrollBar)
       draggingVScrollBar = false, draggingHScrollBar = false;
     else if (HaveMouseCapture()) {
-      ButtonUpWithModifiers(
-        Point(x, y), time, ModifierFlags(ctrl, false, false));
+      ButtonUpWithModifiers(Point(x, y), time, ModifierFlags(ctrl, false, false));
       // TODO: ListBoxEvent event(ListBoxEvent::EventType::selectionChange);
       // TODO: listbox->delegate->ListNotify(&event);
     }
   }
   /**
-   * Returns a NUL-terminated copy of the text on the internal clipboard, not
-   * the primary and/or secondary X selections.
+   * Returns a NUL-terminated copy of the text on the internal clipboard, not the primary and/or
+   * secondary X selections.
    * The caller is responsible for `free`ing the returned text.
    * @param len An optional pointer to store the length of the returned text in.
    * @return clipboard text
@@ -1515,34 +1380,27 @@ public:
 
 // Link with C. Documentation in ScintillaCurses.h.
 extern "C" {
-void *scintilla_new(
-  void (*callback)(void *, int, SCNotification *, void *), void *userdata)
-{
+void *scintilla_new(void (*callback)(void *, int, SCNotification *, void *), void *userdata) {
   return reinterpret_cast<void *>(new ScintillaCurses(callback, userdata));
 }
 WINDOW *scintilla_get_window(void *sci) {
   return reinterpret_cast<ScintillaCurses *>(sci)->GetWINDOW();
 }
-sptr_t scintilla_send_message(
-  void *sci, unsigned int iMessage, uptr_t wParam, sptr_t lParam)
-{
-  return reinterpret_cast<ScintillaCurses *>(sci)->WndProc(
-    iMessage, wParam, lParam);
+sptr_t scintilla_send_message(void *sci, unsigned int iMessage, uptr_t wParam, sptr_t lParam) {
+  return reinterpret_cast<ScintillaCurses *>(sci)->WndProc(iMessage, wParam, lParam);
 }
 void scintilla_send_key(void *sci, int key, bool shift, bool ctrl, bool alt) {
   reinterpret_cast<ScintillaCurses *>(sci)->KeyPress(key, shift, ctrl, alt);
 }
-bool scintilla_send_mouse(
-  void *sci, int event, unsigned int time, int button, int y, int x, bool shift,
-  bool ctrl, bool alt)
-{
+bool scintilla_send_mouse(void *sci, int event, unsigned int time, int button, int y, int x,
+  bool shift, bool ctrl, bool alt) {
   ScintillaCurses *scicurses = reinterpret_cast<ScintillaCurses *>(sci);
   WINDOW *w = scicurses->GetWINDOW();
   int begy = getbegy(w), begx = getbegx(w);
   int maxy = getmaxy(w), maxx = getmaxx(w);
   // Ignore most events outside the window.
-  if ((x < begx || x > begx + maxx - 1 || y < begy || y > begy + maxy - 1) &&
-      button != 4 && button != 5 && event != SCM_DRAG)
+  if ((x < begx || x > begx + maxx - 1 || y < begy || y > begy + maxy - 1) && button != 4 &&
+    button != 5 && event != SCM_DRAG)
     return false;
   y = y - begy, x = x - begx;
   if (event == SCM_PRESS)
@@ -1556,16 +1414,10 @@ bool scintilla_send_mouse(
 char *scintilla_get_clipboard(void *sci, int *len) {
   return reinterpret_cast<ScintillaCurses *>(sci)->GetClipboard(len);
 }
-void scintilla_noutrefresh(void *sci) {
-  reinterpret_cast<ScintillaCurses *>(sci)->NoutRefresh();
-}
-void scintilla_refresh(void *sci) {
-  reinterpret_cast<ScintillaCurses *>(sci)->Refresh();
-}
+void scintilla_noutrefresh(void *sci) { reinterpret_cast<ScintillaCurses *>(sci)->NoutRefresh(); }
+void scintilla_refresh(void *sci) { reinterpret_cast<ScintillaCurses *>(sci)->Refresh(); }
 void scintilla_update_cursor(void *sci) {
   reinterpret_cast<ScintillaCurses *>(sci)->UpdateCursor();
 }
-void scintilla_delete(void *sci) {
-  delete reinterpret_cast<ScintillaCurses *>(sci);
-}
+void scintilla_delete(void *sci) { delete reinterpret_cast<ScintillaCurses *>(sci); }
 }

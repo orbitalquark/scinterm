@@ -1,7 +1,6 @@
 ## Scinterm API Documentation
 
-A curses platform for [Scintilla][] that supports curses platforms like
-[ncurses][].
+A curses platform for [Scintilla][] that supports curses platforms like [ncurses][].
 
 [Scintilla]: https://scintilla.org
 [ncurses]: https://invisible-island.net/ncurses/
@@ -11,8 +10,7 @@ A curses platform for [Scintilla][] that supports curses platforms like
 <a id="SCI_COLOR_PAIR"></a>
 #### `SCI_COLOR_PAIR`(*f, b*)
 
-[Macro] Returns the curses `COLOR_PAIR` for the given curses foreground and
-background `COLOR`s.
+[Macro] Returns the curses `COLOR_PAIR` for the given curses foreground and background `COLOR`s.
 This is used simply to enumerate every possible color combination.
 
 Parameters:
@@ -40,9 +38,8 @@ Return:
 <a id="scintilla_get_clipboard"></a>
 #### `scintilla_get_clipboard`(*sci, len*)
 
-Returns a null-terminated copy of the text on Scintilla's internal clipboard
-(not the primary and/or secondary X selections) and stores its length in
-*len*.
+Returns a null-terminated copy of the text on Scintilla's internal clipboard (not the primary
+and/or secondary X selections) and stores its length in *len*.
 The caller is responsible for `free`ing the returned text.
 Keep in mind clipboard text may contain null bytes.
 
@@ -75,8 +72,8 @@ Creates a new Scintilla curses window.
 
 Parameters:
 
-* *`callback`*: SCNotification callback function of the form:
-  `void callback(Scintilla *, int, void *, void *)`.
+* *`callback`*: SCNotification callback function of the form: `void callback(Scintilla *,
+  int, void *, void *)`.
 * *`userdata`*: (`void *`) Userdata to pass to *callback*.
 
 Return:
@@ -116,14 +113,11 @@ If it is not consumed, an SCNotification will be emitted.
 Parameters:
 
 * *`sci`*: The Scintilla window returned by `scintilla_new()`.
-* *`key`*: (`int`) The keycode of the key, or, if Scintilla's code page is
-  UTF-8, the UTF-8 code point of the key.
-* *`shift`*: (`bool`) Flag indicating whether or not the shift modifier key
-  is pressed.
-* *`ctrl`*: (`bool`) Flag indicating whether or not the control modifier key
-  is pressed.
-* *`alt`*: (`bool`) Flag indicating whether or not the alt modifier key is
-  pressed.
+* *`key`*: (`int`) The keycode of the key, or, if Scintilla's code page is UTF-8, the UTF-8
+  code point of the key.
+* *`shift`*: (`bool`) Flag indicating whether or not the shift modifier key is pressed.
+* *`ctrl`*: (`bool`) Flag indicating whether or not the control modifier key is pressed.
+* *`alt`*: (`bool`) Flag indicating whether or not the alt modifier key is pressed.
 
 Return:
 
@@ -153,19 +147,15 @@ Sends the specified mouse event to the given Scintilla window for processing.
 Parameters:
 
 * *`sci`*: The Scintilla window returned by `scintilla_new()`.
-* *`event`*: (`int`) The mouse event (`SCM_CLICK`, `SCM_DRAG`, or
-  `SCM_RELEASE`).
-* *`time`*: (`unsigned int`) The time in milliseconds of the mouse event.
-  This is only needed if double and triple clicks need to be detected.
+* *`event`*: (`int`) The mouse event (`SCM_CLICK`, `SCM_DRAG`, or `SCM_RELEASE`).
+* *`time`*: (`unsigned int`) The time in milliseconds of the mouse event.  This is only
+  needed if double and triple clicks need to be detected.
 * *`button`*: (`int`) The button number pressed, or `0` if none.
 * *`y`*: (`int`) The absolute y coordinate of the mouse event.
 * *`x`*: (`int`) The absolute x coordinate of the mouse event.
-* *`shift`*: (`bool`) Flag indicating whether or not the shift modifier key
-  is pressed.
-* *`ctrl`*: (`bool`) Flag indicating whether or not the control modifier key
-  is pressed.
-* *`alt`*: (`bool`) Flag indicating whether or not the alt modifier key is
-  pressed.
+* *`shift`*: (`bool`) Flag indicating whether or not the shift modifier key is pressed.
+* *`ctrl`*: (`bool`) Flag indicating whether or not the control modifier key is pressed.
+* *`alt`*: (`bool`) Flag indicating whether or not the alt modifier key is pressed.
 
 Return:
 
@@ -174,11 +164,10 @@ Return:
 <a id="scintilla_update_cursor"></a>
 #### `scintilla_update_cursor`(*sci*)
 
-Updates the curses window cursor for the Scintilla window so the terminal
-draws the cursor in the correct position.
-This only needs to be called when `scintilla_refresh()` or
-`scintilla_noutrefresh()` is not the last curses draw command issued (for
-any window, not just the Scintilla window).
+Updates the curses window cursor for the Scintilla window so the terminal draws the cursor
+in the correct position.
+This only needs to be called when `scintilla_refresh()` or `scintilla_noutrefresh()` is not
+the last curses draw command issued (for any window, not just the Scintilla window).
 
 Parameters:
 

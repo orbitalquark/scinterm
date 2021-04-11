@@ -110,8 +110,8 @@ Bugfixes:
 
 Changes:
 
-* Use a curses primitive instead of implementation-specific workaround when
-  changing text attributes.
+* Use a curses primitive instead of implementation-specific workaround when changing text
+  attributes.
 * Updated to [Scintilla][] 3.7.5.
 
 [Scinterm 1.9]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.9.zip
@@ -190,10 +190,10 @@ Changes:
 * Added support for drawing call tip arrows.
 * Implemented scrollbars.
 * Added support for drawing tab arrows when visualizing whitespace.
-* Added support for drawing wrap markers. (Requires a font with good
-  glyph support, like DejaVu Sans Mono.)
-* Added support for drawing nearly all line markers. (Requires a font with good
-  glyph support, like DejaVu Sans Mono or Liberation Mono.)
+* Added support for drawing wrap markers. (Requires a font with good glyph support, like DejaVu
+  Sans Mono.)
+* Added support for drawing nearly all line markers. (Requires a font with good glyph support,
+  like DejaVu Sans Mono or Liberation Mono.)
 * Added support for drawing indentation guides.
 * Updated to [Scintilla][] 3.5.2.
 
@@ -251,8 +251,7 @@ Bugfixes:
 
 Changes:
 
-* Added support for `INDIC_ROUNDBOX` and `INDIC_STRAIGHTBOX`, but with no
-  translucency.
+* Added support for `INDIC_ROUNDBOX` and `INDIC_STRAIGHTBOX`, but with no translucency.
 * Support curses, PDCurses, and X/Open Curses.
 * Recognize up to 16 separate colors for terminals that support it.
 * Updated to [Scintilla][] 3.3.7.

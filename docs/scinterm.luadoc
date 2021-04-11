@@ -2,8 +2,7 @@
 -- This is a DUMMY FILE used for making LuaDoc for the Scinterm API.
 
 ---
--- A curses platform for [Scintilla][] that supports curses platforms like
--- [ncurses][].
+-- A curses platform for [Scintilla][] that supports curses platforms like [ncurses][].
 --
 -- [Scintilla]: https://scintilla.org
 -- [ncurses]: https://invisible-island.net/ncurses/
@@ -11,8 +10,8 @@ module('Scinterm')
 
 ---
 -- Creates a new Scintilla curses window.
--- @param callback SCNotification callback function of the form:
---   `void callback(Scintilla *, int, void *, void *)`.
+-- @param callback SCNotification callback function of the form: `void callback(Scintilla *,
+--   int, void *, void *)`.
 -- @param userdata (`void *`) Userdata to pass to *callback*.
 -- @return `Scintilla *`
 function scintilla_new(callback, userdata) end
@@ -36,40 +35,32 @@ function scintilla_send_message(sci, iMessage, wParam, lParam) end
 -- Sends the specified key to the given Scintilla window for processing.
 -- If it is not consumed, an SCNotification will be emitted.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
--- @param key (`int`) The keycode of the key, or, if Scintilla's code page is
---   UTF-8, the UTF-8 code point of the key.
--- @param shift (`bool`) Flag indicating whether or not the shift modifier key
---   is pressed.
--- @param ctrl (`bool`) Flag indicating whether or not the control modifier key
---   is pressed.
--- @param alt (`bool`) Flag indicating whether or not the alt modifier key is
---   pressed.
+-- @param key (`int`) The keycode of the key, or, if Scintilla's code page is UTF-8, the UTF-8
+--   code point of the key.
+-- @param shift (`bool`) Flag indicating whether or not the shift modifier key is pressed.
+-- @param ctrl (`bool`) Flag indicating whether or not the control modifier key is pressed.
+-- @param alt (`bool`) Flag indicating whether or not the alt modifier key is pressed.
 -- @return `void`
 function scintilla_send_key(sci, key, shift, ctrl, alt) end
 
 ---
 -- Sends the specified mouse event to the given Scintilla window for processing.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
--- @param event (`int`) The mouse event (`SCM_CLICK`, `SCM_DRAG`, or
---   `SCM_RELEASE`).
--- @param time (`unsigned int`) The time in milliseconds of the mouse event.
---   This is only needed if double and triple clicks need to be detected.
+-- @param event (`int`) The mouse event (`SCM_CLICK`, `SCM_DRAG`, or `SCM_RELEASE`).
+-- @param time (`unsigned int`) The time in milliseconds of the mouse event.  This is only
+--   needed if double and triple clicks need to be detected.
 -- @param button (`int`) The button number pressed, or `0` if none.
 -- @param y (`int`) The absolute y coordinate of the mouse event.
 -- @param x (`int`) The absolute x coordinate of the mouse event.
--- @param shift (`bool`) Flag indicating whether or not the shift modifier key
---   is pressed.
--- @param ctrl (`bool`) Flag indicating whether or not the control modifier key
---   is pressed.
--- @param alt (`bool`) Flag indicating whether or not the alt modifier key is
---   pressed.
+-- @param shift (`bool`) Flag indicating whether or not the shift modifier key is pressed.
+-- @param ctrl (`bool`) Flag indicating whether or not the control modifier key is pressed.
+-- @param alt (`bool`) Flag indicating whether or not the alt modifier key is pressed.
 -- @return `bool` whether or not Scintilla handled the mouse event.
 function scintilla_send_mouse(sci, event, time, button, y, x, shift, ctrl, alt) end
 
 ---
--- Returns a null-terminated copy of the text on Scintilla's internal clipboard
--- (not the primary and/or secondary X selections) and stores its length in
--- *len*.
+-- Returns a null-terminated copy of the text on Scintilla's internal clipboard (not the primary
+-- and/or secondary X selections) and stores its length in *len*.
 -- The caller is responsible for `free`ing the returned text.
 -- Keep in mind clipboard text may contain null bytes.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
@@ -91,11 +82,10 @@ function scintilla_noutrefresh(sci) end
 function scintilla_refresh(sci) end
 
 ---
--- Updates the curses window cursor for the Scintilla window so the terminal
--- draws the cursor in the correct position.
--- This only needs to be called when `scintilla_refresh()` or
--- `scintilla_noutrefresh()` is not the last curses draw command issued (for
--- any window, not just the Scintilla window).
+-- Updates the curses window cursor for the Scintilla window so the terminal draws the cursor
+-- in the correct position.
+-- This only needs to be called when `scintilla_refresh()` or `scintilla_noutrefresh()` is not
+-- the last curses draw command issued (for any window, not just the Scintilla window).
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @return `void`
 function scintilla_update_cursor(sci);
@@ -107,8 +97,7 @@ function scintilla_update_cursor(sci);
 function scintilla_delete(sci) end
 
 ---
--- [Macro] Returns the curses `COLOR_PAIR` for the given curses foreground and
--- background `COLOR`s.
+-- [Macro] Returns the curses `COLOR_PAIR` for the given curses foreground and background `COLOR`s.
 -- This is used simply to enumerate every possible color combination.
 -- @param f (`int`) The curses foreground `COLOR`.
 -- @param b (`int`) The curses background `COLOR`.

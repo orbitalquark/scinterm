@@ -2,8 +2,8 @@
 
 CC = gcc
 CXX = g++
-CFLAGS = -DCURSES -DSCI_LEXER -Wall -I../../include -I../../src \
-         -I../../../lexilla/include -I../../../lexilla/lexlib -I ../
+CFLAGS = -DCURSES -DSCI_LEXER -Wall -I../../include -I../../src -I../../../lexilla/include \
+  -I../../../lexilla/lexlib -I ../
 CXXFLAGS = $(CFLAGS)
 
 scintilla = ../../bin/scintilla.a ../../../lexilla/bin/liblexilla.a
