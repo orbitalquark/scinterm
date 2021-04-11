@@ -17,10 +17,10 @@ CURSES_FLAGS =
 scintilla = ../bin/scintilla.a
 sci = AutoComplete.o CallTip.o CaseConvert.o CaseFolder.o CellBuffer.o \
       CharacterCategory.o CharClassify.o ContractionState.o DBCS.o \
-      Decoration.o Document.o EditModel.o Editor.o EditView.o Indicator.o \
-      KeyMap.o LineMarker.o MarginView.o PerLine.o PositionCache.o RESearch.o \
-      RunStyles.o ScintillaBase.o Selection.o Style.o UniConversion.o \
-      UniqueString.o ViewStyle.o XPM.o
+      Decoration.o Document.o EditModel.o Editor.o EditView.o Geometry.o \
+      Indicator.o KeyMap.o LineMarker.o MarginView.o PerLine.o PositionCache.o \
+      RESearch.o RunStyles.o ScintillaBase.o Selection.o Style.o \
+      UniConversion.o UniqueString.o ViewStyle.o XPM.o
 
 vpath %.h ../src ../include
 vpath %.cxx ../src
