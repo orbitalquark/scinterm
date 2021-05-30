@@ -450,7 +450,7 @@ public:
     if (static_cast<int>(rc.top) > getmaxy(win) - 1) return;
     attr_t attrs = mvwinch(win, static_cast<int>(rc.top), static_cast<int>(rc.left));
     short pair = PAIR_NUMBER(attrs), unused, back = COLOR_BLACK;
-    if (pair > 0) pair_content(pair, &unused, &back);
+    if (pair > 0 && !isCallTip) pair_content(pair, &unused, &back);
     DrawTextNoClip(rc, font_, ybase, text, fore, SCI_COLORS[back]);
   }
   /**
@@ -583,6 +583,8 @@ public:
     char tail = vsDraw.tabDrawMode == TabDrawMode::LongArrow ? '>' : '-';
     mvwaddch(win, rcTab.top, rcTab.right, tail | A_BOLD);
   }
+
+  bool isCallTip = false;
 };
 
 /** Creates a new curses surface. */
@@ -1118,7 +1120,10 @@ public:
     std::unique_ptr<Surface> sur = Surface::Allocate(Technology::Default);
     if (sur) {
       sur->Init(wid);
+      dynamic_cast<SurfaceImpl *>(sur.get())->isCallTip = true;
       ct.PaintCT(sur.get());
+      wattr_set(_WINDOW(wid), 0, term_color_pair(COLOR_WHITE, COLOR_BLACK), nullptr);
+      box(_WINDOW(wid), '|', '-');
       wnoutrefresh(_WINDOW(wid));
     }
   }
