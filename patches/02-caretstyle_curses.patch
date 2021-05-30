@@ -1,19 +1,19 @@
-Added CARETSTYLE_CURSES to allow for terminal drawing of the main caret.
-diff -r 8c2f906208a2 doc/ScintillaDoc.html
---- a/doc/ScintillaDoc.html	Sat Mar 06 13:45:16 2021 +1100
-+++ b/doc/ScintillaDoc.html	Fri Mar 26 21:27:12 2021 -0400
-@@ -3315,8 +3315,8 @@
+Added Scintilla::Curses to allow for terminal drawing of the main caret.
+diff -r d366f4d25ee6 doc/ScintillaDoc.html
+--- a/doc/ScintillaDoc.html	Sat May 29 16:14:02 2021 +1000
++++ b/doc/ScintillaDoc.html	Sat May 29 12:56:11 2021 -0400
+@@ -3728,8 +3728,8 @@
      <p><b id="SCI_SETCARETSTYLE">SCI_SETCARETSTYLE(int caretStyle)</b><br />
       <b id="SCI_GETCARETSTYLE">SCI_GETCARETSTYLE &rarr; int</b><br />
       The style of the caret can be set with <code>SCI_SETCARETSTYLE</code>.
--     There are separate styles for insert mode (lower 4-bits, CARETSTYLE_INS_MASK) and
+-     There are separate styles for insert mode (lower 4-bits, <code>CARETSTYLE_INS_MASK</code>) and
 -     overtype mode (bit 4).
 +     There are separate styles for insert mode (lower 4-bits, CARETSTYLE_INS_MASK),
 +     overtype mode (bit 4), and curses mode (bit 5).
  
       <table class="standard" summary="Caret Styles">
         <tbody valign="top">
-@@ -3346,6 +3346,13 @@
+@@ -3759,6 +3759,13 @@
             <td>Draws an overstrike caret as a block. This should be ored with one of the first three styles.</td>
           </tr>
           <tr>
@@ -27,10 +27,10 @@ diff -r 8c2f906208a2 doc/ScintillaDoc.html
             <th align="left"><code>CARETSTYLE_BLOCK_AFTER</code></th>
             <td>256</td>
             <td>When the caret end of a range is at the end and a block caret style is chosen, draws the block
-diff -r 22b6bbb36280 include/Scintilla.h
---- a/include/Scintilla.h	Sat Sep 05 07:55:08 2020 +1000
-+++ b/include/Scintilla.h	Sat Feb 13 11:22:53 2021 -0500
-@@ -848,6 +848,7 @@
+diff -r d366f4d25ee6 include/Scintilla.h
+--- a/include/Scintilla.h	Sat May 29 16:14:02 2021 +1000
++++ b/include/Scintilla.h	Sat May 29 12:56:11 2021 -0400
+@@ -893,6 +893,7 @@
  #define CARETSTYLE_BLOCK 2
  #define CARETSTYLE_OVERSTRIKE_BAR 0
  #define CARETSTYLE_OVERSTRIKE_BLOCK 0x10
@@ -38,10 +38,21 @@ diff -r 22b6bbb36280 include/Scintilla.h
  #define CARETSTYLE_INS_MASK 0xF
  #define CARETSTYLE_BLOCK_AFTER 0x100
  #define SCI_SETCARETSTYLE 2512
-diff -r 22b6bbb36280 src/EditView.cxx
---- a/src/EditView.cxx	Sat Sep 05 07:55:08 2020 +1000
-+++ b/src/EditView.cxx	Sat Feb 13 11:22:53 2021 -0500
-@@ -1542,7 +1542,7 @@
+diff -r d366f4d25ee6 include/ScintillaTypes.h
+--- a/include/ScintillaTypes.h	Sat May 29 16:14:02 2021 +1000
++++ b/include/ScintillaTypes.h	Sat May 29 12:56:11 2021 -0400
+@@ -432,6 +432,7 @@
+ 	Block = 2,
+ 	OverstrikeBar = 0,
+ 	OverstrikeBlock = 0x10,
++	Curses = 0x20,
+ 	InsMask = 0xF,
+ 	BlockAfter = 0x100,
+ };
+diff -r d366f4d25ee6 src/EditView.cxx
+--- a/src/EditView.cxx	Sat May 29 16:14:02 2021 +1000
++++ b/src/EditView.cxx	Sat May 29 12:56:11 2021 -0400
+@@ -1596,7 +1596,7 @@
  			}
  			const bool caretBlinkState = (model.caret.active && model.caret.on) || (!additionalCaretsBlink && !mainCaret);
  			const bool caretVisibleState = additionalCaretsVisible || mainCaret;
@@ -50,7 +61,7 @@ diff -r 22b6bbb36280 src/EditView.cxx
  				(drawDrag || (caretBlinkState && caretVisibleState))) {
  				bool canDrawBlockCaret = true;
  				bool drawBlockCaret = false;
-@@ -1566,7 +1566,8 @@
+@@ -1620,7 +1620,8 @@
  				if (xposCaret > 0)
  					caretWidthOffset = 0.51f;	// Move back so overlaps both character cells.
  				xposCaret += xStart;
@@ -60,7 +71,7 @@ diff -r 22b6bbb36280 src/EditView.cxx
  				if (drawDrag) {
  					/* Dragging text, use a line caret */
  					rcCaret.left = std::round(xposCaret - caretWidthOffset);
-@@ -1638,6 +1639,22 @@
+@@ -1693,6 +1694,22 @@
  	}
  }
  
@@ -71,65 +82,65 @@ diff -r 22b6bbb36280 src/EditView.cxx
 +// has broken up the line such that, if the caret is inside the main selection,
 +// the beginning or end of that selection is at the end of a text segment.
 +// This function should only be called if iDoc is within the main selection.
-+static int characterInCursesSelection(Sci::Position iDoc, const EditModel &model, const ViewStyle &vsDraw) {
++static InSelection characterInCursesSelection(Sci::Position iDoc, const EditModel &model, const ViewStyle &vsDraw) {
 +	const SelectionPosition& posCaret = model.sel.RangeMain().caret;
 +	const bool caretAtStart = posCaret < model.sel.RangeMain().anchor && posCaret.Position() == iDoc;
 +	const bool caretAtEnd = posCaret > model.sel.RangeMain().anchor &&
 +		vsDraw.DrawCaretInsideSelection(false, false) &&
 +		model.pdoc->MovePositionOutsideChar(posCaret.Position()-1, -1) == iDoc;
-+	return (caretAtStart || caretAtEnd) ? 0 : 1;
++	return (caretAtStart || caretAtEnd) ? InSelection::inNone : InSelection::inMain;
 +}
 +
  void EditView::DrawBackground(Surface *surface, const EditModel &model, const ViewStyle &vsDraw, const LineLayout *ll,
  	PRectangle rcLine, Range lineRange, Sci::Position posLineStart, int xStart,
- 	int subLine, ColourOptional background) const {
-@@ -1648,7 +1665,7 @@
+ 	int subLine, std::optional<ColourRGBA> background) const {
+@@ -1703,7 +1720,7 @@
  	// Does not take margin into account but not significant
- 	const int xStartVisible = static_cast<int>(subLineStart)-xStart;
+ 	const XYPOSITION xStartVisible = static_cast<XYPOSITION>(subLineStart-xStart);
  
 -	BreakFinder bfBack(ll, &model.sel, lineRange, posLineStart, xStartVisible, selBackDrawn, model.pdoc, &model.reprs, nullptr);
 +	BreakFinder bfBack(ll, &model.sel, lineRange, posLineStart, xStartVisible, selBackDrawn, model.pdoc, &model.reprs, &vsDraw);
  
- 	const bool drawWhitespaceBackground = vsDraw.WhitespaceBackgroundDrawn() && !background.isSet;
+ 	const bool drawWhitespaceBackground = vsDraw.WhitespaceBackgroundDrawn() && !background;
  
-@@ -1671,7 +1688,9 @@
+@@ -1726,7 +1743,9 @@
  			if (rcSegment.right > rcLine.right)
  				rcSegment.right = rcLine.right;
  
--			const int inSelection = hideSelection ? 0 : model.sel.CharacterInSelection(iDoc);
-+			int inSelection = hideSelection ? 0 : model.sel.CharacterInSelection(iDoc);
-+			if (vsDraw.IsMainCursesCaret(inSelection == 1))
+-			const InSelection inSelection = hideSelection ? InSelection::inNone : model.sel.CharacterInSelection(iDoc);
++			InSelection inSelection = hideSelection ? InSelection::inNone : model.sel.CharacterInSelection(iDoc);
++			if (vsDraw.IsMainCursesCaret(inSelection == InSelection::inMain))
 +				inSelection = characterInCursesSelection(iDoc, model, vsDraw);
  			const bool inHotspot = (ll->hotspot.Valid()) && ll->hotspot.ContainsCharacter(iDoc);
- 			ColourDesired textBack = TextBackground(model, vsDraw, ll, background, inSelection,
+ 			ColourRGBA textBack = TextBackground(model, vsDraw, ll, background, inSelection,
  				inHotspot, ll->styles[i], i);
-@@ -1916,7 +1935,9 @@
+@@ -1970,7 +1989,9 @@
  					}
  				}
  			}
--			const int inSelection = hideSelection ? 0 : model.sel.CharacterInSelection(iDoc);
-+			int inSelection = hideSelection ? 0 : model.sel.CharacterInSelection(iDoc);
-+			if (vsDraw.IsMainCursesCaret(inSelection == 1))
+-			const InSelection inSelection = hideSelection ? InSelection::inNone : model.sel.CharacterInSelection(iDoc);
++			InSelection inSelection = hideSelection ? InSelection::inNone : model.sel.CharacterInSelection(iDoc);
++			if (vsDraw.IsMainCursesCaret(inSelection == InSelection::inMain))
 +				inSelection = characterInCursesSelection(iDoc, model, vsDraw);
- 			if (inSelection && (vsDraw.selColours.fore.isSet)) {
- 				textFore = (inSelection == 1) ? vsDraw.selColours.fore : vsDraw.selAdditionalForeground;
- 			}
-diff -r 22b6bbb36280 src/Editor.cxx
---- a/src/Editor.cxx	Sat Sep 05 07:55:08 2020 +1000
-+++ b/src/Editor.cxx	Sat Feb 13 11:22:53 2021 -0500
-@@ -7386,7 +7386,7 @@
- 		return vs.caretcolour.AsInteger();
+ 			const std::optional<ColourRGBA> selectionFore = SelectionForeground(model, vsDraw, inSelection);
+ 			if (selectionFore) {
+ 				textFore = *selectionFore;
+diff -r d366f4d25ee6 src/Editor.cxx
+--- a/src/Editor.cxx	Sat May 29 16:14:02 2021 +1000
++++ b/src/Editor.cxx	Sat May 29 12:56:11 2021 -0400
+@@ -7562,7 +7562,7 @@
+ 		return vs.ElementColour(Element::Caret)->OpaqueRGB();
  
- 	case SCI_SETCARETSTYLE:
--		if (wParam <= (CARETSTYLE_BLOCK | CARETSTYLE_OVERSTRIKE_BLOCK | CARETSTYLE_BLOCK_AFTER))
-+		if (wParam <= (CARETSTYLE_BLOCK | CARETSTYLE_OVERSTRIKE_BLOCK | CARETSTYLE_CURSES | CARETSTYLE_BLOCK_AFTER))
- 			vs.caretStyle = static_cast<int>(wParam);
+ 	case Message::SetCaretStyle:
+-		if (static_cast<CaretStyle>(wParam) <= (CaretStyle::Block | CaretStyle::OverstrikeBlock | CaretStyle::BlockAfter))
++		if (static_cast<CaretStyle>(wParam) <= (CaretStyle::Block | CaretStyle::OverstrikeBlock | CaretStyle::Curses | CaretStyle::BlockAfter))
+ 			vs.caret.style = static_cast<CaretStyle>(wParam);
  		else
  			/* Default to the line caret */
-diff -r 22b6bbb36280 src/PositionCache.cxx
---- a/src/PositionCache.cxx	Sat Sep 05 07:55:08 2020 +1000
-+++ b/src/PositionCache.cxx	Sat Feb 13 11:22:53 2021 -0500
-@@ -582,10 +582,38 @@
+diff -r d366f4d25ee6 src/PositionCache.cxx
+--- a/src/PositionCache.cxx	Sat May 29 16:14:02 2021 +1000
++++ b/src/PositionCache.cxx	Sat May 29 12:56:11 2021 -0400
+@@ -638,10 +638,38 @@
  		for (size_t r=0; r<psel->Count(); r++) {
  			const SelectionSegment portion = psel->Range(r).Intersect(segmentLine);
  			if (!(portion.start == portion.end)) {
@@ -172,57 +183,57 @@ diff -r 22b6bbb36280 src/PositionCache.cxx
  			}
  		}
  	}
-diff -r 22b6bbb36280 src/ViewStyle.cxx
---- a/src/ViewStyle.cxx	Sat Sep 05 07:55:08 2020 +1000
-+++ b/src/ViewStyle.cxx	Sat Feb 13 11:22:53 2021 -0500
-@@ -562,11 +562,18 @@
+diff -r d366f4d25ee6 src/ViewStyle.cxx
+--- a/src/ViewStyle.cxx	Sat May 29 16:14:02 2021 +1000
++++ b/src/ViewStyle.cxx	Sat May 29 12:56:11 2021 -0400
+@@ -651,11 +651,18 @@
  
  bool ViewStyle::IsBlockCaretStyle() const noexcept {
- 	return ((caretStyle & CARETSTYLE_INS_MASK) == CARETSTYLE_BLOCK) ||
--		(caretStyle & CARETSTYLE_OVERSTRIKE_BLOCK) != 0;
-+		(caretStyle & CARETSTYLE_OVERSTRIKE_BLOCK) != 0 ||
-+		(caretStyle & CARETSTYLE_CURSES) != 0;
+ 	return ((caret.style & CaretStyle::InsMask) == CaretStyle::Block) ||
+-		(FlagSet(caret.style, CaretStyle::OverstrikeBlock)) != 0;
++		(FlagSet(caret.style, CaretStyle::OverstrikeBlock)) != 0 ||
++		(FlagSet(caret.style, CaretStyle::Curses)) != 0;
  }
  
 -bool ViewStyle::IsCaretVisible() const noexcept {
--	return caretWidth > 0 && caretStyle != CARETSTYLE_INVISIBLE;
+-	return caret.width > 0 && caret.style != CaretStyle::Invisible;
 +bool ViewStyle::IsCaretVisible(bool isMainSelection) const noexcept {
-+	return caretWidth > 0 &&
-+		((caretStyle & CARETSTYLE_INS_MASK) != CARETSTYLE_INVISIBLE ||
-+		((caretStyle & CARETSTYLE_CURSES) != 0 && !isMainSelection)); // only draw additional selections in curses mode
++	return caret.width > 0 &&
++		((caret.style & CaretStyle::InsMask) != CaretStyle::Invisible ||
++		(FlagSet(caret.style, CaretStyle::Curses) != 0 && !isMainSelection)); // only draw additional selections in curses mode
 +}
 +
 +bool ViewStyle::IsMainCursesCaret(bool isMainSelection) const noexcept {
-+	return isMainSelection && (caretStyle & CARETSTYLE_CURSES) != 0;
++	return isMainSelection && FlagSet(caret.style, CaretStyle::Curses) != 0;
  }
  
  bool ViewStyle::DrawCaretInsideSelection(bool inOverstrike, bool imeCaretBlockOverride) const noexcept {
-@@ -574,14 +581,19 @@
+@@ -663,14 +670,19 @@
  		return false;
- 	return ((caretStyle & CARETSTYLE_INS_MASK) == CARETSTYLE_BLOCK) ||
- 		(inOverstrike && (caretStyle & CARETSTYLE_OVERSTRIKE_BLOCK) != 0) ||
+ 	return ((caret.style & CaretStyle::InsMask) == CaretStyle::Block) ||
+ 		(inOverstrike && (FlagSet(caret.style, CaretStyle::OverstrikeBlock)) != 0) ||
 -		imeCaretBlockOverride;
 +		imeCaretBlockOverride ||
-+		((caretStyle & CARETSTYLE_CURSES) != 0);
++		FlagSet(caret.style, CaretStyle::Curses) != 0;
  }
  
 -ViewStyle::CaretShape ViewStyle::CaretShapeForMode(bool inOverstrike) const noexcept {
 +ViewStyle::CaretShape ViewStyle::CaretShapeForMode(bool inOverstrike, bool isMainSelection) const noexcept {
  	if (inOverstrike) {
- 		return (caretStyle & CARETSTYLE_OVERSTRIKE_BLOCK) ? CaretShape::block : CaretShape::bar;
+ 		return (FlagSet(caret.style, CaretStyle::OverstrikeBlock)) ? CaretShape::block : CaretShape::bar;
  	}
  
-+	if ((caretStyle & CARETSTYLE_CURSES) != 0 && !isMainSelection) {
++	if (FlagSet(caret.style, CaretStyle::Curses) != 0 && !isMainSelection) {
 +		return CaretShape::block;
 +	}
 +
- 	const int caret = caretStyle & CARETSTYLE_INS_MASK;
- 	return (caret <= CARETSTYLE_BLOCK) ? static_cast<CaretShape>(caret) : CaretShape::line;
+ 	const CaretStyle caretStyle = caret.style & CaretStyle::InsMask;
+ 	return (caretStyle <= CaretStyle::Block) ? static_cast<CaretShape>(caretStyle) : CaretShape::line;
  }
-diff -r 22b6bbb36280 src/ViewStyle.h
---- a/src/ViewStyle.h	Sat Sep 05 07:55:08 2020 +1000
-+++ b/src/ViewStyle.h	Sat Feb 13 11:22:53 2021 -0500
-@@ -205,9 +205,10 @@
+diff -r d366f4d25ee6 src/ViewStyle.h
+--- a/src/ViewStyle.h	Sat May 29 16:14:02 2021 +1000
++++ b/src/ViewStyle.h	Sat May 29 12:56:11 2021 -0400
+@@ -243,9 +243,10 @@
  
  	enum class CaretShape { invisible, line, block, bar };
  	bool IsBlockCaretStyle() const noexcept;
