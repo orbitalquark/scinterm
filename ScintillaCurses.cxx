@@ -273,7 +273,7 @@ public:
   /** Releases the surface's resources. */
   void Release() noexcept override { win = nullptr; }
   /** Extra graphics features are ill-suited for drawing in the terminal and not implemented. */
-  int SupportsFeature(Supports feature) noexcept { return 0; }
+  int SupportsFeature(Supports feature) noexcept override { return 0; }
   /**
    * Returns `true` since this method is only called for pixmap surfaces and those surfaces
    * are not implemented.
