@@ -2,6 +2,25 @@
 
 [Atom Feed](https://github.com/orbitalquark/scinterm/releases.atom)
 
+### 3.1 (26 Jun 2021)
+
+Download:
+
+* [Scinterm 3.1][]
+
+Bugfixes:
+
+* None.
+
+Changes:
+
+* Added support for native terminal caret and added [`scintilla_update_cursor()`][].
+* Updated to [Scintilla][] 5.1.0.
+
+[Scinterm 3.1]: https://github.com/orbitalquark/scinterm/archive/scinterm_3.1.zip
+[`scintilla_update_cursor()`]: api.html#scintilla_update_cursor
+[Scintilla]: https://scintilla.org
+
 ### 3.0 (27 Jul 2020)
 
 Download:
