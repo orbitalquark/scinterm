@@ -1,3 +1,4 @@
+Added Scintilla::Curses to allow for terminal drawing of the main caret.
 diff -r 13067e47a3c3 doc/ScintillaDoc.html
 --- a/doc/ScintillaDoc.html	Wed Jun 23 23:19:54 2021 +1000
 +++ b/doc/ScintillaDoc.html	Wed Jun 23 12:48:09 2021 -0400
@@ -124,6 +125,18 @@ diff -r 13067e47a3c3 src/EditView.cxx
  			const std::optional<ColourRGBA> selectionFore = SelectionForeground(model, vsDraw, inSelection);
  			if (selectionFore) {
  				textFore = *selectionFore;
+diff -r 13067e47a3c3 src/Editor.cxx
+--- a/src/Editor.cxx	Wed Jun 23 23:19:54 2021 +1000
++++ b/src/Editor.cxx	Sun Jun 27 11:00:39 2021 -0400
+@@ -7567,7 +7567,7 @@
+ 		return vs.ElementColour(Element::Caret)->OpaqueRGB();
+ 
+ 	case Message::SetCaretStyle:
+-		if (static_cast<CaretStyle>(wParam) <= (CaretStyle::Block | CaretStyle::OverstrikeBlock | CaretStyle::BlockAfter))
++		if (static_cast<CaretStyle>(wParam) <= (CaretStyle::Block | CaretStyle::OverstrikeBlock | CaretStyle::Curses | CaretStyle::BlockAfter))
+ 			vs.caret.style = static_cast<CaretStyle>(wParam);
+ 		else
+ 			/* Default to the line caret */
 diff -r 13067e47a3c3 src/PositionCache.cxx
 --- a/src/PositionCache.cxx	Wed Jun 23 23:19:54 2021 +1000
 +++ b/src/PositionCache.cxx	Wed Jun 23 12:48:09 2021 -0400
