@@ -111,7 +111,7 @@ diff -r 13067e47a3c3 src/EditView.cxx
 +			InSelection inSelection = hideSelection ? InSelection::inNone : model.sel.CharacterInSelection(iDoc);
 +			if (vsDraw.IsMainCursesCaret(inSelection == InSelection::inMain))
 +				inSelection = characterInCursesSelection(iDoc, model, vsDraw);
- 			const bool inHotspot = (ll->hotspot.Valid()) && ll->hotspot.ContainsCharacter(iDoc);
+ 			const bool inHotspot = model.hotspot.Valid() && model.hotspot.ContainsCharacter(iDoc);
  			ColourRGBA textBack = TextBackground(model, vsDraw, ll, background, inSelection,
  				inHotspot, ll->styles[i], i);
 @@ -2002,7 +2021,9 @@
