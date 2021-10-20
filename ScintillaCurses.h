@@ -78,6 +78,9 @@ char *scintilla_get_clipboard(void *sci, int *len);
  * This should be done along with the normal curses `noutrefresh()`, as the virtual screen is
  * updated when calling this function.
  * Curses must have been initialized prior to calling this function.
+ * Note: the terminal cursor may be hidden if Scintilla thinks this window has focus
+ * (e.g. `SCI_SETFOCUS`) and Scintilla's caret is out of view. If another non-Scintilla window
+ * has the real focus, call `curs_set(1)` in order to show the terminal cursor for that window.
  * @param sci The Scintilla window returned by `scintilla_new()`.
  */
 void scintilla_noutrefresh(void *sci);
@@ -86,6 +89,9 @@ void scintilla_noutrefresh(void *sci);
  * This should be done along with the normal curses `refresh()`, as the physical screen is
  * updated when calling this function.
  * Curses must have been initialized prior to calling this function.
+ * Note: the terminal cursor may be hidden if Scintilla thinks this window has focus
+ * (e.g. `SCI_SETFOCUS`) and Scintilla's caret is out of view. If another non-Scintilla window
+ * has the real focus, call `curs_set(1)` in order to show the terminal cursor for that window.
  * @param sci The Scintilla window returned by `scintilla_new()`.
  */
 void scintilla_refresh(void *sci);
@@ -94,6 +100,9 @@ void scintilla_refresh(void *sci);
  * in the correct position.
  * This only needs to be called when `scintilla_refresh()` or `scintilla_noutrefresh()` is not
  * the last curses draw command issued (for any window, not just the Scintilla window).
+ * Note: the terminal cursor may be hidden if Scintilla thinks this window has focus
+ * (e.g. `SCI_SETFOCUS`) and Scintilla's caret is out of view. If another non-Scintilla window
+ * has the real focus, call `curs_set(1)` in order to show the terminal cursor for that window.
  */
 void scintilla_update_cursor(void *sci);
 /**

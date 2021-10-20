@@ -1177,14 +1177,15 @@ public:
    */
   void UpdateCursor() {
     int pos = WndProc(Message::GetCurrentPos, 0, 0);
-    if (!WndProc(Message::GetSelectionEmpty, 0, 0) &&
-      (WndProc(Message::GetCaretStyle, 0, 0) & static_cast<int>(CaretStyle::BlockAfter)) == 0 &&
-      (WndProc(Message::GetCurrentPos, 0, 0) > WndProc(Message::GetAnchor, 0, 0)))
+    if (!SelectionEmpty() && !FlagSet(vs.caret.style, CaretStyle::BlockAfter) &&
+      (pos > WndProc(Message::GetAnchor, 0, 0)))
       pos = WndProc(Message::PositionBefore, pos, 0); // draw inside selection
-    int y = WndProc(Message::PointYFromPosition, 0, pos);
-    int x = WndProc(Message::PointXFromPosition, 0, pos);
-    wmove(GetWINDOW(), y, x);
-    wrefresh(GetWINDOW());
+    Point point = LocationFromPosition(pos);
+    auto y = static_cast<int>(point.y), x = static_cast<int>(point.x);
+    WINDOW *win = GetWINDOW();
+    bool in_view = x >= 0 && x <= getmaxx(win) && y >= 0 && y <= getmaxy(win);
+    if (in_view) wmove(win, y, x), wrefresh(win);
+    if (hasFocus && FlagSet(vs.caret.style, CaretStyle::Curses)) curs_set(in_view ? 1 : 0);
   }
   /**
    * Repaints the Scintilla window on the virtual screen.

@@ -85,6 +85,9 @@ Return:
 
 Refreshes the Scintilla window on the virtual screen.
 This should be done along with the normal curses `noutrefresh()`.
+Note: the terminal cursor may be hidden if Scintilla thinks this window has focus
+(e.g. `SCI_SETFOCUS`) and Scintilla's caret is out of view. If another non-Scintilla window
+has the real focus, call `curs_set(1)` in order to show the terminal cursor for that window.
 
 Parameters:
 
@@ -95,6 +98,9 @@ Parameters:
 
 Refreshes the Scintilla window on the physical screen.
 This should be done along with the normal curses `refresh()`.
+Note: the terminal cursor may be hidden if Scintilla thinks this window has focus
+(e.g. `SCI_SETFOCUS`) and Scintilla's caret is out of view. If another non-Scintilla window
+has the real focus, call `curs_set(1)` in order to show the terminal cursor for that window.
 
 Parameters:
 
@@ -168,6 +174,9 @@ Updates the curses window cursor for the Scintilla window so the terminal draws 
 in the correct position.
 This only needs to be called when `scintilla_refresh()` or `scintilla_noutrefresh()` is not
 the last curses draw command issued (for any window, not just the Scintilla window).
+Note: the terminal cursor may be hidden if Scintilla thinks this window has focus
+(e.g. `SCI_SETFOCUS`) and Scintilla's caret is out of view. If another non-Scintilla window
+has the real focus, call `curs_set(1)` in order to show the terminal cursor for that window.
 
 Parameters:
 
