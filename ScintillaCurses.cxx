@@ -359,7 +359,7 @@ public:
    */
   void AlphaRectangle(PRectangle rc, XYPOSITION cornerSize, FillStroke fillStroke) override {
     ColourRGBA &fill = fillStroke.fill.colour;
-    for (int x = rc.left, y = rc.top - 1; x < rc.right; x++) {
+    for (int x = std::max(rc.left, clip.left), y = rc.top - 1; x < rc.right; x++) {
       attr_t attrs = mvwinch(win, y, x) & A_ATTRIBUTES;
       short pair = PAIR_NUMBER(attrs), fore, unused;
       if (pair > 0) pair_content(pair, &fore, &unused);
@@ -387,6 +387,7 @@ public:
    */
   void Copy(PRectangle rc, Point from, Surface &surfaceSource) override {
     // TODO: handle indent guide highlighting.
+    if (rc.left - 1 < clip.left) return;
     wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
     mvwaddch(win, rc.top, rc.left - 1, '|' | A_BOLD);
   }
@@ -580,7 +581,8 @@ public:
   void DrawTabArrow(PRectangle rcTab, const ViewStyle &vsDraw) {
     // TODO: set color to vs.whitespaceColours.fore and back.
     wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
-    for (int i = rcTab.left - 1; i < rcTab.right; i++) mvwaddch(win, rcTab.top, i, '-' | A_BOLD);
+    for (int i = std::max(rcTab.left - 1, clip.left); i < rcTab.right; i++)
+      mvwaddch(win, rcTab.top, i, '-' | A_BOLD);
     char tail = vsDraw.tabDrawMode == TabDrawMode::LongArrow ? '>' : '-';
     mvwaddch(win, rcTab.top, rcTab.right, tail | A_BOLD);
   }
