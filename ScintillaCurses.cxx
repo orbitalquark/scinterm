@@ -333,7 +333,7 @@ public:
       rc.right = static_cast<int>(rc.right), ch = ACS_BULLET | A_BOLD;
     }
     for (int y = rc.top; y < rc.bottom; y++)
-      for (int x = rc.left; x < rc.right; x++) mvwaddch(win, y, x, ch);
+      for (int x = std::max(rc.left, clip.left); x < rc.right; x++) mvwaddch(win, y, x, ch);
   }
   /**
    * Identical to `FillRectangle()` since special alignment to pixel boundaries is not needed.
@@ -448,7 +448,8 @@ public:
   void DrawTextTransparent(PRectangle rc, const Font *font_, XYPOSITION ybase,
     std::string_view text, ColourRGBA fore) override {
     if (static_cast<int>(rc.top) > getmaxy(win) - 1) return;
-    attr_t attrs = mvwinch(win, static_cast<int>(rc.top), static_cast<int>(rc.left));
+    int left = static_cast<int>(rc.left);
+    attr_t attrs = left >= clip.left ? mvwinch(win, static_cast<int>(rc.top), left) : 0;
     short pair = PAIR_NUMBER(attrs), unused, back = COLOR_BLACK;
     if (pair > 0 && !isCallTip) pair_content(pair, &unused, &back);
     DrawTextNoClip(rc, font_, ybase, text, fore, SCI_COLORS[back]);
