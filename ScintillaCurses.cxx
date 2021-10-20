@@ -407,7 +407,7 @@ public:
     wattr_set(win, attrs, term_color_pair(fore, back), nullptr);
     if (rc.left < clip.left) {
       // Do not overwrite margin text.
-      int clip_chars = static_cast<int>(clip.left - rc.left);
+      auto clip_chars = static_cast<int>(clip.left - rc.left);
       size_t offset = 0;
       for (int chars = 0; offset < text.length(); offset++) {
         if (!UTF8IsTrailByte(static_cast<unsigned char>(text[offset])))
@@ -448,7 +448,7 @@ public:
   void DrawTextTransparent(PRectangle rc, const Font *font_, XYPOSITION ybase,
     std::string_view text, ColourRGBA fore) override {
     if (static_cast<int>(rc.top) > getmaxy(win) - 1) return;
-    int left = static_cast<int>(rc.left);
+    auto left = static_cast<int>(rc.left);
     attr_t attrs = left >= clip.left ? mvwinch(win, static_cast<int>(rc.top), left) : 0;
     short pair = PAIR_NUMBER(attrs), unused, back = COLOR_BLACK;
     if (pair > 0 && !isCallTip) pair_content(pair, &unused, &back);
@@ -532,7 +532,7 @@ public:
   void DrawLineMarker(
     const PRectangle &rcWhole, const Font *fontForCharacter, int tFold, const void *data) {
     // TODO: handle fold marker highlighting.
-    const LineMarker *marker = reinterpret_cast<const LineMarker *>(data);
+    auto marker = reinterpret_cast<const LineMarker *>(data);
     wattr_set(win, 0, term_color_pair(marker->fore, marker->back), nullptr);
     switch (marker->markType) {
     case MarkerSymbol::Circle: mvwaddstr(win, rcWhole.top, rcWhole.left, "●"); return;
@@ -564,7 +564,7 @@ public:
     default: break; // prevent warning
     }
     if (marker->markType >= MarkerSymbol::Character) {
-      char ch = static_cast<char>(
+      auto ch = static_cast<char>(
         static_cast<int>(marker->markType) - static_cast<int>(MarkerSymbol::Character));
       DrawTextClipped(
         rcWhole, fontForCharacter, rcWhole.bottom, std::string(&ch, 1), marker->fore, marker->back);
@@ -756,7 +756,7 @@ public:
     WINDOW *w = _WINDOW(wid);
     wclear(w);
     box(w, '|', '-');
-    int len = static_cast<int>(list.size());
+    auto len = static_cast<int>(list.size());
     int s = n - height / 2;
     if (s + height > len) s = len - height;
     if (s < 0) s = 0;
@@ -1064,7 +1064,7 @@ public:
         InsertCharacter(std::string(utf8, len), CharacterSource::DirectInput);
         return 1;
       } else {
-        char ch = static_cast<char>(key);
+        auto ch = static_cast<char>(key);
         InsertCharacter(std::string(&ch, 1), CharacterSource::DirectInput);
         return 1;
       }
@@ -1148,9 +1148,7 @@ public:
       // Pass to Scintilla.
       default: return ScintillaBase::WndProc(iMessage, wParam, lParam);
       }
-    } catch (std::bad_alloc &) {
-      errorStatus = Status::BadAlloc;
-    } catch (...) {
+    } catch (std::bad_alloc &) { errorStatus = Status::BadAlloc; } catch (...) {
       errorStatus = Status::Failure;
     }
     return 0;
@@ -1408,7 +1406,7 @@ void scintilla_send_key(void *sci, int key, bool shift, bool ctrl, bool alt) {
 }
 bool scintilla_send_mouse(void *sci, int event, unsigned int time, int button, int y, int x,
   bool shift, bool ctrl, bool alt) {
-  ScintillaCurses *scicurses = reinterpret_cast<ScintillaCurses *>(sci);
+  auto scicurses = reinterpret_cast<ScintillaCurses *>(sci);
   WINDOW *w = scicurses->GetWINDOW();
   int begy = getbegy(w), begx = getbegx(w);
   int maxy = getmaxy(w), maxx = getmaxx(w);
