@@ -2,6 +2,26 @@
 
 [Atom Feed](https://github.com/orbitalquark/scinterm/releases.atom)
 
+### 3.2 (11 Nov 2021)
+
+Download:
+
+* [Scinterm 3.2][]
+
+Bugfixes:
+
+* Fixed accidental drawing of whitespace, tab arrows, and indentation guides in margins when
+  scrolling horizontally.
+* Fixed accidental highlighting in margins when scrolling horizontally.
+* Fixed occasional incorrect drawing when scrolling horizontally.
+
+Changes:
+
+* Hide the terminal cursor when Scintilla's caret is out of view.
+
+[Scinterm 3.2]: https://github.com/orbitalquark/scinterm/archive/scinterm_3.2.zip
+[Scintilla]: https://scintilla.org
+
 ### 3.1 (26 Jun 2021)
 
 Download:
