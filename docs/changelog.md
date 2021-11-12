@@ -18,6 +18,7 @@ Bugfixes:
 Changes:
 
 * Hide the terminal cursor when Scintilla's caret is out of view.
+* Updated to [Scintilla][] 5.1.4.
 
 [Scinterm 3.2]: https://github.com/orbitalquark/scinterm/archive/scinterm_3.2.zip
 [Scintilla]: https://scintilla.org
