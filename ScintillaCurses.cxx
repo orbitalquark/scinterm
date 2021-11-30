@@ -1326,10 +1326,10 @@ public:
         return true;
       }
     } else if (button == 4 || button == 5) {
-      // Scroll the view.
-      int lines = std::max(getmaxy(GetWINDOW()) / 4, 1);
-      if (button == 4) lines *= -1;
-      return (ScrollTo(topLine + lines), true);
+      // Scroll the view (horizontally if shift is pressed).
+      int offset = std::max((!shift ? getmaxy(GetWINDOW()) : getmaxx(GetWINDOW())) / 4, 1);
+      if (button == 4) offset *= -1;
+      return (!shift ? ScrollTo(topLine + offset) : HorizontalScrollTo(xOffset + offset), true);
     }
     return false;
   }
