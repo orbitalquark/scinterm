@@ -1,4 +1,4 @@
-// Copyright 2012-2021 Mitchell. See LICENSE.
+// Copyright 2012-2022 Mitchell. See LICENSE.
 // Scintilla implemented in a curses (terminal) environment.
 // Contains platform facilities and a curses-specific subclass of ScintillaBase.
 // Note: setlocale(LC_CTYPE, "") must be called before initializing curses in order to display
