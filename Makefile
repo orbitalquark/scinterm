@@ -24,9 +24,9 @@ vpath %.h ../src ../include
 vpath %.cxx ../src
 
 all: $(scintilla)
-$(sci) ScintillaCurses.o: %.o: %.cxx
+$(sci) PlatCurses.o ScintillaCurses.o: %.o: %.cxx
 	$(CXX) $(CXXFLAGS) $(CURSES_FLAGS) -c $<
-$(scintilla): $(sci) ScintillaCurses.o
+$(scintilla): $(sci) PlatCurses.o ScintillaCurses.o
 	$(AR) rc $@ $^
 	touch $@
 patch: $(wildcard patches/*.patch)

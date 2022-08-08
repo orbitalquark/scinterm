@@ -1,10 +1,12 @@
 // Copyright 2012-2022 Mitchell. See LICENSE.
-// Header for Scintilla in a curses (terminal) environment.
+// Client header for Scintilla in a curses (terminal) environment.
 
-#ifndef SCINTILLACURSES_H
-#define SCINTILLACURSES_H
+#ifndef SCINTILLA_CURSES_H
+#define SCINTILLA_CURSES_H
 
 #include <curses.h>
+
+#include "Scintilla.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,6 +20,7 @@ extern "C" {
  */
 void *scintilla_new(
   void (*callback)(void *sci, int iMessage, SCNotification *n, void *userdata), void *userdata);
+
 /**
  * Returns the curses `WINDOW` associated with the given Scintilla window.
  * Curses must have been initialized prior to calling this function.
@@ -25,6 +28,7 @@ void *scintilla_new(
  * @return curses `WINDOW`.
  */
 WINDOW *scintilla_get_window(void *sci);
+
 /**
  * Sends the given message with parameters to the given Scintilla window.
  * Curses does not have to be initialized before calling this function.
@@ -34,6 +38,7 @@ WINDOW *scintilla_get_window(void *sci);
  * @param lParam The second parameter.
  */
 sptr_t scintilla_send_message(void *sci, unsigned int iMessage, uptr_t wParam, sptr_t lParam);
+
 /**
  * Sends the specified key to the given Scintilla window for processing.
  * If it is not consumed, an SCNotification will be emitted.
@@ -45,6 +50,7 @@ sptr_t scintilla_send_message(void *sci, unsigned int iMessage, uptr_t wParam, s
  * @param alt Flag indicating whether or not the alt modifier key is pressed.
  */
 void scintilla_send_key(void *sci, int key, bool shift, bool ctrl, bool alt);
+
 /**
  * Sends the specified mouse event to the given Scintilla window for processing.
  * Curses must have been initialized prior to calling this function.
@@ -60,6 +66,7 @@ void scintilla_send_key(void *sci, int key, bool shift, bool ctrl, bool alt);
  */
 bool scintilla_send_mouse(
   void *sci, int event, int button, int y, int x, bool shift, bool ctrl, bool alt);
+
 /**
  * Returns a NUL-terminated copy of the text on Scintilla's internal clipboard, not the primary
  * and/or secondary X selections.
@@ -71,6 +78,7 @@ bool scintilla_send_mouse(
  * @return the clipboard text.
  */
 char *scintilla_get_clipboard(void *sci, int *len);
+
 /**
  * Refreshes the Scintilla window on the virtual screen.
  * This should be done along with the normal curses `noutrefresh()`, as the virtual screen is
@@ -82,6 +90,7 @@ char *scintilla_get_clipboard(void *sci, int *len);
  * @param sci The Scintilla window returned by `scintilla_new()`.
  */
 void scintilla_noutrefresh(void *sci);
+
 /**
  * Refreshes the Scintilla window on the physical screen.
  * This should be done along with the normal curses `refresh()`, as the physical screen is
@@ -93,6 +102,7 @@ void scintilla_noutrefresh(void *sci);
  * @param sci The Scintilla window returned by `scintilla_new()`.
  */
 void scintilla_refresh(void *sci);
+
 /**
  * Updates the curses window cursor for the Scintilla window so the terminal draws the cursor
  * in the correct position.
@@ -103,6 +113,7 @@ void scintilla_refresh(void *sci);
  * has the real focus, call `curs_set(1)` in order to show the terminal cursor for that window.
  */
 void scintilla_update_cursor(void *sci);
+
 /**
  * Deletes the given Scintilla window.
  * Curses must have been initialized prior to calling this function.

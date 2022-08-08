@@ -1,25 +1,20 @@
 // Copyright 2012-2022 Mitchell. See LICENSE.
-// Scintilla implemented in a curses (terminal) environment.
-// Contains platform facilities and a curses-specific subclass of ScintillaBase.
 // Note: setlocale(LC_CTYPE, "") must be called before initializing curses in order to display
 // UTF-8 characters properly in ncursesw.
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <math.h>
-#include <assert.h>
-#include <wchar.h>
+#include <cassert>
+#include <cstring>
+#include <cmath>
 
-#include <stdexcept>
 #include <string>
 #include <vector>
 #include <map>
 #include <set>
-#include <optional>
 #include <algorithm>
 #include <memory>
 #include <chrono>
+
+#include <curses.h>
 
 #include "ScintillaTypes.h"
 #include "ScintillaMessages.h"
@@ -31,7 +26,6 @@
 #include "Geometry.h"
 #include "Platform.h"
 
-#include "Scintilla.h"
 #include "CharacterCategoryMap.h"
 #include "Position.h"
 #include "UniqueString.h"
@@ -59,802 +53,65 @@
 #include "Editor.h"
 #include "AutoComplete.h"
 #include "ScintillaBase.h"
+
 #include "ScintillaCurses.h"
+#include "PlatCurses.h"
 
-/**
- * Returns the given Scintilla `WindowID` as a curses `WINDOW`.
- * @param w A Scintilla `WindowID`.
- * @return curses `WINDOW`.
- */
-#define _WINDOW(w) reinterpret_cast<WINDOW *>(w)
+namespace Scintilla::Internal {
 
-#if _WIN32
-#define wcwidth(_) 1 // TODO: http://www.cl.cam.ac.uk/~mgk25/ucs/wcwidth.c
-#endif
+namespace {
 
-using namespace Scintilla;
-using namespace Scintilla::Internal;
-
-// Font handling.
-
-/**
- * Allocates a new Scintilla font for curses.
- * Since terminals handle fonts on their own, the only use for Scintilla font objects is to
- * indicate which attributes terminal characters have.
- */
-class FontImpl : public Font {
-public:
-  /**
-   * Sets terminal character attributes for a particular font.
-   * These attributes are a union of curses attributes and stored in the font's `attrs`.
-   * The curses attributes are not constructed from various fields in *fp* since there is no
-   * `underline` parameter. Instead, you need to manually set the `weight` parameter to be the
-   * union of your desired attributes. Scintilla's lexers/LexLPeg.cxx has an example of this.
-   */
-  FontImpl(const FontParameters &fp) {
-    if (fp.weight == FontWeight::Bold)
-      attrs = A_BOLD;
-    else if (fp.weight != FontWeight::Normal && fp.weight != FontWeight::SemiBold)
-      attrs = static_cast<int>(fp.weight); // font attributes are stored in fp.weight
-  }
-  ~FontImpl() noexcept override = default;
-  attr_t attrs = 0;
-};
-std::shared_ptr<Font> Font::Allocate(const FontParameters &fp) {
-  return std::make_shared<FontImpl>(fp);
-}
-
-// Color handling.
-
-static int COLOR_LBLACK = COLOR_BLACK + 8;
-static int COLOR_LRED = COLOR_RED + 8;
-static int COLOR_LGREEN = COLOR_GREEN + 8;
-static int COLOR_LYELLOW = COLOR_YELLOW + 8;
-static int COLOR_LBLUE = COLOR_BLUE + 8;
-static int COLOR_LMAGENTA = COLOR_MAGENTA + 8;
-static int COLOR_LCYAN = COLOR_CYAN + 8;
-static int COLOR_LWHITE = COLOR_WHITE + 8;
-
-static bool initialized_colors = false;
-
-/**
- * Initializes colors in curses if they have not already been initialized.
- * Creates all possible color pairs using the `SCI_COLOR_PAIR()` macro.
- * This is called automatically from `scintilla_new()`.
- */
-static void init_colors() {
-  if (initialized_colors || !has_colors()) return;
-  start_color();
-  for (int back = 0; back < ((COLORS < 16) ? 8 : 16); back++)
-    for (int fore = 0; fore < ((COLORS < 16) ? 8 : 16); fore++)
-      init_pair(SCI_COLOR_PAIR(fore, back), fore, back);
-  if (COLORS < 16) {
-    // Do not distinguish between light and normal colors.
-    COLOR_LBLACK -= 8;
-    COLOR_LRED -= 8;
-    COLOR_LGREEN -= 8;
-    COLOR_LYELLOW -= 8;
-    COLOR_LBLUE -= 8;
-    COLOR_LMAGENTA -= 8;
-    COLOR_LCYAN -= 8;
-    COLOR_LWHITE -= 8;
-  }
-  initialized_colors = true;
-}
-
-static ColourRGBA BLACK(0, 0, 0);
-static ColourRGBA RED(0x80, 0, 0);
-static ColourRGBA GREEN(0, 0x80, 0);
-static ColourRGBA YELLOW(0x80, 0x80, 0);
-static ColourRGBA BLUE(0, 0, 0x80);
-static ColourRGBA MAGENTA(0x80, 0, 0x80);
-static ColourRGBA CYAN(0, 0x80, 0x80);
-static ColourRGBA WHITE(0xC0, 0xC0, 0xC0);
-static ColourRGBA LBLACK(0x40, 0x40, 0x40);
-static ColourRGBA LRED(0xFF, 0, 0);
-static ColourRGBA LGREEN(0, 0xFF, 0);
-static ColourRGBA LYELLOW(0xFF, 0xFF, 0);
-static ColourRGBA LBLUE(0, 0, 0xFF);
-static ColourRGBA LMAGENTA(0xFF, 0, 0xFF);
-static ColourRGBA LCYAN(0, 0xFF, 0xFF);
-static ColourRGBA LWHITE(0xFF, 0xFF, 0xFF);
-static ColourRGBA SCI_COLORS[] = {BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, LBLACK,
-  LRED, LGREEN, LYELLOW, LBLUE, LMAGENTA, LCYAN, LWHITE};
-
-/**
- * Returns a curses color for the given Scintilla color.
- * Recognized colors are: black (0x000000), red (0x800000), green (0x008000), yellow (0x808000),
- * blue (0x000080), magenta (0x800080), cyan (0x008080), white (0xc0c0c0), light black (0x404040),
- * light red (0xff0000), light green (0x00ff00), light yellow (0xffff00), light blue (0x0000ff),
- * light magenta (0xff00ff), light cyan (0x00ffff), and light white (0xffffff). If the color
- * is not recognized, returns `COLOR_WHITE` by default.
- * @param color Color to get a curses color for.
- * @return curses color
- */
-static int term_color(ColourRGBA color) {
-  color = color.Opaque();
-  if (color == BLACK) return COLOR_BLACK;
-  if (color == RED) return COLOR_RED;
-  if (color == GREEN) return COLOR_GREEN;
-  if (color == YELLOW) return COLOR_YELLOW;
-  if (color == BLUE) return COLOR_BLUE;
-  if (color == MAGENTA) return COLOR_MAGENTA;
-  if (color == CYAN) return COLOR_CYAN;
-  if (color == LBLACK) return COLOR_LBLACK;
-  if (color == LRED) return COLOR_LRED;
-  if (color == LGREEN) return COLOR_LGREEN;
-  if (color == LYELLOW) return COLOR_LYELLOW;
-  if (color == LBLUE) return COLOR_LBLUE;
-  if (color == LMAGENTA) return COLOR_LMAGENTA;
-  if (color == LCYAN) return COLOR_LCYAN;
-  if (color == LWHITE) return COLOR_LWHITE;
-  return COLOR_WHITE;
-}
-
-/**
- * Returns a curses color for the given curses color.
- * This overloaded method only exists for the `term_color_pair()` macro.
- */
-static int term_color(int color) { return color; }
-
-/**
- * Returns a curses color pair from the given fore and back colors.
- * @param f Foreground color, either a Scintilla color or curses color.
- * @param b Background color, either a Scintilla color or curses color.
- * @return curses color pair suitable for calling `COLOR_PAIR()` with.
- */
-#define term_color_pair(f, b) SCI_COLOR_PAIR(term_color(f), term_color(b))
-
-// Surface handling.
-
-/**
- * Implementation of a Scintilla surface for curses.
- * The surface is initialized with a curses `WINDOW` for drawing on. Since curses can only show
- * text, many of Scintilla's pixel-based functions are not implemented.
- */
-class SurfaceImpl : public Surface {
-  WINDOW *win = nullptr;
-  PRectangle clip;
-
-  /**
-   * Returns the number of columns used to display the first UTF-8 character in `s`, taking
-   * into account zero-width combining characters.
-   * @param s The string that contains the first UTF-8 character to display.
-   */
-  int grapheme_width(const char *s) {
-    wchar_t wch;
-    if (mbtowc(&wch, s, MB_CUR_MAX) < 1) return 1;
-    int width = wcwidth(wch);
-    return width >= 0 ? width : 1;
-  }
-
-public:
-  /** Allocates a new Scintilla surface for curses. */
-  SurfaceImpl() = default;
-  /** Deletes the surface. */
-  ~SurfaceImpl() noexcept override { Release(); }
-
-  /**
-   * Initializes/reinitializes the surface with a curses `WINDOW` for drawing on.
-   * @param wid Curses `WINDOW`.
-   */
-  void Init(WindowID wid) override {
-    Release();
-    win = _WINDOW(wid);
-  }
-  /** Identical to `Init()` using the given curses `WINDOW`. */
-  void Init(SurfaceID sid, WindowID wid) override { Init(wid); }
-  /**
-   * Surface pixmaps are not implemented.
-   * Cannot return a nullptr because Scintilla assumes the allocation succeeded.
-   */
-  std::unique_ptr<Surface> AllocatePixMap(int width, int height) override {
-    return std::make_unique<SurfaceImpl>();
-  }
-
-  /** Surface modes other than UTF-8 (like DBCS and bidirectional) are not implemented. */
-  void SetMode(SurfaceMode mode) override {}
-
-  /** Releases the surface's resources. */
-  void Release() noexcept override { win = nullptr; }
-  /** Extra graphics features are ill-suited for drawing in the terminal and not implemented. */
-  int SupportsFeature(Supports feature) noexcept override { return 0; }
-  /**
-   * Returns `true` since this method is only called for pixmap surfaces and those surfaces
-   * are not implemented.
-   */
-  bool Initialised() override { return true; }
-  /** Unused; return value irrelevant. */
-  int LogPixelsY() override { return 1; }
-  /** Returns 1 since one "pixel" is always 1 character cell in curses. */
-  int PixelDivisions() override { return 1; }
-  /** Returns 1 since font height is always 1 in curses. */
-  int DeviceHeightFont(int points) override { return 1; }
-  /**
-   * Drawing lines is not implemented because more often than not lines are being drawn for
-   * decoration (e.g. line markers, underlines, indicators, arrows, etc.).
-   */
-  void LineDraw(Point start, Point end, Stroke stroke) override {}
-  void PolyLine(const Point *pts, size_t npts, Stroke stroke) override {}
-  /**
-   * Draws the character equivalent of shape outlined by the given polygon's points.
-   * Scintilla only calls this method for CallTip arrows and INDIC_POINT[CHARACTER]. Assume
-   * the former. Line markers that Scintilla would normally draw as polygons are handled in
-   * `DrawLineMarker()`.
-   */
-  void Polygon(const Point *pts, size_t npts, FillStroke fillStroke) override {
-    ColourRGBA &back = fillStroke.fill.colour;
-    wattr_set(win, 0, term_color_pair(back, COLOR_WHITE), nullptr); // invert
-    if (pts[0].y < pts[npts - 1].y) // up arrow
-      mvwaddstr(win, pts[0].y, pts[npts - 1].x - 1, "▲");
-    else if (pts[0].y > pts[npts - 1].y) // down arrow
-      mvwaddstr(win, pts[0].y - 2, pts[npts - 1].x - 1, "▼");
-  }
-  /**
-   * Scintilla will never call this method.
-   * Line markers that Scintilla would normally draw as rectangles are handled in
-   * `DrawLineMarker()`.
-   */
-  void RectangleDraw(PRectangle rc, FillStroke fillStroke) override {}
-  /**
-   * Drawing framed rectangles like fold display text, EOL annotations, and INDIC_BOX is not
-   * implemented.
-   */
-  void RectangleFrame(PRectangle rc, Stroke stroke) override {}
-  /**
-   * Clears the given portion of the screen with the given background color.
-   * In some cases, it can be determined that whitespace is being drawn. If so, draw it
-   * appropriately instead of clearing the given portion of the screen.
-   */
-  void FillRectangle(PRectangle rc, Fill fill) override {
-    if (!win) return; // surface pixmaps not supported
-    wattr_set(win, 0, term_color_pair(COLOR_WHITE, fill.colour), nullptr);
-    chtype ch = ' ';
-    if (fabs(rc.left - static_cast<int>(rc.left)) > 0.1) {
-      // If rc.left is a fractional value (e.g. 4.5) then whitespace dots are being drawn. Draw
-      // them appropriately.
-      // TODO: set color to vs.whitespaceColours.fore and back.
-      wcolor_set(win, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
-      rc.right = static_cast<int>(rc.right), ch = ACS_BULLET | A_BOLD;
-    }
-    for (int y = rc.top; y < rc.bottom; y++)
-      for (int x = std::max(rc.left, clip.left); x < rc.right; x++) mvwaddch(win, y, x, ch);
-  }
-  /**
-   * Identical to `FillRectangle()` since special alignment to pixel boundaries is not needed.
-   */
-  void FillRectangleAligned(PRectangle rc, Fill fill) override { FillRectangle(rc, fill); }
-  /**
-   * Instead of filling a portion of the screen with a surface pixmap, fills the the screen
-   * portion with black.
-   */
-  void FillRectangle(PRectangle rc, Surface &surfacePattern) override { FillRectangle(rc, BLACK); }
-  /**
-   * Scintilla will never call this method.
-   * Line markers that Scintilla would normally draw as rounded rectangles are handled in
-   * `DrawLineMarker()`.
-   */
-  void RoundedRectangle(PRectangle rc, FillStroke fillStroke) override {}
-  /**
-   * Drawing alpha rectangles is not fully supported.
-   * Instead, fills the background color of the given rectangle with the fill color, emulating
-   * INDIC_STRAIGHTBOX with no transparency.
-   * This is called by Scintilla to draw INDIC_ROUNDBOX and INDIC_STRAIGHTBOX indicators,
-   * text blobs, and translucent line states and selections.
-   */
-  void AlphaRectangle(PRectangle rc, XYPOSITION cornerSize, FillStroke fillStroke) override {
-    ColourRGBA &fill = fillStroke.fill.colour;
-    for (int x = std::max(rc.left, clip.left), y = rc.top - 1; x < rc.right; x++) {
-      attr_t attrs = mvwinch(win, y, x) & A_ATTRIBUTES;
-      short pair = PAIR_NUMBER(attrs), fore, unused;
-      if (pair > 0) pair_content(pair, &fore, &unused);
-      mvwchgat(win, y, x, 1, attrs, term_color_pair(fore, fill), nullptr);
-    }
-  }
-  /** Drawing gradients is not implemented. */
-  void GradientRectangle(
-    PRectangle rc, const std::vector<ColourStop> &stops, GradientOptions options) override {}
-  /** Drawing images is not implemented. */
-  void DrawRGBAImage(
-    PRectangle rc, int width, int height, const unsigned char *pixelsImage) override {}
-  /**
-   * Scintilla will never call this method.
-   * Line markers that Scintilla would normally draw as circles are handled in `DrawLineMarker()`.
-   */
-  void Ellipse(PRectangle rc, FillStroke fillStroke) override {}
-  /** Drawing curved ends on EOL annotations is not implemented. */
-  void Stadium(PRectangle rc, FillStroke fillStroke, Ends ends) override {}
-  /**
-   * Draw an indentation guide.
-   * Scintilla will only call this method when drawing indentation guides or during certain
-   * drawing operations when double buffering is enabled. Since the latter is not supported,
-   * assume the former.
-   */
-  void Copy(PRectangle rc, Point from, Surface &surfaceSource) override {
-    // TODO: handle indent guide highlighting.
-    if (rc.left - 1 < clip.left) return;
-    wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
-    mvwaddch(win, rc.top, rc.left - 1, '|' | A_BOLD);
-  }
-
-  /** Bidirectional input is not implemented. */
-  std::unique_ptr<IScreenLineLayout> Layout(const IScreenLine *screenLine) override {
-    return nullptr;
-  }
-
-  /**
-   * Draws the given text at the given position on the screen with the given foreground and
-   * background colors.
-   * Takes into account any clipping boundaries previously specified.
-   */
-  void DrawTextNoClip(PRectangle rc, const Font *font_, XYPOSITION ybase, std::string_view text,
-    ColourRGBA fore, ColourRGBA back) override {
-    attr_t attrs = dynamic_cast<const FontImpl *>(font_)->attrs;
-    wattr_set(win, attrs, term_color_pair(fore, back), nullptr);
-    if (rc.left < clip.left) {
-      // Do not overwrite margin text.
-      auto clip_chars = static_cast<int>(clip.left - rc.left);
-      size_t offset = 0;
-      for (int chars = 0; offset < text.length(); offset++) {
-        if (!UTF8IsTrailByte(static_cast<unsigned char>(text[offset])))
-          chars += grapheme_width(text.data() + offset);
-        if (chars > clip_chars) break;
-      }
-      text.remove_prefix(offset);
-      rc.left = clip.left;
-    }
-    // Do not write beyond right window boundary.
-    int clip_chars = getmaxx(win) - rc.left;
-    size_t bytes = 0;
-    for (int chars = 0; bytes < text.length(); bytes++) {
-      if (!UTF8IsTrailByte(static_cast<unsigned char>(text[bytes])))
-        chars += grapheme_width(text.data() + bytes);
-      if (chars > clip_chars) break;
-    }
-    mvwaddnstr(win, rc.top, rc.left, text.data(), std::min(text.length(), bytes));
-  }
-  /**
-   * Similar to `DrawTextNoClip()`.
-   * Scintilla calls this method for drawing the caret, text blobs, and `MarkerSymbol::Character`
-   * line markers.
-   * When drawing control characters, *rc* needs to have its pixel padding removed since curses
-   * has smaller resolution. Similarly when drawing line markers, *rc* needs to be reshaped.
-   * @see DrawTextNoClip
-   */
-  void DrawTextClipped(PRectangle rc, const Font *font_, XYPOSITION ybase, std::string_view text,
-    ColourRGBA fore, ColourRGBA back) override {
-    if (rc.left >= rc.right) // when drawing text blobs
-      rc.left -= 2, rc.right -= 2, rc.top -= 1, rc.bottom -= 1;
-    DrawTextNoClip(rc, font_, ybase, text, fore, back);
-  }
-  /**
-   * Similar to `DrawTextNoClip()`.
-   * Scintilla calls this method for drawing CallTip text and two-phase buffer text.
-   */
-  void DrawTextTransparent(PRectangle rc, const Font *font_, XYPOSITION ybase,
-    std::string_view text, ColourRGBA fore) override {
-    if (static_cast<int>(rc.top) > getmaxy(win) - 1) return;
-    auto left = static_cast<int>(rc.left);
-    attr_t attrs = left >= clip.left ? mvwinch(win, static_cast<int>(rc.top), left) : 0;
-    short pair = PAIR_NUMBER(attrs), unused, back = COLOR_BLACK;
-    if (pair > 0 && !isCallTip) pair_content(pair, &unused, &back);
-    DrawTextNoClip(rc, font_, ybase, text, fore, SCI_COLORS[back]);
-  }
-  /**
-   * Measures the width of characters in the given string and writes them to the given position
-   * list.
-   * Curses characters always have a width of 1 if they are not UTF-8 trailing bytes.
-   */
-  void MeasureWidths(const Font *font_, std::string_view text, XYPOSITION *positions) override {
-    for (size_t i = 0, j = 0; i < text.length(); i++) {
-      if (!UTF8IsTrailByte(static_cast<unsigned char>(text[i])))
-        j += grapheme_width(text.data() + i);
-      positions[i] = j;
-    }
-  }
-  /**
-   * Returns the number of UTF-8 characters in the given string since curses characters always
-   * have a width of 1.
-   */
-  XYPOSITION WidthText(const Font *font_, std::string_view text) override {
-    int width = 0;
-    for (size_t i = 0; i < text.length(); i++)
-      if (!UTF8IsTrailByte(static_cast<unsigned char>(text[i])))
-        width += grapheme_width(text.data() + i);
-    return width;
-  }
-  /** Identical to `DrawTextNoClip()` since UTF-8 is assumed. */
-  void DrawTextNoClipUTF8(PRectangle rc, const Font *font_, XYPOSITION ybase, std::string_view text,
-    ColourRGBA fore, ColourRGBA back) override {
-    DrawTextNoClip(rc, font_, ybase, text, fore, back);
-  }
-  /** Identical to `DrawTextClipped()` since UTF-8 is assumed. */
-  void DrawTextClippedUTF8(PRectangle rc, const Font *font_, XYPOSITION ybase,
-    std::string_view text, ColourRGBA fore, ColourRGBA back) override {
-    DrawTextClipped(rc, font_, ybase, text, fore, back);
-  }
-  /** Identical to `DrawTextTransparent()` since UTF-8 is assumed. */
-  void DrawTextTransparentUTF8(PRectangle rc, const Font *font_, XYPOSITION ybase,
-    std::string_view text, ColourRGBA fore) override {
-    DrawTextTransparent(rc, font_, ybase, text, fore);
-  }
-  /** Identical to `MeasureWidths()` since UTF-8 is assumed. */
-  void MeasureWidthsUTF8(const Font *font_, std::string_view text, XYPOSITION *positions) override {
-    MeasureWidths(font_, text, positions);
-  }
-  /** Identical to `WidthText()` since UTF-8 is assumed. */
-  XYPOSITION WidthTextUTF8(const Font *font_, std::string_view text) override {
-    return WidthText(font_, text);
-  }
-  /** Returns 0 since curses characters have no ascent. */
-  XYPOSITION Ascent(const Font *font_) override { return 0; }
-  /** Returns 0 since curses characters have no descent. */
-  XYPOSITION Descent(const Font *font_) override { return 0; }
-  /** Returns 0 since curses characters have no leading. */
-  XYPOSITION InternalLeading(const Font *font_) override { return 0; }
-  /** Returns 1 since curses characters always have a height of 1. */
-  XYPOSITION Height(const Font *font_) override { return 1; }
-  /** Returns 1 since curses characters always have a width of 1. */
-  XYPOSITION AverageCharWidth(const Font *font_) override { return 1; }
-
-  /**
-   * Ensure text to be drawn in subsequent calls to `DrawText*()` is drawn within the given
-   * rectangle.
-   * This is needed in order to prevent long lines from overwriting margin text when scrolling
-   * to the right.
-   */
-  void SetClip(PRectangle rc) override {
-    clip.left = rc.left, clip.top = rc.top;
-    clip.right = rc.right, clip.bottom = rc.bottom;
-  }
-  /** Remove the clip set in `SetClip()`. */
-  void PopClip() override { clip.left = 0, clip.top = 0, clip.right = 0, clip.bottom = 0; }
-  /** Flushing cache is not implemented. */
-  void FlushCachedState() override {}
-  /** Flushing is not implemented since surface pixmaps are not implemented. */
-  void FlushDrawing() override {}
-
-  /** Draws the text representation of a line marker, if possible. */
-  void DrawLineMarker(
-    const PRectangle &rcWhole, const Font *fontForCharacter, int tFold, const void *data) {
-    // TODO: handle fold marker highlighting.
-    auto marker = reinterpret_cast<const LineMarker *>(data);
-    wattr_set(win, 0, term_color_pair(marker->fore, marker->back), nullptr);
-    switch (marker->markType) {
-    case MarkerSymbol::Circle: mvwaddstr(win, rcWhole.top, rcWhole.left, "●"); return;
-    case MarkerSymbol::SmallRect:
-    case MarkerSymbol::RoundRect: mvwaddstr(win, rcWhole.top, rcWhole.left, "■"); return;
-    case MarkerSymbol::Arrow: mvwaddstr(win, rcWhole.top, rcWhole.left, "►"); return;
-    case MarkerSymbol::ShortArrow: mvwaddstr(win, rcWhole.top, rcWhole.left, "→"); return;
-    case MarkerSymbol::ArrowDown: mvwaddstr(win, rcWhole.top, rcWhole.left, "▼"); return;
-    case MarkerSymbol::Minus: mvwaddch(win, rcWhole.top, rcWhole.left, '-'); return;
-    case MarkerSymbol::BoxMinus:
-    case MarkerSymbol::BoxMinusConnected: mvwaddstr(win, rcWhole.top, rcWhole.left, "⊟"); return;
-    case MarkerSymbol::CircleMinus:
-    case MarkerSymbol::CircleMinusConnected: mvwaddstr(win, rcWhole.top, rcWhole.left, "⊖"); return;
-    case MarkerSymbol::Plus: mvwaddch(win, rcWhole.top, rcWhole.left, '+'); return;
-    case MarkerSymbol::BoxPlus:
-    case MarkerSymbol::BoxPlusConnected: mvwaddstr(win, rcWhole.top, rcWhole.left, "⊞"); return;
-    case MarkerSymbol::CirclePlus:
-    case MarkerSymbol::CirclePlusConnected: mvwaddstr(win, rcWhole.top, rcWhole.left, "⊕"); return;
-    case MarkerSymbol::VLine: mvwaddch(win, rcWhole.top, rcWhole.left, ACS_VLINE); return;
-    case MarkerSymbol::LCorner:
-    case MarkerSymbol::LCornerCurve: mvwaddch(win, rcWhole.top, rcWhole.left, ACS_LLCORNER); return;
-    case MarkerSymbol::TCorner:
-    case MarkerSymbol::TCornerCurve: mvwaddch(win, rcWhole.top, rcWhole.left, ACS_LTEE); return;
-    case MarkerSymbol::DotDotDot: mvwaddstr(win, rcWhole.top, rcWhole.left, "…"); return;
-    case MarkerSymbol::Arrows: mvwaddstr(win, rcWhole.top, rcWhole.left, "»"); return;
-    case MarkerSymbol::FullRect: FillRectangle(rcWhole, marker->back); return;
-    case MarkerSymbol::LeftRect: mvwaddstr(win, rcWhole.top, rcWhole.left, "▌"); return;
-    case MarkerSymbol::Bookmark: mvwaddstr(win, rcWhole.top, rcWhole.left, "Σ"); return;
-    default: break; // prevent warning
-    }
-    if (marker->markType >= MarkerSymbol::Character) {
-      auto ch = static_cast<char>(
-        static_cast<int>(marker->markType) - static_cast<int>(MarkerSymbol::Character));
-      DrawTextClipped(
-        rcWhole, fontForCharacter, rcWhole.bottom, std::string(&ch, 1), marker->fore, marker->back);
-      return;
-    }
-  }
-  /** Draws the text representation of a wrap marker. */
-  void DrawWrapMarker(PRectangle rcPlace, bool isEndMarker, ColourRGBA wrapColour) {
-    wattr_set(win, 0, term_color_pair(wrapColour, COLOR_BLACK), nullptr);
-    mvwaddstr(win, rcPlace.top, rcPlace.left, isEndMarker ? "↩" : "↪");
-  }
-  /** Draws the text representation of a tab arrow. */
-  void DrawTabArrow(PRectangle rcTab, const ViewStyle &vsDraw) {
-    // TODO: set color to vs.whitespaceColours.fore and back.
-    wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
-    for (int i = std::max(rcTab.left - 1, clip.left); i < rcTab.right; i++)
-      mvwaddch(win, rcTab.top, i, '-' | A_BOLD);
-    char tail = vsDraw.tabDrawMode == TabDrawMode::LongArrow ? '>' : '-';
-    mvwaddch(win, rcTab.top, rcTab.right, tail | A_BOLD);
-  }
-
-  bool isCallTip = false;
-};
-
-/** Creates a new curses surface. */
-std::unique_ptr<Surface> Surface::Allocate(Technology) { return std::make_unique<SurfaceImpl>(); }
-
-/** Custom function for drawing line markers in curses. */
-static void DrawLineMarker(Surface *surface, const PRectangle &rcWhole,
-  const Font *fontForCharacter, int tFold, MarginType marginStyle, const void *data) {
+// Custom drawing function for line markers.
+void DrawLineMarker(Surface *surface, const PRectangle &rcWhole, const Font *fontForCharacter,
+  int tFold, MarginType marginStyle, const void *data) {
   reinterpret_cast<SurfaceImpl *>(surface)->DrawLineMarker(rcWhole, fontForCharacter, tFold, data);
 }
-/** Custom function for drawing wrap markers in curses. */
-static void DrawWrapVisualMarker(
+
+// Custom drawing function for wrap markers.
+void DrawWrapVisualMarker(
   Surface *surface, PRectangle rcPlace, bool isEndMarker, ColourRGBA wrapColour) {
   reinterpret_cast<SurfaceImpl *>(surface)->DrawWrapMarker(rcPlace, isEndMarker, wrapColour);
 }
-/** Custom function for drawing tab arrows in curses. */
-static void DrawTabArrow(
+
+// Custom drawing function for tab arrows.
+void DrawTabArrow(
   Surface *surface, PRectangle rcTab, int ymid, const ViewStyle &vsDraw, Stroke stroke) {
   reinterpret_cast<SurfaceImpl *>(surface)->DrawTabArrow(rcTab, vsDraw);
 }
 
-// Window handling.
-
-/** Deletes the window. */
-Window::~Window() noexcept {}
-/**
- * Releases the window's resources.
- * Since the only Windows created are AutoComplete and CallTip windows, and since those windows
- * are created in `ListBox::Create()` and `ScintillaCurses::CreateCallTipWindow()`, respectively,
- * via `newwin()`, it is safe to use `delwin()`.
- * It is important to note that even though `ScintillaCurses::wMain` is a Window, its `Destroy()`
- * function is never called, hence why `scintilla_delete()` is the complement to `scintilla_new()`.
- */
-void Window::Destroy() noexcept {
-  if (wid) delwin(_WINDOW(wid));
-  wid = nullptr;
-}
-/**
- * Returns the window's boundaries.
- * Unlike other platforms, Scintilla paints in coordinates relative to the window in
- * curses. Therefore, this function should always return the window bounds to ensure all of it
- * is painted.
- * @return PRectangle with the window's boundaries.
- */
-PRectangle Window::GetPosition() const {
-  int maxx = wid ? getmaxx(_WINDOW(wid)) : 0;
-  int maxy = wid ? getmaxy(_WINDOW(wid)) : 0;
-  return PRectangle(0, 0, maxx, maxy);
-}
-/**
- * Sets the position of the window relative to its parent window.
- * It will take care not to exceed the boundaries of the parent.
- * @param rc The position relative to the parent window.
- * @param relativeTo The parent window.
- */
-void Window::SetPositionRelative(PRectangle rc, const Window *relativeTo) {
-  int begx = 0, begy = 0, x = 0, y = 0;
-  // Determine the relative position.
-  getbegyx(_WINDOW(relativeTo->GetID()), begy, begx);
-  x = begx + rc.left;
-  if (x < begx) x = begx;
-  y = begy + rc.top;
-  if (y < begy) y = begy;
-  // Correct to fit the parent if necessary.
-  int sizex = rc.right - rc.left;
-  int sizey = rc.bottom - rc.top;
-  int screen_width = getmaxx(_WINDOW(relativeTo->GetID()));
-  int screen_height = getmaxy(_WINDOW(relativeTo->GetID()));
-  if (sizex > screen_width)
-    x = begx; // align left
-  else if (x + sizex > begx + screen_width)
-    x = begx + screen_width - sizex; // align right
-  if (y + sizey > begy + screen_height) {
-    y = begy + screen_height - sizey; // align bottom
-    if (screen_height == 1) y--; // show directly above the relative window
-  }
-  if (y < 0) y = begy; // align top
-  // Update the location.
-  mvwin(_WINDOW(wid), y, x);
-}
-/** Identical to `Window::GetPosition()`. */
-PRectangle Window::GetClientPosition() const { return GetPosition(); }
-void Window::Show(bool show) {} // TODO:
-void Window::InvalidateAll() {} // notify repaint
-void Window::InvalidateRectangle(PRectangle rc) {} // notify repaint
-/** Setting the cursor icon is not implemented. */
-void Window::SetCursor(Cursor curs) {}
-/** Identical to `Window::GetPosition()`. */
-PRectangle Window::GetMonitorRect(Point pt) { return GetPosition(); }
-
-/**
- * Implementation of a Scintilla ListBox for curses.
- * Instead of registering images to types, printable UTF-8 characters are registered to types.
- */
-class ListBoxImpl : public ListBox {
-  int height = 5, width = 10;
-  std::vector<std::string> list;
-  char types[IMAGE_MAX + 1][5]; // UTF-8 character plus terminating '\0'
-  int selection = 0;
-
-public:
-  IListBoxDelegate *delegate = nullptr;
-
-  /** Allocates a new Scintilla ListBox for curses. */
-  ListBoxImpl() {
-    list.reserve(10);
-    ClearRegisteredImages();
-  }
-  /** Deletes the ListBox. */
-  ~ListBoxImpl() override = default;
-
-  /** Setting the font is not implemented. */
-  void SetFont(const Font *font) override {}
-  /**
-   * Creates a new listbox.
-   * The `Show()` function resizes window with the appropriate height and width.
-   */
-  void Create(Window &parent, int ctrlID, Point location_, int lineHeight_, bool unicodeMode_,
-    Technology technology_) override {
-    wid = newwin(1, 1, 0, 0);
-  }
-  /**
-   * Setting average char width is not implemented since all curses characters have a width of 1.
-   */
-  void SetAverageCharWidth(int width) override {}
-  /** Sets the number of visible rows in the listbox. */
-  void SetVisibleRows(int rows) override {
-    height = rows;
-    wresize(_WINDOW(wid), height + 2, width + 2);
-  }
-  /** Returns the number of visible rows in the listbox. */
-  int GetVisibleRows() const override { return height; }
-  /** Returns the desired size of the listbox. */
-  PRectangle GetDesiredRect() override {
-    return PRectangle(0, 0, width + 2, height + 2); // add border widths
-  }
-  /**
-   * Returns the left-offset of the ListBox with respect to the caret.
-   * Takes into account the border width and type character width.
-   * @return 2 to shift the ListBox to the left two characters.
-   */
-  int CaretFromEdge() override { return 2; }
-  /** Clears the contents of the listbox. */
-  void Clear() noexcept override {
-    list.clear();
-    width = 0;
-  }
-  /**
-   * Adds the given string list item to the listbox.
-   * Prepends the item's type character (if any) to the list item for display.
-   */
-  void Append(char *s, int type) override {
-    if (type >= 0 && type <= IMAGE_MAX) {
-      char *chtype = types[type];
-      list.push_back(std::string(chtype, strlen(chtype)) + s);
-    } else
-      list.push_back(std::string(" ") + s);
-    int len = strlen(s); // TODO: UTF-8 awareness?
-    if (width < len + 1) {
-      width = len + 1; // include type character len
-      wresize(_WINDOW(wid), height + 2, width + 2);
-    }
-  }
-  /** Returns the number of items in the listbox. */
-  int Length() override { return list.size(); }
-  /** Selects the given item in the listbox and repaints the listbox. */
-  void Select(int n) override {
-    WINDOW *w = _WINDOW(wid);
-    wclear(w);
-    box(w, '|', '-');
-    auto len = static_cast<int>(list.size());
-    int s = n - height / 2;
-    if (s + height > len) s = len - height;
-    if (s < 0) s = 0;
-    for (int i = s; i < s + height && i < len; i++) {
-      mvwaddstr(w, i - s + 1, 1, list.at(i).c_str());
-      if (i == n) mvwchgat(w, i - s + 1, 2, width - 1, A_REVERSE, 0, nullptr);
-    }
-    wmove(w, n - s + 1, 1); // place cursor on selected line
-    wnoutrefresh(w);
-    selection = n;
-  }
-  /** Returns the currently selected item in the listbox. */
-  int GetSelection() override { return selection; }
-  /**
-   * Searches the listbox for the items matching the given prefix string and returns the index
-   * of the first match.
-   * Since the type is displayed as the first character, the value starts on the second character;
-   * match strings starting there.
-   */
-  int Find(const char *prefix) override {
-    int len = strlen(prefix);
-    for (unsigned int i = 0; i < list.size(); i++) {
-      const char *item = list.at(i).c_str();
-      item += UTF8DrawBytes(reinterpret_cast<const unsigned char *>(item), strlen(item));
-      if (strncmp(prefix, item, len) == 0) return i;
-    }
-    return -1;
-  }
-  /**
-   * Returns the string item in the listbox at the given index.
-   * Since the type is displayed as the first character, the value starts on the second character.
-   */
-  std::string GetValue(int n) override {
-    const char *item = list.at(n).c_str();
-    item += UTF8DrawBytes(reinterpret_cast<const unsigned char *>(item), strlen(item));
-    return item;
-  }
-  /**
-   * Registers the first UTF-8 character of the given string to the given type.
-   * By default, ' ' (space) is registered to all types.
-   * @usage SCI_REGISTERIMAGE(1, "*") // type 1 shows '*' in front of list item.
-   * @usage SCI_REGISTERIMAGE(2, "+") // type 2 shows '+' in front of list item.
-   * @usage SCI_REGISTERIMAGE(3, "■") // type 3 shows '■' in front of list item.
-   */
-  void RegisterImage(int type, const char *xpm_data) override {
-    if (type < 0 || type > IMAGE_MAX) return;
-    int len = UTF8DrawBytes(reinterpret_cast<const unsigned char *>(xpm_data), strlen(xpm_data));
-    for (int i = 0; i < len; i++) types[type][i] = xpm_data[i];
-    types[type][len] = '\0';
-  }
-  /** Registering images is not implemented. */
-  void RegisterRGBAImage(
-    int type, int width, int height, const unsigned char *pixelsImage) override {}
-  /** Clears all registered types back to ' ' (space). */
-  void ClearRegisteredImages() override {
-    for (int i = 0; i <= IMAGE_MAX; i++) types[i][0] = ' ', types[i][1] = '\0';
-  }
-  /** Defines the delegate for ListBox actions. */
-  void SetDelegate(IListBoxDelegate *lbDelegate) override { delegate = lbDelegate; }
-  /** Sets the list items in the listbox to the given items. */
-  void SetList(const char *listText, char separator, char typesep) override {
-    Clear();
-    int len = strlen(listText);
-    char *text = new char[len + 1];
-    if (!text) return;
-    memcpy(text, listText, len + 1);
-    char *word = text, *type = nullptr;
-    for (int i = 0; i <= len; i++) {
-      if (text[i] == separator || i == len) {
-        text[i] = '\0';
-        if (type) *type = '\0';
-        Append(word, type ? atoi(type + 1) : -1);
-        word = text + i + 1, type = nullptr;
-      } else if (text[i] == typesep)
-        type = text + i;
-    }
-    delete[] text;
-  }
-  /** List options are not implemented. */
-  void SetOptions(ListOptions options_) override {}
-};
-
-/** Creates a new Scintilla ListBox. */
-ListBox::ListBox() noexcept = default;
-/** Deletes the ListBox. */
-ListBox::~ListBox() noexcept = default;
-/** Creates a new curses ListBox. */
-std::unique_ptr<ListBox> ListBox::Allocate() { return std::make_unique<ListBoxImpl>(); }
-
-// Menus are not implemented.
-Menu::Menu() noexcept : mid(nullptr) {}
-void Menu::CreatePopUp() {}
-void Menu::Destroy() noexcept {}
-void Menu::Show(Point pt, const Window &w) {}
-
-ColourRGBA Platform::Chrome() { return ColourRGBA(0, 0, 0); }
-ColourRGBA Platform::ChromeHighlight() { return ColourRGBA(0, 0, 0); }
-const char *Platform::DefaultFont() { return "monospace"; }
-int Platform::DefaultFontSize() { return 10; }
-unsigned int Platform::DoubleClickTime() { return 500; /* ms */ }
-void Platform::DebugDisplay(const char *s) noexcept { fprintf(stderr, "%s", s); }
-void Platform::DebugPrintf(const char *format, ...) noexcept {}
-// bool Platform::ShowAssertionPopUps(bool assertionPopUps_) noexcept { return true; }
-void Platform::Assert(const char *c, const char *file, int line) noexcept {
-  char buffer[2000];
-  sprintf(buffer, "Assertion [%s] failed at %s %d\r\n", c, file, line);
-  Platform::DebugDisplay(buffer);
-  abort();
+// Uses the given UTF-8 code point to fill the given UTF-8 byte sequence and length.
+// This algorithm was inspired by Paul Evans' libtermkey.
+// (http://www.leonerd.org.uk/code/libtermkey)
+void toutf8(int code, char *s, int *len) {
+  if (code < 0x80)
+    *len = 1;
+  else if (code < 0x800)
+    *len = 2;
+  else if (code < 0x10000)
+    *len = 3;
+  else if (code < 0x200000)
+    *len = 4;
+  else if (code < 0x4000000)
+    *len = 5;
+  else
+    *len = 6;
+  for (int b = *len - 1; b > 0; b--) s[b] = 0x80 | (code & 0x3F), code >>= 6;
+  if (*len == 1)
+    s[0] = code & 0x7F;
+  else if (*len == 2)
+    s[0] = 0xC0 | (code & 0x1F);
+  else if (*len == 3)
+    s[0] = 0xE0 | (code & 0x0F);
+  else if (*len == 4)
+    s[0] = 0xF0 | (code & 0x07);
+  else if (*len == 5)
+    s[0] = 0xF8 | (code & 0x03);
+  else if (*len == 6)
+    s[0] = 0xFC | (code & 0x01);
 }
 
-/** Implementation of Scintilla for curses. */
+} // namespace
+
 class ScintillaCurses : public ScintillaBase {
   std::unique_ptr<Surface> sur; // window surface to draw on
   int width = 0, height = 0; // window dimensions
@@ -868,528 +125,523 @@ class ScintillaCurses : public ScintillaBase {
   bool draggingVScrollBar, draggingHScrollBar; // a scrollbar is being dragged
   int dragOffset; // the distance to the position of the scrollbar being dragged
 
-  /**
-   * Uses the given UTF-8 code point to fill the given UTF-8 byte sequence and length.
-   * This algorithm was inspired by Paul Evans' libtermkey.
-   * (http://www.leonerd.org.uk/code/libtermkey)
-   * @param code The UTF-8 code point.
-   * @param s The string to write the UTF-8 byte sequence in. Must be at least 6 bytes in size.
-   * @param len The integer to put the number of UTF-8 bytes written in.
-   */
-  void toutf8(int code, char *s, int *len) {
-    if (code < 0x80)
-      *len = 1;
-    else if (code < 0x800)
-      *len = 2;
-    else if (code < 0x10000)
-      *len = 3;
-    else if (code < 0x200000)
-      *len = 4;
-    else if (code < 0x4000000)
-      *len = 5;
-    else
-      *len = 6;
-    for (int b = *len - 1; b > 0; b--) s[b] = 0x80 | (code & 0x3F), code >>= 6;
-    if (*len == 1)
-      s[0] = code & 0x7F;
-    else if (*len == 2)
-      s[0] = 0xC0 | (code & 0x1F);
-    else if (*len == 3)
-      s[0] = 0xE0 | (code & 0x0F);
-    else if (*len == 4)
-      s[0] = 0xF0 | (code & 0x07);
-    else if (*len == 5)
-      s[0] = 0xF8 | (code & 0x03);
-    else if (*len == 6)
-      s[0] = 0xFC | (code & 0x01);
-  }
+public:
+  ScintillaCurses(void (*callback_)(void *, int, SCNotification *, void *), void *userdata_);
+  virtual ~ScintillaCurses() override;
+
+private:
+  void Initialise() override;
+
+  void StartDrag() override;
+
+  void SetVerticalScrollPos() override;
+  void SetHorizontalScrollPos() override;
+  bool ModifyScrollBars(Sci::Line nMax, Sci::Line nPage) override;
+
+  void Copy() override;
+  void Paste() override;
+  void ClaimSelection() override;
+
+  void NotifyChange() override;
+  void NotifyParent(NotificationData scn) override;
+
+  int KeyDefault(Keys key, KeyMod modifiers) override;
+
+  void CopyToClipboard(const SelectionText &selectedText) override;
+
+  bool FineTickerRunning(TickReason reason) override;
+  void FineTickerStart(TickReason reason, int millis, int tolerance) override;
+  void FineTickerCancel(TickReason reason) override;
+
+  void SetMouseCapture(bool on) override;
+  bool HaveMouseCapture() override;
+
+  std::string UTF8FromEncoded(std::string_view encoded) const override;
+  std::string EncodedFromUTF8(std::string_view utf8) const override;
+
+  sptr_t DefWndProc(Message iMessage, uptr_t wParam, sptr_t lParam) override;
+
+  void CreateCallTipWindow(PRectangle rc) override;
+
+  void AddToPopUp(const char *label, int cmd = 0, bool enabled = true) override;
 
 public:
-  /**
-   * Creates a new Scintilla instance in a curses `WINDOW`.
-   * However, the `WINDOW` itself will not be created until it is absolutely necessary. When the
-   * `WINDOW` is created, it will initially be full-screen.
-   * @param callback_ Callback function for Scintilla notifications.
-   */
-  ScintillaCurses(void (*callback_)(void *, int, SCNotification *, void *), void *userdata_)
-      : sur(Surface::Allocate(Technology::Default)), callback(callback_), userdata(userdata_) {
-    // Defaults for curses.
-    marginView.wrapMarkerPaddingRight = 0; // no padding for margin wrap markers
-    marginView.customDrawWrapMarker = DrawWrapVisualMarker; // draw text markers
-    view.tabWidthMinimumPixels = 0; // no proportional fonts
-    view.drawOverstrikeCaret = false; // always draw normal caret
-    view.bufferedDraw = false; // draw directly to the screen
-    view.tabArrowHeight = 0; // no additional tab arrow height
-    view.customDrawTabArrow = DrawTabArrow; // draw text arrows for tabs
-    view.customDrawWrapMarker = DrawWrapVisualMarker; // draw text wrap markers
-    mouseSelectionRectangularSwitch = true; // easier rectangular selection
-    doubleClickCloseThreshold = Point(0, 0); // double-clicks only in same cell
-    horizontalScrollBarVisible = false; // no horizontal scroll bar
-    scrollWidth = 5 * width; // reasonable default for any horizontal scroll bar
-    vs.SetElementRGB(Element::SelectionText, 0x000000); // black on white selection
-    vs.SetElementRGB(Element::SelectionAdditionalText, 0x000000);
-    vs.SetElementRGB(Element::SelectionAdditionalBack, 0xFFFFFF);
-    vs.SetElementRGB(Element::Caret, 0xFFFFFF); // white caret
-    vs.caret.style = CaretStyle::Curses; // block carets
-    vs.leftMarginWidth = 0, vs.rightMarginWidth = 0; // no margins
-    vs.ms[1].width = 1; // marker margin width should be 1
-    vs.extraDescent = -1; // hack to make lineHeight 1 instead of 2
-    // Set default marker foreground and background colors.
-    for (int i = 0; i <= MARKER_MAX; i++) {
-      vs.markers[i].fore = ColourRGBA(0xC0, 0xC0, 0xC0);
-      vs.markers[i].back = ColourRGBA(0, 0, 0);
-      if (i >= 25) vs.markers[i].markType = MarkerSymbol::Empty;
-      vs.markers[i].customDraw = DrawLineMarker;
-    }
-    // Use '+' and '-' fold markers.
-    vs.markers[static_cast<int>(MarkerOutline::FolderOpen)].markType = MarkerSymbol::Minus;
-    vs.markers[static_cast<int>(MarkerOutline::Folder)].markType = MarkerSymbol::Plus;
-    vs.markers[static_cast<int>(MarkerOutline::FolderOpenMid)].markType = MarkerSymbol::Minus;
-    vs.markers[static_cast<int>(MarkerOutline::FolderEnd)].markType = MarkerSymbol::Plus;
-    displayPopupMenu = PopUp::Never; // no context menu
-    vs.marginNumberPadding = 0; // no number margin padding
-    vs.ctrlCharPadding = 0; // no ctrl character text blob padding
-    vs.lastSegItalicsOffset = 0; // no offset for italic characters at EOLs
-    ac.widthLBDefault = 10; // more sane bound for autocomplete width
-    ac.heightLBDefault = 10; // more sane bound for autocomplete  height
-    ct.colourBG = ColourRGBA(0, 0, 0); // black background color
-    ct.colourUnSel = ColourRGBA(0xC0, 0xC0, 0xC0); // white text
-    ct.insetX = 2; // border and arrow widths are 1 each
-    ct.widthArrow = 1; // arrow width is 1 character
-    ct.borderHeight = 1; // no extra empty lines in border height
-    ct.verticalOffset = 0; // no extra offset of calltip from line
+  sptr_t WndProc(Message iMessage, uptr_t wParam, sptr_t lParam) override;
+
+  // Access methods for C interface.
+
+  WINDOW *GetWINDOW();
+
+  void UpdateCursor();
+
+  void NoutRefresh();
+  void Refresh();
+
+  void KeyPress(int key, bool shift, bool ctrl, bool alt);
+
+  bool MousePress(int button, int y, int x, bool shift, bool ctrl, bool alt);
+  bool MouseMove(int y, int x, bool shift, bool ctrl, bool alt);
+  void MouseRelease(int y, int x, int ctrl);
+
+  char *GetClipboard(int *len);
+};
+
+// Creates a new Scintilla instance on a curses `WINDOW`, but does not create that `WINDOW`
+// until absolutely necessary. When it is created, it will initially be full-screen.
+ScintillaCurses::ScintillaCurses(
+  void (*callback_)(void *, int, SCNotification *, void *), void *userdata_)
+    : sur(Surface::Allocate(Technology::Default)), callback(callback_), userdata(userdata_) {
+
+  // Defaults for curses.
+  marginView.wrapMarkerPaddingRight = 0; // no padding for margin wrap markers
+  marginView.customDrawWrapMarker = DrawWrapVisualMarker; // draw text markers
+
+  view.tabWidthMinimumPixels = 0; // no proportional fonts
+  view.drawOverstrikeCaret = false; // always draw normal caret
+  view.bufferedDraw = false; // draw directly to the screen
+  view.tabArrowHeight = 0; // no additional tab arrow height
+  view.customDrawTabArrow = DrawTabArrow; // draw text arrows for tabs
+  view.customDrawWrapMarker = DrawWrapVisualMarker; // draw text wrap markers
+
+  mouseSelectionRectangularSwitch = true; // easier rectangular selection
+  doubleClickCloseThreshold = Point(0, 0); // double-clicks only in same cell
+  horizontalScrollBarVisible = false; // no horizontal scroll bar
+  scrollWidth = 5 * width; // reasonable default for any horizontal scroll bar
+
+  vs.SetElementRGB(Element::SelectionText, 0x000000); // black on white selection
+  vs.SetElementRGB(Element::SelectionAdditionalText, 0x000000);
+  vs.SetElementRGB(Element::SelectionAdditionalBack, 0xFFFFFF);
+  vs.SetElementRGB(Element::Caret, 0xFFFFFF); // white caret
+  vs.caret.style = CaretStyle::Curses; // block carets
+  vs.leftMarginWidth = 0, vs.rightMarginWidth = 0; // no margins
+  vs.ms[1].width = 1; // marker margin width should be 1
+  vs.extraDescent = -1; // hack to make lineHeight 1 instead of 2
+
+  // Set default marker foreground and background colors.
+  for (int i = 0; i <= MARKER_MAX; i++) {
+    vs.markers[i].fore = ColourRGBA(0xC0, 0xC0, 0xC0);
+    vs.markers[i].back = ColourRGBA(0, 0, 0);
+    if (i >= 25) vs.markers[i].markType = MarkerSymbol::Empty;
+    vs.markers[i].customDraw = DrawLineMarker;
   }
-  /** Deletes the Scintilla instance. */
-  ~ScintillaCurses() override {
-    if (wMain.GetID()) delwin(GetWINDOW());
-  }
-  /** Initializing code is unnecessary. */
-  void Initialise() override {}
-  /** Disable drag and drop since it is not implemented. */
-  void StartDrag() override {
-    inDragDrop = DragDrop::none;
-    SetDragPosition(SelectionPosition(Sci::invalidPosition));
-  }
-  /** Draws the vertical scroll bar. */
-  void SetVerticalScrollPos() override {
-    if (!wMain.GetID() || !verticalScrollBarVisible) return;
-    WINDOW *w = GetWINDOW();
-    int maxy = getmaxy(w), maxx = getmaxx(w);
-    // Draw the gutter.
-    wattr_set(w, 0, term_color_pair(COLOR_WHITE, COLOR_BLACK), nullptr);
-    for (int i = 0; i < maxy; i++) mvwaddch(w, i, maxx - 1, ACS_CKBOARD);
-    // Draw the bar.
-    scrollBarVPos = static_cast<float>(topLine) / (MaxScrollPos() + LinesOnScreen() - 1) * maxy;
-    wattr_set(w, 0, term_color_pair(COLOR_BLACK, COLOR_WHITE), nullptr);
-    for (int i = scrollBarVPos; i < scrollBarVPos + scrollBarHeight; i++)
-      mvwaddch(w, i, maxx - 1, ' ');
-  }
-  /** Draws the horizontal scroll bar. */
-  void SetHorizontalScrollPos() override {
-    if (!wMain.GetID() || !horizontalScrollBarVisible) return;
-    WINDOW *w = GetWINDOW();
-    int maxy = getmaxy(w), maxx = getmaxx(w);
-    // Draw the gutter.
-    wattr_set(w, 0, term_color_pair(COLOR_WHITE, COLOR_BLACK), nullptr);
-    for (int i = 0; i < maxx; i++) mvwaddch(w, maxy - 1, i, ACS_CKBOARD);
-    // Draw the bar.
-    scrollBarHPos = static_cast<float>(xOffset) / scrollWidth * maxx;
-    wattr_set(w, 0, term_color_pair(COLOR_BLACK, COLOR_WHITE), nullptr);
-    for (int i = scrollBarHPos; i < scrollBarHPos + scrollBarWidth; i++)
-      mvwaddch(w, maxy - 1, i, ' ');
-  }
-  /**
-   * Sets the height of the vertical scroll bar and width of the horizontal scroll bar.
-   * The height is based on the given size of a page and the total number of pages. The width
-   * is based on the width of the view and the view's scroll width property.
-   */
-  bool ModifyScrollBars(Sci::Line nMax, Sci::Line nPage) override {
-    if (!wMain.GetID()) return false;
-    WINDOW *w = GetWINDOW();
-    int maxy = getmaxy(w), maxx = getmaxx(w);
-    int height = roundf(static_cast<float>(nPage) / nMax * maxy);
-    scrollBarHeight = std::clamp(height, 1, maxy);
-    int width = roundf(static_cast<float>(maxx) / scrollWidth * maxx);
-    scrollBarWidth = std::clamp(width, 1, maxx);
-    return true;
-  }
-  /**
-   * Copies the selected text to the internal clipboard.
-   * The primary and secondary X selections are unaffected.
-   */
-  void Copy() override {
-    if (!sel.Empty()) CopySelectionRange(&clipboard);
-  }
-  /** Pastes text from the internal clipboard, not from primary or secondary X selections. */
-  void Paste() override {
-    if (clipboard.Empty()) return;
-    ClearSelection(multiPasteMode == MultiPaste::Each);
-    InsertPasteShape(clipboard.Data(), static_cast<int>(clipboard.Length()),
-      !clipboard.rectangular ? PasteShape::stream : PasteShape::rectangular);
-    EnsureCaretVisible();
-  }
-  /** Setting of the primary and/or secondary X selections is not supported. */
-  void ClaimSelection() override {}
-  /** Notifying the parent of text changes is not yet supported. */
-  void NotifyChange() override {}
-  /** Send Scintilla notifications to the parent. */
-  void NotifyParent(NotificationData scn) override {
-    if (callback)
-      (*callback)(
-        reinterpret_cast<void *>(this), 0, reinterpret_cast<SCNotification *>(&scn), userdata);
-  }
-  /**
-   * Handles an unconsumed key.
-   * If a character is being typed, add it to the editor. Otherwise, notify the container.
-   */
-  int KeyDefault(Keys key, KeyMod modifiers) override {
-    if ((IsUnicodeMode() || static_cast<int>(key) < 256) && modifiers == KeyMod::Norm) {
-      if (IsUnicodeMode()) {
-        char utf8[6];
-        int len;
-        toutf8(static_cast<int>(key), utf8, &len);
-        InsertCharacter(std::string(utf8, len), CharacterSource::DirectInput);
-        return 1;
-      }
-      auto ch = static_cast<char>(key);
-      InsertCharacter(std::string(&ch, 1), CharacterSource::DirectInput);
+
+  // Use '+' and '-' fold markers.
+  vs.markers[static_cast<int>(MarkerOutline::FolderOpen)].markType = MarkerSymbol::Minus;
+  vs.markers[static_cast<int>(MarkerOutline::Folder)].markType = MarkerSymbol::Plus;
+  vs.markers[static_cast<int>(MarkerOutline::FolderOpenMid)].markType = MarkerSymbol::Minus;
+  vs.markers[static_cast<int>(MarkerOutline::FolderEnd)].markType = MarkerSymbol::Plus;
+
+  displayPopupMenu = PopUp::Never; // no context menu
+
+  vs.marginNumberPadding = 0; // no number margin padding
+  vs.ctrlCharPadding = 0; // no ctrl character text blob padding
+  vs.lastSegItalicsOffset = 0; // no offset for italic characters at EOLs
+
+  ac.widthLBDefault = 10; // more sane bound for autocomplete width
+  ac.heightLBDefault = 10; // more sane bound for autocomplete  height
+
+  ct.colourBG = ColourRGBA(0, 0, 0); // black background color
+  ct.colourUnSel = ColourRGBA(0xC0, 0xC0, 0xC0); // white text
+  ct.insetX = 2; // border and arrow widths are 1 each
+  ct.widthArrow = 1; // arrow width is 1 character
+  ct.borderHeight = 1; // no extra empty lines in border height
+  ct.verticalOffset = 0; // no extra offset of calltip from line
+}
+
+ScintillaCurses::~ScintillaCurses() {
+  if (wMain.GetID()) delwin(GetWINDOW());
+}
+
+void ScintillaCurses::Initialise() {}
+
+// Disable drag and drop since it is not implemented.
+void ScintillaCurses::StartDrag() {
+  inDragDrop = DragDrop::none;
+  SetDragPosition(SelectionPosition(Sci::invalidPosition));
+}
+
+void ScintillaCurses::SetVerticalScrollPos() {
+  if (!wMain.GetID() || !verticalScrollBarVisible) return;
+  WINDOW *w = GetWINDOW();
+  int maxy = getmaxy(w), maxx = getmaxx(w);
+  // Draw the gutter.
+  wattr_set(w, 0, term_color_pair(COLOR_WHITE, COLOR_BLACK), nullptr);
+  for (int i = 0; i < maxy; i++) mvwaddch(w, i, maxx - 1, ACS_CKBOARD);
+  // Draw the bar.
+  scrollBarVPos = static_cast<float>(topLine) / (MaxScrollPos() + LinesOnScreen() - 1) * maxy;
+  wattr_set(w, 0, term_color_pair(COLOR_BLACK, COLOR_WHITE), nullptr);
+  for (int i = scrollBarVPos; i < scrollBarVPos + scrollBarHeight; i++)
+    mvwaddch(w, i, maxx - 1, ' ');
+}
+
+void ScintillaCurses::SetHorizontalScrollPos() {
+  if (!wMain.GetID() || !horizontalScrollBarVisible) return;
+  WINDOW *w = GetWINDOW();
+  int maxy = getmaxy(w), maxx = getmaxx(w);
+  // Draw the gutter.
+  wattr_set(w, 0, term_color_pair(COLOR_WHITE, COLOR_BLACK), nullptr);
+  for (int i = 0; i < maxx; i++) mvwaddch(w, maxy - 1, i, ACS_CKBOARD);
+  // Draw the bar.
+  scrollBarHPos = static_cast<float>(xOffset) / scrollWidth * maxx;
+  wattr_set(w, 0, term_color_pair(COLOR_BLACK, COLOR_WHITE), nullptr);
+  for (int i = scrollBarHPos; i < scrollBarHPos + scrollBarWidth; i++)
+    mvwaddch(w, maxy - 1, i, ' ');
+}
+
+// The height is based on the given size of a page and the total number of pages. The width is
+// based on the width of the view and the view's scroll width property.
+bool ScintillaCurses::ModifyScrollBars(Sci::Line nMax, Sci::Line nPage) {
+  if (!wMain.GetID()) return false;
+  WINDOW *w = GetWINDOW();
+  int maxy = getmaxy(w), maxx = getmaxx(w);
+  int height = roundf(static_cast<float>(nPage) / nMax * maxy);
+  scrollBarHeight = std::clamp(height, 1, maxy);
+  int width = roundf(static_cast<float>(maxx) / scrollWidth * maxx);
+  scrollBarWidth = std::clamp(width, 1, maxx);
+  return true;
+}
+
+// Internal copy; primary and secondary X selections are unaffected.
+void ScintillaCurses::Copy() {
+  if (!sel.Empty()) CopySelectionRange(&clipboard);
+}
+
+// Pastes from internal clipboard, not from primary or secondary X selections.
+void ScintillaCurses::Paste() {
+  if (clipboard.Empty()) return;
+  ClearSelection(multiPasteMode == MultiPaste::Each);
+  InsertPasteShape(clipboard.Data(), static_cast<int>(clipboard.Length()),
+    !clipboard.rectangular ? PasteShape::stream : PasteShape::rectangular);
+  EnsureCaretVisible();
+}
+
+void ScintillaCurses::ClaimSelection() {}
+
+void ScintillaCurses::NotifyChange() {}
+
+void ScintillaCurses::NotifyParent(NotificationData scn) {
+  if (callback)
+    (*callback)(
+      reinterpret_cast<void *>(this), 0, reinterpret_cast<SCNotification *>(&scn), userdata);
+}
+
+int ScintillaCurses::KeyDefault(Keys key, KeyMod modifiers) {
+  if ((IsUnicodeMode() || static_cast<int>(key) < 256) && modifiers == KeyMod::Norm) {
+    if (IsUnicodeMode()) {
+      char utf8[6];
+      int len;
+      toutf8(static_cast<int>(key), utf8, &len);
+      InsertCharacter(std::string(utf8, len), CharacterSource::DirectInput);
       return 1;
     }
-    NotificationData scn = {};
-    scn.nmhdr.code = Notification::Key;
-    scn.ch = static_cast<int>(key);
-    scn.modifiers = modifiers;
-    return (NotifyParent(scn), 0);
+    auto ch = static_cast<char>(key);
+    InsertCharacter(std::string(&ch, 1), CharacterSource::DirectInput);
+    return 1;
   }
-  /**
-   * Copies the given text to the internal clipboard.
-   * Like `Copy()`, does not affect the primary and secondary X selections.
-   */
-  void CopyToClipboard(const SelectionText &selectedText) override { clipboard.Copy(selectedText); }
-  /** A ticking caret is not implemented. */
-  bool FineTickerRunning(TickReason reason) override { return false; }
-  /** A ticking caret is not implemented. */
-  void FineTickerStart(TickReason reason, int millis, int tolerance) override {}
-  /** A ticking caret is not implemented. */
-  void FineTickerCancel(TickReason reason) override {}
-  /**
-   * Sets whether or not the mouse is captured.
-   * This is used by Scintilla to handle mouse clicks, drags, and releases.
-   */
-  void SetMouseCapture(bool on) override { capturedMouse = on; }
-  /** Returns whether or not the mouse is captured. */
-  bool HaveMouseCapture() override { return capturedMouse; }
-  /** All text is assumed to be in UTF-8. */
-  std::string UTF8FromEncoded(std::string_view encoded) const override {
-    return std::string(encoded);
-  }
-  /** All text is assumed to be in UTF-8. */
-  std::string EncodedFromUTF8(std::string_view utf8) const override { return std::string(utf8); }
-  /** A Scintilla direct pointer is not implemented. */
-  sptr_t DefWndProc(Message iMessage, uptr_t wParam, sptr_t lParam) override { return 0; }
-  /** Draws a CallTip, creating the curses window for it if necessary. */
-  void CreateCallTipWindow(PRectangle rc) override {
-    if (!wMain.GetID()) return;
-    if (!ct.wCallTip.Created()) {
-      rc.right -= 1; // remove right-side padding
-      int begx = 0, begy = 0, maxx = 0, maxy = 0;
-      getbegyx(GetWINDOW(), begy, begx);
-      int xoffset = begx - rc.left, yoffset = begy - rc.top;
-      if (xoffset > 0) rc.left += xoffset, rc.right += xoffset;
-      if (yoffset > 0) rc.top += yoffset, rc.bottom += yoffset;
-      getmaxyx(GetWINDOW(), maxy, maxx);
-      if (rc.Width() > maxx) rc.right = rc.left + maxx;
-      if (rc.Height() > maxy) rc.bottom = rc.top + maxy;
-      ct.wCallTip = newwin(rc.Height(), rc.Width(), rc.top, rc.left);
-    }
-    WindowID wid = ct.wCallTip.GetID();
-    std::unique_ptr<Surface> sur = Surface::Allocate(Technology::Default);
-    if (sur) {
-      sur->Init(wid);
-      dynamic_cast<SurfaceImpl *>(sur.get())->isCallTip = true;
-      ct.PaintCT(sur.get());
-      wattr_set(_WINDOW(wid), 0, term_color_pair(COLOR_WHITE, COLOR_BLACK), nullptr);
-      box(_WINDOW(wid), '|', '-');
-      wnoutrefresh(_WINDOW(wid));
-    }
-  }
-  /** Adding menu items to the popup menu is not implemented. */
-  void AddToPopUp(const char *label, int cmd = 0, bool enabled = true) override {}
-  /**
-   * Sends the given message and parameters to Scintilla unless it is a message that changes
-   * an unsupported property.
-   */
-  sptr_t WndProc(Message iMessage, uptr_t wParam, sptr_t lParam) override {
-    try {
-      switch (iMessage) {
-      case Message::GetDirectFunction: return reinterpret_cast<sptr_t>(scintilla_send_message);
-      case Message::GetDirectPointer: return reinterpret_cast<sptr_t>(this);
-      // Ignore attempted changes of the following unsupported properties.
-      case Message::SetBufferedDraw:
-      case Message::SetWhitespaceSize:
-      case Message::SetPhasesDraw:
-      case Message::SetExtraAscent:
-      case Message::SetExtraDescent: return 0;
-      // Pass to Scintilla.
-      default: return ScintillaBase::WndProc(iMessage, wParam, lParam);
-      }
-    } catch (std::bad_alloc &) {
-      errorStatus = Status::BadAlloc;
-    } catch (...) {
-      errorStatus = Status::Failure;
-    }
-    return 0;
-  }
+  NotificationData scn = {};
+  scn.nmhdr.code = Notification::Key;
+  scn.ch = static_cast<int>(key);
+  scn.modifiers = modifiers;
+  return (NotifyParent(scn), 0);
+}
 
-  /**
-   * Returns the curses `WINDOW` associated with this Scintilla instance.
-   * If the `WINDOW` has not been created yet, create it now.
-   */
-  WINDOW *GetWINDOW() {
-    if (!wMain.GetID()) {
-      init_colors();
-      wMain = newwin(0, 0, 0, 0);
-      WINDOW *w = _WINDOW(wMain.GetID());
-      keypad(w, TRUE);
-      if (sur) sur->Init(w);
-      getmaxyx(w, height, width);
-      InvalidateStyleRedraw(); // needed to fully initialize Scintilla
+// Internal copy; primary and secondary X selections are unaffected.
+void ScintillaCurses::CopyToClipboard(const SelectionText &selectedText) {
+  clipboard.Copy(selectedText);
+}
+
+bool ScintillaCurses::FineTickerRunning(TickReason reason) { return false; }
+
+void ScintillaCurses::FineTickerStart(TickReason reason, int millis, int tolerance) {}
+
+void ScintillaCurses::FineTickerCancel(TickReason reason) {}
+
+void ScintillaCurses::SetMouseCapture(bool on) { capturedMouse = on; }
+
+// Used to handle mouse clicks, drags, and releases.
+bool ScintillaCurses::HaveMouseCapture() { return capturedMouse; }
+
+std::string ScintillaCurses::UTF8FromEncoded(std::string_view encoded) const {
+  return std::string(encoded);
+}
+
+std::string ScintillaCurses::EncodedFromUTF8(std::string_view utf8) const {
+  return std::string(utf8);
+}
+
+sptr_t ScintillaCurses::DefWndProc(Message iMessage, uptr_t wParam, sptr_t lParam) { return 0; }
+
+void ScintillaCurses::CreateCallTipWindow(PRectangle rc) {
+  if (!wMain.GetID()) return;
+  if (!ct.wCallTip.Created()) {
+    rc.right -= 1; // remove right-side padding
+    int begx = 0, begy = 0, maxx = 0, maxy = 0;
+    getbegyx(GetWINDOW(), begy, begx);
+    int xoffset = begx - rc.left, yoffset = begy - rc.top;
+    if (xoffset > 0) rc.left += xoffset, rc.right += xoffset;
+    if (yoffset > 0) rc.top += yoffset, rc.bottom += yoffset;
+    getmaxyx(GetWINDOW(), maxy, maxx);
+    if (rc.Width() > maxx) rc.right = rc.left + maxx;
+    if (rc.Height() > maxy) rc.bottom = rc.top + maxy;
+    ct.wCallTip = newwin(rc.Height(), rc.Width(), rc.top, rc.left);
+  }
+  WindowID wid = ct.wCallTip.GetID();
+  std::unique_ptr<Surface> sur = Surface::Allocate(Technology::Default);
+  if (sur) {
+    sur->Init(wid);
+    dynamic_cast<SurfaceImpl *>(sur.get())->isCallTip = true;
+    ct.PaintCT(sur.get());
+    wattr_set(_WINDOW(wid), 0, term_color_pair(COLOR_WHITE, COLOR_BLACK), nullptr);
+    box(_WINDOW(wid), '|', '-');
+    wnoutrefresh(_WINDOW(wid));
+  }
+}
+
+void ScintillaCurses::AddToPopUp(const char *label, int cmd, bool enabled) {}
+
+sptr_t ScintillaCurses::WndProc(Message iMessage, uptr_t wParam, sptr_t lParam) {
+  try {
+    switch (iMessage) {
+    case Message::GetDirectFunction: return reinterpret_cast<sptr_t>(scintilla_send_message);
+    case Message::GetDirectPointer: return reinterpret_cast<sptr_t>(this);
+    // Ignore attempted changes of the following unsupported properties.
+    case Message::SetBufferedDraw:
+    case Message::SetWhitespaceSize:
+    case Message::SetPhasesDraw:
+    case Message::SetExtraAscent:
+    case Message::SetExtraDescent: return 0;
+    // Pass to Scintilla.
+    default: return ScintillaBase::WndProc(iMessage, wParam, lParam);
     }
-    return _WINDOW(wMain.GetID());
+  } catch (std::bad_alloc &) {
+    errorStatus = Status::BadAlloc;
+  } catch (...) {
+    errorStatus = Status::Failure;
   }
-  /**
-   * Updates the cursor position, even if it's not visible, as the container may have a use for it.
-   */
-  void UpdateCursor() {
-    int pos = WndProc(Message::GetCurrentPos, 0, 0);
-    if (!SelectionEmpty() && !FlagSet(vs.caret.style, CaretStyle::BlockAfter) &&
-      (pos > WndProc(Message::GetAnchor, 0, 0)))
-      pos = WndProc(Message::PositionBefore, pos, 0); // draw inside selection
-    Point point = LocationFromPosition(pos);
-    auto y = static_cast<int>(point.y), x = static_cast<int>(point.x);
-    WINDOW *win = GetWINDOW();
-    bool in_view = x >= 0 && x <= getmaxx(win) && y >= 0 && y <= getmaxy(win);
-    if (in_view) wmove(win, y, x), wrefresh(win);
-    if (hasFocus && FlagSet(vs.caret.style, CaretStyle::Curses)) curs_set(in_view ? 1 : 0);
+  return 0;
+}
+
+WINDOW *ScintillaCurses::GetWINDOW() {
+  if (!wMain.GetID()) {
+    init_colors();
+    wMain = newwin(0, 0, 0, 0);
+    WINDOW *w = _WINDOW(wMain.GetID());
+    keypad(w, TRUE);
+    if (sur) sur->Init(w);
+    getmaxyx(w, height, width);
+    InvalidateStyleRedraw(); // needed to fully initialize Scintilla
   }
-  /**
-   * Repaints the Scintilla window on the virtual screen.
-   * If an autocompletion list, user list, or calltip is active, redraw it over the buffer's
-   * contents.
-   * It is the application's responsibility to call the curses `doupdate()` in order to refresh
-   * the physical screen. To paint to the physical screen instead, use `Refresh()`.
-   * @see Refresh
-   */
-  void NoutRefresh() {
-    WINDOW *w = GetWINDOW();
-    rcPaint.top = 0, rcPaint.left = 0; // paint from (0, 0), not (begy, begx)
-    getmaxyx(w, rcPaint.bottom, rcPaint.right);
-    if (rcPaint.bottom != height || rcPaint.right != width)
-      height = rcPaint.bottom, width = rcPaint.right, ChangeSize();
-    Paint(sur.get(), rcPaint);
-    SetVerticalScrollPos(), SetHorizontalScrollPos();
-    wnoutrefresh(w);
-    if (ac.Active())
-      ac.lb->Select(ac.lb->GetSelection()); // redraw
-    else if (ct.inCallTipMode)
-      CreateCallTipWindow(PRectangle(0, 0, 0, 0)); // redraw
+  return _WINDOW(wMain.GetID());
+}
+
+// Update even if it's not visible, as the container may have a use for it.
+void ScintillaCurses::UpdateCursor() {
+  int pos = WndProc(Message::GetCurrentPos, 0, 0);
+  if (!SelectionEmpty() && !FlagSet(vs.caret.style, CaretStyle::BlockAfter) &&
+    (pos > WndProc(Message::GetAnchor, 0, 0)))
+    pos = WndProc(Message::PositionBefore, pos, 0); // draw inside selection
+  Point point = LocationFromPosition(pos);
+  auto y = static_cast<int>(point.y), x = static_cast<int>(point.x);
+  WINDOW *win = GetWINDOW();
+  bool in_view = x >= 0 && x <= getmaxx(win) && y >= 0 && y <= getmaxy(win);
+  if (in_view) wmove(win, y, x), wrefresh(win);
+  if (hasFocus && FlagSet(vs.caret.style, CaretStyle::Curses)) curs_set(in_view ? 1 : 0);
+}
+
+// Repaints the Scintilla window on the virtual screen.
+// If an autocompletion list, user list, or calltip is active, redraw it over the buffer's
+// contents.
+// It is the application's responsibility to call the curses `doupdate()` in order to refresh
+// the physical screen. To paint to the physical screen instead, use `Refresh()`.
+void ScintillaCurses::NoutRefresh() {
+  WINDOW *w = GetWINDOW();
+  rcPaint.top = 0, rcPaint.left = 0; // paint from (0, 0), not (begy, begx)
+  getmaxyx(w, rcPaint.bottom, rcPaint.right);
+  if (rcPaint.bottom != height || rcPaint.right != width)
+    height = rcPaint.bottom, width = rcPaint.right, ChangeSize();
+  Paint(sur.get(), rcPaint);
+  SetVerticalScrollPos(), SetHorizontalScrollPos();
+  wnoutrefresh(w);
+  if (ac.Active())
+    ac.lb->Select(ac.lb->GetSelection()); // redraw
+  else if (ct.inCallTipMode)
+    CreateCallTipWindow(PRectangle(0, 0, 0, 0)); // redraw
 #if PDCURSES
-    else
-      touchwin(w); // pdcurses has problems after drawing overlapping windows
+  else
+    touchwin(w); // pdcurses has problems after drawing overlapping windows
 #endif
-    if (hasFocus) UpdateCursor();
-  }
-  /**
-   * Repaints the Scintilla window on the physical screen.
-   * If an autocompletion list, user list, or calltip is active, redraw it over the buffer's
-   * contents.
-   * To paint to the virtual screen instead, use `NoutRefresh()`.
-   * @see NoutRefresh
-   */
-  void Refresh() {
-    NoutRefresh();
-    doupdate();
-  }
-  /**
-   * Sends a key to Scintilla.
-   * Usually if a key is consumed, the screen should be repainted. However, when autocomplete is
-   * active, that window is consuming the keys and any repainting of the main Scintilla window
-   * will overwrite the autocomplete window.
-   * @param key The key pressed.
-   * @param shift Flag indicating whether or not the shift modifier key is pressed.
-   * @param shift Flag indicating whether or not the control modifier key is pressed.
-   * @param shift Flag indicating whether or not the alt modifier key is pressed.
-   */
-  void KeyPress(int key, bool shift, bool ctrl, bool alt) {
-    KeyDownWithModifiers(static_cast<Keys>(key), ModifierFlags(shift, ctrl, alt), nullptr);
-  }
-  /**
-   * Handles a mouse button press.
-   * @param button The button number pressed, or `0` if none.
-   * @param y The y coordinate of the mouse event relative to this window.
-   * @param x The x coordinate of the mouse event relative to this window.
-   * @param shift Flag indicating whether or not the shift modifier key is pressed.
-   * @param ctrl Flag indicating whether or not the control modifier key is pressed.
-   * @param alt Flag indicating whether or not the alt modifier key is pressed.
-   * @return whether or not the mouse event was handled
-   */
-  bool MousePress(int button, int y, int x, bool shift, bool ctrl, bool alt) {
-    const auto now = std::chrono::system_clock::now().time_since_epoch();
-    unsigned int time = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
-    GetWINDOW(); // ensure the curses `WINDOW` has been created
-    if (ac.Active() && (button == 1 || button == 4 || button == 5)) {
-      // Select an autocompletion list item if possible or scroll the list.
-      WINDOW *w = _WINDOW(ac.lb->GetID()), *parent = GetWINDOW();
-      int begy = getbegy(w) - getbegy(parent); // y is relative to the view
-      int begx = getbegx(w) - getbegx(parent); // x is relative to the view
-      int maxy = getmaxy(w) - 1, maxx = getmaxx(w) - 1; // ignore border
-      int ry = y - begy, rx = x - begx; // relative to list box
-      if (ry > 0 && ry < maxy && rx > 0 && rx < maxx) {
-        if (button == 1) {
-          // Select a list item.
-          // The currently selected item is normally displayed in the middle.
-          int middle = ac.lb->GetVisibleRows() / 2;
-          int n = ac.lb->GetSelection(), ny = middle;
-          if (n < middle)
-            ny = n; // the currently selected item is near the beginning
-          else if (n >= ac.lb->Length() - middle)
-            ny = (n - 1) % ac.lb->GetVisibleRows(); // it's near the end
-          // Compute the index of the item to select.
-          int offset = ry - ny - 1; // -1 ignores list box border
-          if (offset == 0 && time - autoCompleteLastClickTime < Platform::DoubleClickTime()) {
-            ListBoxImpl *listbox = reinterpret_cast<ListBoxImpl *>(ac.lb.get());
-            if (listbox->delegate) {
-              ListBoxEvent event(ListBoxEvent::EventType::doubleClick);
-              listbox->delegate->ListNotify(&event);
-            }
-          } else
-            ac.lb->Select(n + offset);
-          autoCompleteLastClickTime = time;
-        } else {
-          // Scroll the list.
-          int n = ac.lb->GetSelection();
-          if (button == 4 && n > 0)
-            ac.lb->Select(n - 1);
-          else if (button == 5 && n < ac.lb->Length() - 1)
-            ac.lb->Select(n + 1);
-        }
-        return true;
-      }
-      if (ry == 0 || ry == maxy || rx == 0 || rx == maxx) return true; // ignore border click
-    } else if (ct.inCallTipMode && button == 1) {
-      // Send the click to the CallTip.
-      WINDOW *w = _WINDOW(ct.wCallTip.GetID()), *parent = GetWINDOW();
-      int begy = getbegy(w) - getbegy(parent); // y is relative to the view
-      int begx = getbegx(w) - getbegx(parent); // x is relative to the view
-      int maxy = getmaxy(w) - 1, maxx = getmaxx(w) - 1; // ignore border
-      int ry = y - begy, rx = x - begx; // relative to list box
-      if (ry >= 0 && ry <= maxy && rx >= 0 && rx <= maxx) {
-        ct.MouseClick(Point(rx, ry));
-        return (CallTipClick(), true);
-      }
-    }
+  if (hasFocus) UpdateCursor();
+}
 
-    if (button == 1) {
-      if (verticalScrollBarVisible && x == getmaxx(GetWINDOW()) - 1) {
-        // Scroll the vertical scrollbar.
-        if (y < scrollBarVPos) return (ScrollTo(topLine - LinesOnScreen()), true);
-        if (y >= scrollBarVPos + scrollBarHeight)
-          return (ScrollTo(topLine + LinesOnScreen()), true);
-        draggingVScrollBar = true, dragOffset = y - scrollBarVPos;
-      } else if (horizontalScrollBarVisible && y == getmaxy(GetWINDOW()) - 1) {
-        // Scroll the horizontal scroll bar.
-        if (x < scrollBarHPos)
-          return (HorizontalScrollTo(xOffset - getmaxx(GetWINDOW()) / 2), true);
-        if (x >= scrollBarHPos + scrollBarWidth)
-          return (HorizontalScrollTo(xOffset + getmaxx(GetWINDOW()) / 2), true);
-        draggingHScrollBar = true, dragOffset = x - scrollBarHPos;
+// Repaints the Scintilla window on the physical screen.
+// If an autocompletion list, user list, or calltip is active, redraw it over the buffer's
+// contents.
+// To paint to the virtual screen instead, use `NoutRefresh()`.
+void ScintillaCurses::Refresh() {
+  NoutRefresh();
+  doupdate();
+}
+
+// Sends a key to Scintilla.
+// Usually if a key is consumed, the screen should be repainted. However, when autocomplete is
+// active, that window is consuming the keys and any repainting of the main Scintilla window
+// will overwrite the autocomplete window.
+void ScintillaCurses::KeyPress(int key, bool shift, bool ctrl, bool alt) {
+  KeyDownWithModifiers(static_cast<Keys>(key), ModifierFlags(shift, ctrl, alt), nullptr);
+}
+
+// Handles a mouse button press, with coordinates relative to this window.
+// Returns whether or not the press was handled.
+bool ScintillaCurses::MousePress(int button, int y, int x, bool shift, bool ctrl, bool alt) {
+  const auto now = std::chrono::system_clock::now().time_since_epoch();
+  unsigned int time = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+  GetWINDOW(); // ensure the curses `WINDOW` has been created
+  if (ac.Active() && (button == 1 || button == 4 || button == 5)) {
+    // Select an autocompletion list item if possible or scroll the list.
+    WINDOW *w = _WINDOW(ac.lb->GetID()), *parent = GetWINDOW();
+    int begy = getbegy(w) - getbegy(parent); // y is relative to the view
+    int begx = getbegx(w) - getbegx(parent); // x is relative to the view
+    int maxy = getmaxy(w) - 1, maxx = getmaxx(w) - 1; // ignore border
+    int ry = y - begy, rx = x - begx; // relative to list box
+    if (ry > 0 && ry < maxy && rx > 0 && rx < maxx) {
+      if (button == 1) {
+        // Select a list item.
+        // The currently selected item is normally displayed in the middle.
+        int middle = ac.lb->GetVisibleRows() / 2;
+        int n = ac.lb->GetSelection(), ny = middle;
+        if (n < middle)
+          ny = n; // the currently selected item is near the beginning
+        else if (n >= ac.lb->Length() - middle)
+          ny = (n - 1) % ac.lb->GetVisibleRows(); // it's near the end
+        // Compute the index of the item to select.
+        int offset = ry - ny - 1; // -1 ignores list box border
+        if (offset == 0 && time - autoCompleteLastClickTime < Platform::DoubleClickTime()) {
+          ListBoxImpl *listbox = reinterpret_cast<ListBoxImpl *>(ac.lb.get());
+          if (listbox->delegate) {
+            ListBoxEvent event(ListBoxEvent::EventType::doubleClick);
+            listbox->delegate->ListNotify(&event);
+          }
+        } else
+          ac.lb->Select(n + offset);
+        autoCompleteLastClickTime = time;
       } else {
-        // Have Scintilla handle the click.
-        ButtonDownWithModifiers(Point(x, y), time, ModifierFlags(shift, ctrl, alt));
-        return true;
+        // Scroll the list.
+        int n = ac.lb->GetSelection();
+        if (button == 4 && n > 0)
+          ac.lb->Select(n - 1);
+        else if (button == 5 && n < ac.lb->Length() - 1)
+          ac.lb->Select(n + 1);
       }
-    } else if (button == 4 || button == 5) {
-      // Scroll the view (horizontally if shift is pressed).
-      int offset = std::max((!shift ? getmaxy(GetWINDOW()) : getmaxx(GetWINDOW())) / 4, 1);
-      if (button == 4) offset *= -1;
-      return (!shift ? ScrollTo(topLine + offset) : HorizontalScrollTo(xOffset + offset), true);
-    }
-    return false;
-  }
-  /**
-   * Sends a mouse move event to Scintilla, returning whether or not Scintilla handled the
-   * mouse event.
-   * @param y The y coordinate of the mouse event relative to this window.
-   * @param x The x coordinate of the mouse event relative to this window.
-   * @param shift Flag indicating whether or not the shift modifier key is pressed.
-   * @param ctrl Flag indicating whether or not the control modifier key is pressed.
-   * @param alt Flag indicating whether or not the alt modifier key is pressed.
-   * @return whether or not Scintilla handled the mouse event
-   */
-  bool MouseMove(int y, int x, bool shift, bool ctrl, bool alt) {
-    GetWINDOW(); // ensure the curses `WINDOW` has been created
-    if (!draggingVScrollBar && !draggingHScrollBar) {
-      ButtonMoveWithModifiers(Point(x, y), 0, ModifierFlags(shift, ctrl, alt));
-    } else if (draggingVScrollBar) {
-      int maxy = getmaxy(GetWINDOW()) - scrollBarHeight, pos = y - dragOffset;
-      if (pos >= 0 && pos <= maxy) ScrollTo(pos * MaxScrollPos() / maxy);
-      return true;
-    } else if (draggingHScrollBar) {
-      int maxx = getmaxx(GetWINDOW()) - scrollBarWidth, pos = x - dragOffset;
-      if (pos >= 0 && pos <= maxx)
-        HorizontalScrollTo(pos * (scrollWidth - maxx - scrollBarWidth) / maxx);
       return true;
     }
-    return HaveMouseCapture();
-  }
-  /**
-   * Sends a mouse release event to Scintilla.
-   * @param y The y coordinate of the mouse event relative to this window.
-   * @param x The x coordinate of the mouse event relative to this window.
-   * @param ctrl Flag indicating whether or not the control modifier key is pressed.
-   */
-  void MouseRelease(int y, int x, int ctrl) {
-    const auto now = std::chrono::system_clock::now().time_since_epoch();
-    unsigned int time = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
-    GetWINDOW(); // ensure the curses `WINDOW` has been created
-    if (draggingVScrollBar || draggingHScrollBar)
-      draggingVScrollBar = false, draggingHScrollBar = false;
-    else if (HaveMouseCapture()) {
-      ButtonUpWithModifiers(Point(x, y), time, ModifierFlags(ctrl, false, false));
-      // TODO: ListBoxEvent event(ListBoxEvent::EventType::selectionChange);
-      // TODO: listbox->delegate->ListNotify(&event);
+    if (ry == 0 || ry == maxy || rx == 0 || rx == maxx) return true; // ignore border click
+  } else if (ct.inCallTipMode && button == 1) {
+    // Send the click to the CallTip.
+    WINDOW *w = _WINDOW(ct.wCallTip.GetID()), *parent = GetWINDOW();
+    int begy = getbegy(w) - getbegy(parent); // y is relative to the view
+    int begx = getbegx(w) - getbegx(parent); // x is relative to the view
+    int maxy = getmaxy(w) - 1, maxx = getmaxx(w) - 1; // ignore border
+    int ry = y - begy, rx = x - begx; // relative to list box
+    if (ry >= 0 && ry <= maxy && rx >= 0 && rx <= maxx) {
+      ct.MouseClick(Point(rx, ry));
+      return (CallTipClick(), true);
     }
   }
-  /**
-   * Returns a NUL-terminated copy of the text on the internal clipboard, not the primary and/or
-   * secondary X selections.
-   * The caller is responsible for `free`ing the returned text.
-   * @param len An optional pointer to store the length of the returned text in.
-   * @return clipboard text
-   */
-  char *GetClipboard(int *len) {
-    if (len) *len = clipboard.Length();
-    char *text = new char[clipboard.Length() + 1];
-    memcpy(text, clipboard.Data(), clipboard.Length() + 1);
-    return text;
+
+  if (button == 1) {
+    if (verticalScrollBarVisible && x == getmaxx(GetWINDOW()) - 1) {
+      // Scroll the vertical scrollbar.
+      if (y < scrollBarVPos) return (ScrollTo(topLine - LinesOnScreen()), true);
+      if (y >= scrollBarVPos + scrollBarHeight) return (ScrollTo(topLine + LinesOnScreen()), true);
+      draggingVScrollBar = true, dragOffset = y - scrollBarVPos;
+    } else if (horizontalScrollBarVisible && y == getmaxy(GetWINDOW()) - 1) {
+      // Scroll the horizontal scroll bar.
+      if (x < scrollBarHPos) return (HorizontalScrollTo(xOffset - getmaxx(GetWINDOW()) / 2), true);
+      if (x >= scrollBarHPos + scrollBarWidth)
+        return (HorizontalScrollTo(xOffset + getmaxx(GetWINDOW()) / 2), true);
+      draggingHScrollBar = true, dragOffset = x - scrollBarHPos;
+    } else {
+      // Have Scintilla handle the click.
+      ButtonDownWithModifiers(Point(x, y), time, ModifierFlags(shift, ctrl, alt));
+      return true;
+    }
+  } else if (button == 4 || button == 5) {
+    // Scroll the view (horizontally if shift is pressed).
+    int offset = std::max((!shift ? getmaxy(GetWINDOW()) : getmaxx(GetWINDOW())) / 4, 1);
+    if (button == 4) offset *= -1;
+    return (!shift ? ScrollTo(topLine + offset) : HorizontalScrollTo(xOffset + offset), true);
   }
-};
+  return false;
+}
+
+// Handles a mouse move, with coordinates relative to this window.
+// Returns whether or not the press was handled.
+bool ScintillaCurses::MouseMove(int y, int x, bool shift, bool ctrl, bool alt) {
+  GetWINDOW(); // ensure the curses `WINDOW` has been created
+  if (!draggingVScrollBar && !draggingHScrollBar) {
+    ButtonMoveWithModifiers(Point(x, y), 0, ModifierFlags(shift, ctrl, alt));
+  } else if (draggingVScrollBar) {
+    int maxy = getmaxy(GetWINDOW()) - scrollBarHeight, pos = y - dragOffset;
+    if (pos >= 0 && pos <= maxy) ScrollTo(pos * MaxScrollPos() / maxy);
+    return true;
+  } else if (draggingHScrollBar) {
+    int maxx = getmaxx(GetWINDOW()) - scrollBarWidth, pos = x - dragOffset;
+    if (pos >= 0 && pos <= maxx)
+      HorizontalScrollTo(pos * (scrollWidth - maxx - scrollBarWidth) / maxx);
+    return true;
+  }
+  return HaveMouseCapture();
+}
+
+// Handles a mouse button release, with coordinates relative to this window.
+void ScintillaCurses::MouseRelease(int y, int x, int ctrl) {
+  const auto now = std::chrono::system_clock::now().time_since_epoch();
+  unsigned int time = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+  GetWINDOW(); // ensure the curses `WINDOW` has been created
+  if (draggingVScrollBar || draggingHScrollBar)
+    draggingVScrollBar = false, draggingHScrollBar = false;
+  else if (HaveMouseCapture()) {
+    ButtonUpWithModifiers(Point(x, y), time, ModifierFlags(ctrl, false, false));
+    // TODO: ListBoxEvent event(ListBoxEvent::EventType::selectionChange);
+    // TODO: listbox->delegate->ListNotify(&event);
+  }
+}
+
+// Returns a NUL-terminated copy of the text on the internal clipboard, not the primary and/or
+// secondary X selections.
+// The caller is responsible for `free`ing the returned text.
+char *ScintillaCurses::GetClipboard(int *len) {
+  if (len) *len = clipboard.Length();
+  char *text = new char[clipboard.Length() + 1];
+  memcpy(text, clipboard.Data(), clipboard.Length() + 1);
+  return text;
+}
+
+} // namespace Scintilla::Internal
+
+using namespace Scintilla;
+using namespace Scintilla::Internal;
 
 // Link with C. Documentation in ScintillaCurses.h.
 extern "C" {
+
 void *scintilla_new(void (*callback)(void *, int, SCNotification *, void *), void *userdata) {
   return reinterpret_cast<void *>(new ScintillaCurses(callback, userdata));
 }
+
 WINDOW *scintilla_get_window(void *sci) {
   return reinterpret_cast<ScintillaCurses *>(sci)->GetWINDOW();
 }
+
 sptr_t scintilla_send_message(void *sci, unsigned int iMessage, uptr_t wParam, sptr_t lParam) {
   return reinterpret_cast<ScintillaCurses *>(sci)->WndProc(
     static_cast<Message>(iMessage), wParam, lParam);
 }
+
 void scintilla_send_key(void *sci, int key, bool shift, bool ctrl, bool alt) {
   reinterpret_cast<ScintillaCurses *>(sci)->KeyPress(key, shift, ctrl, alt);
 }
+
 bool scintilla_send_mouse(
   void *sci, int event, int button, int y, int x, bool shift, bool ctrl, bool alt) {
   auto scicurses = reinterpret_cast<ScintillaCurses *>(sci);
@@ -1406,13 +658,18 @@ bool scintilla_send_mouse(
   if (event == SCM_RELEASE) return (scicurses->MouseRelease(y, x, ctrl), true);
   return false;
 }
+
 char *scintilla_get_clipboard(void *sci, int *len) {
   return reinterpret_cast<ScintillaCurses *>(sci)->GetClipboard(len);
 }
+
 void scintilla_noutrefresh(void *sci) { reinterpret_cast<ScintillaCurses *>(sci)->NoutRefresh(); }
+
 void scintilla_refresh(void *sci) { reinterpret_cast<ScintillaCurses *>(sci)->Refresh(); }
+
 void scintilla_update_cursor(void *sci) {
   reinterpret_cast<ScintillaCurses *>(sci)->UpdateCursor();
 }
+
 void scintilla_delete(void *sci) { delete reinterpret_cast<ScintillaCurses *>(sci); }
 }
