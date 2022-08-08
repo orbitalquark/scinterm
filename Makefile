@@ -5,7 +5,6 @@
 AR = ar
 CC = gcc
 CXX = g++
-CFLAGS = -std=c99 -pedantic -Wall
 CXXFLAGS = -std=c++17 -pedantic -DCURSES -DSCI_LEXER -I../include -I../src -Wall
 ifdef DEBUG
   CXXFLAGS += -DDEBUG -g

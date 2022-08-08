@@ -173,38 +173,22 @@ static ColourRGBA SCI_COLORS[] = {BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN
  */
 static int term_color(ColourRGBA color) {
   color = color.Opaque();
-  if (color == BLACK)
-    return COLOR_BLACK;
-  else if (color == RED)
-    return COLOR_RED;
-  else if (color == GREEN)
-    return COLOR_GREEN;
-  else if (color == YELLOW)
-    return COLOR_YELLOW;
-  else if (color == BLUE)
-    return COLOR_BLUE;
-  else if (color == MAGENTA)
-    return COLOR_MAGENTA;
-  else if (color == CYAN)
-    return COLOR_CYAN;
-  else if (color == LBLACK)
-    return COLOR_LBLACK;
-  else if (color == LRED)
-    return COLOR_LRED;
-  else if (color == LGREEN)
-    return COLOR_LGREEN;
-  else if (color == LYELLOW)
-    return COLOR_LYELLOW;
-  else if (color == LBLUE)
-    return COLOR_LBLUE;
-  else if (color == LMAGENTA)
-    return COLOR_LMAGENTA;
-  else if (color == LCYAN)
-    return COLOR_LCYAN;
-  else if (color == LWHITE)
-    return COLOR_LWHITE;
-  else
-    return COLOR_WHITE;
+  if (color == BLACK) return COLOR_BLACK;
+  if (color == RED) return COLOR_RED;
+  if (color == GREEN) return COLOR_GREEN;
+  if (color == YELLOW) return COLOR_YELLOW;
+  if (color == BLUE) return COLOR_BLUE;
+  if (color == MAGENTA) return COLOR_MAGENTA;
+  if (color == CYAN) return COLOR_CYAN;
+  if (color == LBLACK) return COLOR_LBLACK;
+  if (color == LRED) return COLOR_LRED;
+  if (color == LGREEN) return COLOR_LGREEN;
+  if (color == LYELLOW) return COLOR_LYELLOW;
+  if (color == LBLUE) return COLOR_LBLUE;
+  if (color == LMAGENTA) return COLOR_LMAGENTA;
+  if (color == LCYAN) return COLOR_LCYAN;
+  if (color == LWHITE) return COLOR_LWHITE;
+  return COLOR_WHITE;
 }
 
 /**
@@ -1066,18 +1050,16 @@ public:
         toutf8(static_cast<int>(key), utf8, &len);
         InsertCharacter(std::string(utf8, len), CharacterSource::DirectInput);
         return 1;
-      } else {
-        auto ch = static_cast<char>(key);
-        InsertCharacter(std::string(&ch, 1), CharacterSource::DirectInput);
-        return 1;
       }
-    } else {
-      NotificationData scn = {};
-      scn.nmhdr.code = Notification::Key;
-      scn.ch = static_cast<int>(key);
-      scn.modifiers = modifiers;
-      return (NotifyParent(scn), 0);
+      auto ch = static_cast<char>(key);
+      InsertCharacter(std::string(&ch, 1), CharacterSource::DirectInput);
+      return 1;
     }
+    NotificationData scn = {};
+    scn.nmhdr.code = Notification::Key;
+    scn.ch = static_cast<int>(key);
+    scn.modifiers = modifiers;
+    return (NotifyParent(scn), 0);
   }
   /**
    * Copies the given text to the internal clipboard.
@@ -1151,7 +1133,9 @@ public:
       // Pass to Scintilla.
       default: return ScintillaBase::WndProc(iMessage, wParam, lParam);
       }
-    } catch (std::bad_alloc &) { errorStatus = Status::BadAlloc; } catch (...) {
+    } catch (std::bad_alloc &) {
+      errorStatus = Status::BadAlloc;
+    } catch (...) {
       errorStatus = Status::Failure;
     }
     return 0;
@@ -1290,8 +1274,8 @@ public:
             ac.lb->Select(n + 1);
         }
         return true;
-      } else if (ry == 0 || ry == maxy || rx == 0 || rx == maxx)
-        return true; // ignore border click
+      }
+      if (ry == 0 || ry == maxy || rx == 0 || rx == maxx) return true; // ignore border click
     } else if (ct.inCallTipMode && button == 1) {
       // Send the click to the CallTip.
       WINDOW *w = _WINDOW(ct.wCallTip.GetID()), *parent = GetWINDOW();
@@ -1308,20 +1292,17 @@ public:
     if (button == 1) {
       if (verticalScrollBarVisible && x == getmaxx(GetWINDOW()) - 1) {
         // Scroll the vertical scrollbar.
-        if (y < scrollBarVPos)
-          return (ScrollTo(topLine - LinesOnScreen()), true);
-        else if (y >= scrollBarVPos + scrollBarHeight)
+        if (y < scrollBarVPos) return (ScrollTo(topLine - LinesOnScreen()), true);
+        if (y >= scrollBarVPos + scrollBarHeight)
           return (ScrollTo(topLine + LinesOnScreen()), true);
-        else
-          draggingVScrollBar = true, dragOffset = y - scrollBarVPos;
+        draggingVScrollBar = true, dragOffset = y - scrollBarVPos;
       } else if (horizontalScrollBarVisible && y == getmaxy(GetWINDOW()) - 1) {
         // Scroll the horizontal scroll bar.
         if (x < scrollBarHPos)
           return (HorizontalScrollTo(xOffset - getmaxx(GetWINDOW()) / 2), true);
-        else if (x >= scrollBarHPos + scrollBarWidth)
+        if (x >= scrollBarHPos + scrollBarWidth)
           return (HorizontalScrollTo(xOffset + getmaxx(GetWINDOW()) / 2), true);
-        else
-          draggingHScrollBar = true, dragOffset = x - scrollBarHPos;
+        draggingHScrollBar = true, dragOffset = x - scrollBarHPos;
       } else {
         // Have Scintilla handle the click.
         ButtonDownWithModifiers(Point(x, y), time, ModifierFlags(shift, ctrl, alt));
