@@ -50,8 +50,6 @@ void scintilla_send_key(void *sci, int key, bool shift, bool ctrl, bool alt);
  * Curses must have been initialized prior to calling this function.
  * @param sci The Scintilla window returned by `scintilla_new()`.
  * @param event The mouse event (`SCM_CLICK`, `SCM_DRAG`, or `SCM_RELEASE`).
- * @param time The time in milliseconds of the mouse event. This is only needed if double and
- *   triple clicks need to be detected.
  * @param button The button number pressed, or `0` if none.
  * @param y The absolute y coordinate of the mouse event.
  * @param x The absolute x coordinate of the mouse event.
@@ -60,8 +58,8 @@ void scintilla_send_key(void *sci, int key, bool shift, bool ctrl, bool alt);
  * @param alt Flag indicating whether or not the alt modifier key is pressed.
  * @return whether or not Scintilla handled the mouse event
  */
-bool scintilla_send_mouse(void *sci, int event, unsigned int time, int button, int y, int x,
-  bool shift, bool ctrl, bool alt);
+bool scintilla_send_mouse(
+  void *sci, int event, int button, int y, int x, bool shift, bool ctrl, bool alt);
 /**
  * Returns a NUL-terminated copy of the text on Scintilla's internal clipboard, not the primary
  * and/or secondary X selections.
