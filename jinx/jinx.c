@@ -2,7 +2,6 @@
 
 #include <dlfcn.h>
 #include <locale.h>
-#include <sys/time.h>
 #include <curses.h>
 
 #include "Scintilla.h"
@@ -79,11 +78,8 @@ int main(int argc, char **argv) {
         event = SCM_PRESS, button = 1;
       else if (mouse.bstate & BUTTON1_RELEASED)
         event = SCM_RELEASE, button = 1;
-      struct timeval time = {0, 0};
-      gettimeofday(&time, NULL);
-      int millis = time.tv_sec * 1000 + time.tv_usec / 1000;
-      scintilla_send_mouse(sci, event, millis, button, mouse.y, mouse.x,
-        mouse.bstate & BUTTON_SHIFT, mouse.bstate & BUTTON_CTRL, mouse.bstate & BUTTON_ALT);
+      scintilla_send_mouse(sci, event, button, mouse.y, mouse.x, mouse.bstate & BUTTON_SHIFT,
+        mouse.bstate & BUTTON_CTRL, mouse.bstate & BUTTON_ALT);
     }
     scintilla_refresh(sci);
     // scintilla_update_cursor(sci); // use this when doing other curses drawing
