@@ -619,8 +619,7 @@ char *ScintillaCurses::GetClipboard(int *len) {
 
 } // namespace Scintilla::Internal
 
-using namespace Scintilla;
-using namespace Scintilla::Internal;
+using ScintillaCurses = Scintilla::Internal::ScintillaCurses;
 
 // Link with C. Documentation in ScintillaCurses.h.
 extern "C" {
@@ -635,7 +634,7 @@ WINDOW *scintilla_get_window(void *sci) {
 
 sptr_t scintilla_send_message(void *sci, unsigned int iMessage, uptr_t wParam, sptr_t lParam) {
   return reinterpret_cast<ScintillaCurses *>(sci)->WndProc(
-    static_cast<Message>(iMessage), wParam, lParam);
+    static_cast<Scintilla::Message>(iMessage), wParam, lParam);
 }
 
 void scintilla_send_key(void *sci, int key, bool shift, bool ctrl, bool alt) {

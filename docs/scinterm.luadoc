@@ -104,11 +104,3 @@ function scintilla_update_cursor(sci) end
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @return `void`
 function scintilla_delete(sci) end
-
----
--- [Macro] Returns the curses `COLOR_PAIR` for the given curses foreground and background `COLOR`s.
--- This is used simply to enumerate every possible color combination.
--- @param f (`int`) The curses foreground `COLOR`.
--- @param b (`int`) The curses background `COLOR`.
--- @return `int` number for defining a curses `COLOR_PAIR`.
-function SCI_COLOR_PAIR(f, b) end

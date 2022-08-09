@@ -149,6 +149,17 @@ int term_color(int color);
 #define _WINDOW(w) reinterpret_cast<WINDOW *>(w)
 
 /**
+ * Returns the curses `COLOR_PAIR` for the given curses foreground and background `COLOR`s.
+ * This is used simply to enumerate every possible color combination.
+ * Note: only 256 combinations are possible due to curses portability.
+ * Note: This references the global curses variable `COLORS` and is not a constant expression.
+ * @param f The curses foreground `COLOR`.
+ * @param b The curses background `COLOR`.
+ * @return int number for defining a curses `COLOR_PAIR`.
+ */
+#define SCI_COLOR_PAIR(f, b) ((b) * ((COLORS < 16) ? 8 : 16) + (f) + 1)
+
+/**
  * Returns a curses color pair from the given fore and back colors.
  * @param f Foreground color, either a Scintilla color or curses color.
  * @param b Background color, either a Scintilla color or curses color.

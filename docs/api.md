@@ -7,21 +7,6 @@ A curses platform for [Scintilla][] that supports curses platforms like [ncurses
 
 ### Functions defined by `Scinterm`
 
-<a id="SCI_COLOR_PAIR"></a>
-#### `SCI_COLOR_PAIR`(*f, b*)
-
-[Macro] Returns the curses `COLOR_PAIR` for the given curses foreground and background `COLOR`s.
-This is used simply to enumerate every possible color combination.
-
-Parameters:
-
-* *`f`*: (`int`) The curses foreground `COLOR`.
-* *`b`*: (`int`) The curses background `COLOR`.
-
-Return:
-
-* `int` number for defining a curses `COLOR_PAIR`.
-
 <a id="scintilla_delete"></a>
 #### `scintilla_delete`(*sci*)
 
