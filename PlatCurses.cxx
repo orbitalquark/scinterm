@@ -612,7 +612,7 @@ int ListBoxImpl::Find(const char *prefix) {
   int len = strlen(prefix);
   for (unsigned int i = 0; i < list.size(); i++) {
     const char *item = list.at(i).c_str();
-    item += UTF8DrawBytes(reinterpret_cast<const unsigned char *>(item), strlen(item));
+    item += UTF8DrawBytes(reinterpret_cast<const char *>(item), strlen(item));
     if (strncmp(prefix, item, len) == 0) return i;
   }
   return -1;
@@ -621,7 +621,7 @@ int ListBoxImpl::Find(const char *prefix) {
 // The type is the first (UTF-8) character, so return the string after it.
 std::string ListBoxImpl::GetValue(int n) {
   const char *item = list.at(n).c_str();
-  item += UTF8DrawBytes(reinterpret_cast<const unsigned char *>(item), strlen(item));
+  item += UTF8DrawBytes(reinterpret_cast<const char *>(item), strlen(item));
   return item;
 }
 
@@ -629,7 +629,7 @@ std::string ListBoxImpl::GetValue(int n) {
 // By default, ' ' (space) is registered to all types.
 void ListBoxImpl::RegisterImage(int type, const char *xpm_data) {
   if (type < 0 || type > IMAGE_MAX) return;
-  int len = UTF8DrawBytes(reinterpret_cast<const unsigned char *>(xpm_data), strlen(xpm_data));
+  int len = UTF8DrawBytes(reinterpret_cast<const char *>(xpm_data), strlen(xpm_data));
   for (int i = 0; i < len; i++) types[type][i] = xpm_data[i];
   types[type][len] = '\0';
 }
