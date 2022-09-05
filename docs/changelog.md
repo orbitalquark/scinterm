@@ -2,6 +2,26 @@
 
 [Atom Feed](https://github.com/orbitalquark/scinterm/releases.atom)
 
+### 4.0 (05 Sep 2022)
+
+Download:
+
+* [Scinterm 4.0][]
+
+Bugfixes:
+
+* None.
+
+Changes:
+
+* Enable horizontal scroll with Shift+Mouse Wheel.
+* Changed `scintilla_send_mouse()` API to no longer require a time argument.
+* Updated to [Scintilla][] 5.3.0.
+
+[Scinterm 4.0]: https://github.com/orbitalquark/scinterm/archive/scinterm_4.0.zip
+[Scintilla]: https://scintilla.org
+
+
 ### 3.2 (11 Nov 2021)
 
 Download:
