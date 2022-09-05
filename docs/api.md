@@ -131,7 +131,7 @@ Return:
 * `sptr_t`
 
 <a id="scintilla_send_mouse"></a>
-#### `scintilla_send_mouse`(*sci, event, time, button, y, x, shift, ctrl, alt*)
+#### `scintilla_send_mouse`(*sci, event, button, y, x, shift, ctrl, alt*)
 
 Sends the specified mouse event to the given Scintilla window for processing.
 
@@ -139,8 +139,6 @@ Parameters:
 
 * *`sci`*: The Scintilla window returned by `scintilla_new()`.
 * *`event`*: (`int`) The mouse event (`SCM_CLICK`, `SCM_DRAG`, or `SCM_RELEASE`).
-* *`time`*: (`unsigned int`) The time in milliseconds of the mouse event.  This is only
-  needed if double and triple clicks need to be detected.
 * *`button`*: (`int`) The button number pressed, or `0` if none.
 * *`y`*: (`int`) The absolute y coordinate of the mouse event.
 * *`x`*: (`int`) The absolute x coordinate of the mouse event.
