@@ -211,9 +211,9 @@ void SurfaceImpl::Polygon(const Point *pts, size_t npts, FillStroke fillStroke) 
   ColourRGBA &back = fillStroke.fill.colour;
   wattr_set(win, 0, term_color_pair(back, COLOR_WHITE), nullptr); // invert
   if (pts[0].y < pts[npts - 1].y) // up arrow
-    mvwaddstr(win, pts[0].y, pts[npts - 1].x - 1, "▲");
+    mvwaddstr(win, pts[0].y, pts[npts - 1].x - 2, "▲");
   else if (pts[0].y > pts[npts - 1].y) // down arrow
-    mvwaddstr(win, pts[0].y - 2, pts[npts - 1].x - 1, "▼");
+    mvwaddstr(win, pts[0].y - 2, pts[npts - 1].x - 2, "▼");
 }
 
 // Never called. Line markers normally drawn as rectangles are handled in `DrawLineMarker()`.
