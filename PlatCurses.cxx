@@ -227,7 +227,11 @@ void SurfaceImpl::RectangleFrame(PRectangle rc, Stroke stroke) {}
 // some cases however, it can be determined that whitespace is being drawn. If so, draw it
 // appropriately instead of clearing the given portion of the screen.
 void SurfaceImpl::FillRectangle(PRectangle rc, Fill fill) {
-  if (!win) return; // surface pixmaps not supported
+  if (!win) {
+    // Drawing to a pixmap, probably the fold margin. Record the color for a later fill.
+    pixmapColor = fill.colour;
+    return;
+  }
   wattr_set(win, 0, term_color_pair(COLOR_WHITE, fill.colour), nullptr);
   chtype ch = ' ';
   if (fabs(rc.left - static_cast<int>(rc.left)) > 0.1) {
@@ -245,9 +249,9 @@ void SurfaceImpl::FillRectangle(PRectangle rc, Fill fill) {
 void SurfaceImpl::FillRectangleAligned(PRectangle rc, Fill fill) { FillRectangle(rc, fill); }
 
 // Instead of filling a portion of the screen with a surface pixmap, fills the the screen
-// portion with black.
+// portion with that pixmap's last fill color.
 void SurfaceImpl::FillRectangle(PRectangle rc, Surface &surfacePattern) {
-  FillRectangle(rc, BLACK);
+  FillRectangle(rc, static_cast<SurfaceImpl &>(surfacePattern).pixmapColor);
 }
 
 // Never called. Line markers normally drawn as rounded rectangles are handled in
@@ -259,6 +263,7 @@ void SurfaceImpl::RoundedRectangle(PRectangle rc, FillStroke fillStroke) {}
 // INDIC_STRAIGHTBOX with no transparency.
 // Called to draw INDIC_ROUNDBOX and INDIC_STRAIGHTBOX indicators, text blobs, and translucent
 // line states and selections.
+// Does not draw INDIC_FULLBOX correctly.
 void SurfaceImpl::AlphaRectangle(PRectangle rc, XYPOSITION cornerSize, FillStroke fillStroke) {
   ColourRGBA &fill = fillStroke.fill.colour;
   for (int x = std::max(rc.left, clip.left), y = rc.top - 1; x < rc.right; x++) {

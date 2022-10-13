@@ -24,6 +24,7 @@ public:
 class SurfaceImpl : public Surface {
   WINDOW *win = nullptr; // curses window to draw on
   PRectangle clip;
+  ColourRGBA pixmapColor;
 
 public:
   SurfaceImpl() = default;
