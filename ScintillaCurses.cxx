@@ -6,6 +6,7 @@
 #include <cstring>
 #include <cmath>
 
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <map>
