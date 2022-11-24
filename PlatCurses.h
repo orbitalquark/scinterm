@@ -137,8 +137,8 @@ public:
 };
 
 void init_colors();
-int term_color(ColourRGBA color);
-int term_color(int color);
+short term_color(ColourRGBA color);
+short term_color(short color);
 
 } // namespace Scintilla::Internal
 

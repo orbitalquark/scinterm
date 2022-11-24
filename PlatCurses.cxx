@@ -75,14 +75,14 @@ std::shared_ptr<Font> Font::Allocate(const FontParameters &fp) {
 
 namespace {
 
-int COLOR_LBLACK = COLOR_BLACK + 8;
-int COLOR_LRED = COLOR_RED + 8;
-int COLOR_LGREEN = COLOR_GREEN + 8;
-int COLOR_LYELLOW = COLOR_YELLOW + 8;
-int COLOR_LBLUE = COLOR_BLUE + 8;
-int COLOR_LMAGENTA = COLOR_MAGENTA + 8;
-int COLOR_LCYAN = COLOR_CYAN + 8;
-int COLOR_LWHITE = COLOR_WHITE + 8;
+short COLOR_LBLACK = COLOR_BLACK + 8;
+short COLOR_LRED = COLOR_RED + 8;
+short COLOR_LGREEN = COLOR_GREEN + 8;
+short COLOR_LYELLOW = COLOR_YELLOW + 8;
+short COLOR_LBLUE = COLOR_BLUE + 8;
+short COLOR_LMAGENTA = COLOR_MAGENTA + 8;
+short COLOR_LCYAN = COLOR_CYAN + 8;
+short COLOR_LWHITE = COLOR_WHITE + 8;
 
 bool initialized_colors = false;
 
@@ -115,8 +115,8 @@ ColourRGBA SCI_COLORS[] = {BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE
 void init_colors() {
   if (initialized_colors || !has_colors()) return;
   start_color();
-  for (int back = 0; back < ((COLORS < 16) ? 8 : 16); back++)
-    for (int fore = 0; fore < ((COLORS < 16) ? 8 : 16); fore++)
+  for (short back = 0; back < ((COLORS < 16) ? 8 : 16); back++)
+    for (short fore = 0; fore < ((COLORS < 16) ? 8 : 16); fore++)
       init_pair(SCI_COLOR_PAIR(fore, back), fore, back);
   if (COLORS < 16) {
     // Do not distinguish between light and normal colors.
@@ -142,7 +142,7 @@ void init_colors() {
  * @param color Color to get a curses color for.
  * @return curses color
  */
-int term_color(ColourRGBA color) {
+short term_color(ColourRGBA color) {
   color = color.Opaque();
   if (color == BLACK) return COLOR_BLACK;
   if (color == RED) return COLOR_RED;
@@ -166,7 +166,7 @@ int term_color(ColourRGBA color) {
  * Returns a curses color for the given curses color.
  * This overloaded method only exists for the `term_color_pair()` macro.
  */
-int term_color(int color) { return color; }
+short term_color(short color) { return color; }
 
 // Surface handling.
 
@@ -177,18 +177,18 @@ void SurfaceImpl::Init(WindowID wid) {
   win = _WINDOW(wid);
 }
 
-void SurfaceImpl::Init(SurfaceID sid, WindowID wid) { Init(wid); }
+void SurfaceImpl::Init(SurfaceID /*sid*/, WindowID wid) { Init(wid); }
 
-std::unique_ptr<Surface> SurfaceImpl::AllocatePixMap(int width, int height) {
+std::unique_ptr<Surface> SurfaceImpl::AllocatePixMap(int /*width*/, int /*height*/) {
   // Not supported, but cannot return a nullptr because Scintilla assumes the allocation succeeded.
   return std::make_unique<SurfaceImpl>();
 }
 
-void SurfaceImpl::SetMode(SurfaceMode mode) {}
+void SurfaceImpl::SetMode(SurfaceMode /*mode*/) {}
 
 void SurfaceImpl::Release() noexcept { win = nullptr; }
 
-int SurfaceImpl::SupportsFeature(Supports feature) noexcept {
+int SurfaceImpl::SupportsFeature(Supports /*feature*/) noexcept {
   return 0; // feature == Supports::ThreadSafeMeasureWidths;
 }
 
@@ -198,13 +198,13 @@ int SurfaceImpl::LogPixelsY() { return 1; } // N/A
 
 int SurfaceImpl::PixelDivisions() { return 1; }
 
-int SurfaceImpl::DeviceHeightFont(int points) { return 1; }
+int SurfaceImpl::DeviceHeightFont(int /*points*/) { return 1; }
 
 // Drawing lines is not implemented because more often than not, lines are being drawn for
 // decoration (e.g. line markers, underlines, indicators, arrows, etc.)
-void SurfaceImpl::LineDraw(Point start, Point end, Stroke stroke) {}
+void SurfaceImpl::LineDraw(Point /*start*/, Point /*end*/, Stroke /*stroke*/) {}
 
-void SurfaceImpl::PolyLine(const Point *pts, size_t npts, Stroke stroke) {}
+void SurfaceImpl::PolyLine(const Point * /*pts*/, size_t /*npts*/, Stroke /*stroke*/) {}
 
 // Draws the character equivalent of shape outlined by the given polygon's points.
 // Only called for CallTip arrows and INDIC_POINT[CHARACTER]. Assume the former. Line markers
@@ -213,17 +213,17 @@ void SurfaceImpl::Polygon(const Point *pts, size_t npts, FillStroke fillStroke) 
   ColourRGBA &back = fillStroke.fill.colour;
   wattr_set(win, 0, term_color_pair(back, COLOR_WHITE), nullptr); // invert
   if (pts[0].y < pts[npts - 1].y) // up arrow
-    mvwaddstr(win, pts[0].y, pts[npts - 1].x - 2, "▲");
+    mvwaddstr(win, static_cast<int>(pts[0].y), static_cast<int>(pts[npts - 1].x - 2), "▲");
   else if (pts[0].y > pts[npts - 1].y) // down arrow
-    mvwaddstr(win, pts[0].y - 2, pts[npts - 1].x - 2, "▼");
+    mvwaddstr(win, static_cast<int>(pts[0].y - 2), static_cast<int>(pts[npts - 1].x - 2), "▼");
 }
 
 // Never called. Line markers normally drawn as rectangles are handled in `DrawLineMarker()`.
-void SurfaceImpl::RectangleDraw(PRectangle rc, FillStroke fillStroke) {}
+void SurfaceImpl::RectangleDraw(PRectangle /*rc*/, FillStroke /*fillStroke*/) {}
 
 // Drawing framed rectangles like fold display text, EOL annotations, and INDIC_BOX is not
 // implemented.
-void SurfaceImpl::RectangleFrame(PRectangle rc, Stroke stroke) {}
+void SurfaceImpl::RectangleFrame(PRectangle /*rc*/, Stroke /*stroke*/) {}
 
 // Normally this clears the given portion of the screen with the given background color. In
 // some cases however, it can be determined that whitespace is being drawn. If so, draw it
@@ -243,8 +243,9 @@ void SurfaceImpl::FillRectangle(PRectangle rc, Fill fill) {
     wcolor_set(win, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
     rc.right = static_cast<int>(rc.right), ch = ACS_BULLET | A_BOLD;
   }
-  for (int y = rc.top; y < rc.bottom; y++)
-    for (int x = std::max(rc.left, clip.left); x < rc.right; x++) mvwaddch(win, y, x, ch);
+  for (int y = static_cast<int>(rc.top); y < rc.bottom; y++)
+    for (int x = static_cast<int>(std::max(rc.left, clip.left)); x < rc.right; x++)
+      mvwaddch(win, y, x, ch);
 }
 
 // Note: special alignment to pixel boundaries is not needed.
@@ -258,7 +259,7 @@ void SurfaceImpl::FillRectangle(PRectangle rc, Surface &surfacePattern) {
 
 // Never called. Line markers normally drawn as rounded rectangles are handled in
 // `DrawLineMarker()`.
-void SurfaceImpl::RoundedRectangle(PRectangle rc, FillStroke fillStroke) {}
+void SurfaceImpl::RoundedRectangle(PRectangle /*rc*/, FillStroke /*fillStroke*/) {}
 
 // Drawing alpha rectangles is not fully supported.
 // Instead, fills the background color of the given rectangle with the fill color, emulating
@@ -266,39 +267,40 @@ void SurfaceImpl::RoundedRectangle(PRectangle rc, FillStroke fillStroke) {}
 // Called to draw INDIC_ROUNDBOX and INDIC_STRAIGHTBOX indicators, text blobs, and translucent
 // line states and selections.
 // Does not draw INDIC_FULLBOX correctly.
-void SurfaceImpl::AlphaRectangle(PRectangle rc, XYPOSITION cornerSize, FillStroke fillStroke) {
+void SurfaceImpl::AlphaRectangle(PRectangle rc, XYPOSITION /*cornerSize*/, FillStroke fillStroke) {
   ColourRGBA &fill = fillStroke.fill.colour;
-  for (int x = std::max(rc.left, clip.left), y = rc.top - 1; x < rc.right; x++) {
+  for (int x = static_cast<int>(std::max(rc.left, clip.left)), y = static_cast<int>(rc.top - 1);
+       x < rc.right; x++) {
     attr_t attrs = mvwinch(win, y, x) & A_ATTRIBUTES;
-    short pair = PAIR_NUMBER(attrs), fore, unused;
+    short pair = PAIR_NUMBER(attrs), fore = COLOR_WHITE, unused;
     if (pair > 0) pair_content(pair, &fore, &unused);
     mvwchgat(win, y, x, 1, attrs, term_color_pair(fore, fill), nullptr);
   }
 }
 
 void SurfaceImpl::GradientRectangle(
-  PRectangle rc, const std::vector<ColourStop> &stops, GradientOptions options) {}
+  PRectangle /*rc*/, const std::vector<ColourStop> & /*stops*/, GradientOptions /*options*/) {}
 
 void SurfaceImpl::DrawRGBAImage(
-  PRectangle rc, int width, int height, const unsigned char *pixelsImage) {}
+  PRectangle /*rc*/, int /*width*/, int /*height*/, const unsigned char * /*pixelsImage*/) {}
 
 // Never called. Line markers normally drawn as circles are handled in `DrawLineMarker()`.
-void SurfaceImpl::Ellipse(PRectangle rc, FillStroke fillStroke) {}
+void SurfaceImpl::Ellipse(PRectangle /*rc*/, FillStroke /*fillStroke*/) {}
 
 // Drawing curved ends on EOL annotations is not implemented.
-void SurfaceImpl::Stadium(PRectangle rc, FillStroke fillStroke, Ends ends) {}
+void SurfaceImpl::Stadium(PRectangle /*rc*/, FillStroke /*fillStroke*/, Ends /*ends*/) {}
 
 // Draw an indentation guide.
 // Only called when drawing indentation guides or during certain drawing operations when double
 // buffering is enabled. Since the latter is not supported, assume the former.
-void SurfaceImpl::Copy(PRectangle rc, Point from, Surface &surfaceSource) {
+void SurfaceImpl::Copy(PRectangle rc, Point /*from*/, Surface & /*surfaceSource*/) {
   // TODO: handle indent guide highlighting.
   if (rc.left - 1 < clip.left) return;
   wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
-  mvwaddch(win, rc.top, rc.left - 1, '|' | A_BOLD);
+  mvwaddch(win, static_cast<int>(rc.top), static_cast<int>(rc.left - 1), '|' | A_BOLD);
 }
 
-std::unique_ptr<IScreenLineLayout> SurfaceImpl::Layout(const IScreenLine *screenLine) {
+std::unique_ptr<IScreenLineLayout> SurfaceImpl::Layout(const IScreenLine * /*screenLine*/) {
   return nullptr;
 }
 
@@ -318,7 +320,7 @@ int grapheme_width(const char *s) {
   return width >= 0 ? width : 1;
 }
 
-void SurfaceImpl::DrawTextNoClip(PRectangle rc, const Font *font_, XYPOSITION ybase,
+void SurfaceImpl::DrawTextNoClip(PRectangle rc, const Font *font_, XYPOSITION /*ybase*/,
   std::string_view text, ColourRGBA fore, ColourRGBA back) {
   attr_t attrs = dynamic_cast<const FontImpl *>(font_)->attrs;
   wattr_set(win, attrs, term_color_pair(fore, back), nullptr);
@@ -335,14 +337,15 @@ void SurfaceImpl::DrawTextNoClip(PRectangle rc, const Font *font_, XYPOSITION yb
     rc.left = clip.left;
   }
   // Do not write beyond right window boundary.
-  int clip_chars = getmaxx(win) - rc.left;
+  int clip_chars = getmaxx(win) - static_cast<int>(rc.left);
   size_t bytes = 0;
   for (int chars = 0; bytes < text.length(); bytes++) {
     if (!UTF8IsTrailByte(static_cast<unsigned char>(text[bytes])))
       chars += grapheme_width(text.data() + bytes);
     if (chars > clip_chars) break;
   }
-  mvwaddnstr(win, rc.top, rc.left, text.data(), std::min(text.length(), bytes));
+  mvwaddnstr(win, static_cast<int>(rc.top), static_cast<int>(rc.left), text.data(),
+    static_cast<int>(std::min(text.length(), bytes)));
 }
 
 // Called for drawing the caret, text blobs, and `MarkerSymbol::Character` line markers.
@@ -367,14 +370,15 @@ void SurfaceImpl::DrawTextTransparent(
 }
 
 // Curses characters always have a width of 1 if they are not UTF-8 trailing bytes.
-void SurfaceImpl::MeasureWidths(const Font *font_, std::string_view text, XYPOSITION *positions) {
+void SurfaceImpl::MeasureWidths(
+  const Font * /*font_*/, std::string_view text, XYPOSITION *positions) {
   for (size_t i = 0, j = 0; i < text.length(); i++) {
     if (!UTF8IsTrailByte(static_cast<unsigned char>(text[i]))) j += grapheme_width(text.data() + i);
-    positions[i] = j;
+    positions[i] = static_cast<XYPOSITION>(j);
   }
 }
 
-XYPOSITION SurfaceImpl::WidthText(const Font *font_, std::string_view text) {
+XYPOSITION SurfaceImpl::WidthText(const Font * /*font_*/, std::string_view text) {
   int width = 0;
   for (size_t i = 0; i < text.length(); i++)
     if (!UTF8IsTrailByte(static_cast<unsigned char>(text[i])))
@@ -406,15 +410,15 @@ XYPOSITION SurfaceImpl::WidthTextUTF8(const Font *font_, std::string_view text) 
   return WidthText(font_, text);
 }
 
-XYPOSITION SurfaceImpl::Ascent(const Font *font_) { return 0; }
+XYPOSITION SurfaceImpl::Ascent(const Font * /*font_*/) { return 0; }
 
-XYPOSITION SurfaceImpl::Descent(const Font *font_) { return 0; }
+XYPOSITION SurfaceImpl::Descent(const Font * /*font_*/) { return 0; }
 
-XYPOSITION SurfaceImpl::InternalLeading(const Font *font_) { return 0; }
+XYPOSITION SurfaceImpl::InternalLeading(const Font * /*font_*/) { return 0; }
 
-XYPOSITION SurfaceImpl::Height(const Font *font_) { return 1; }
+XYPOSITION SurfaceImpl::Height(const Font * /*font_*/) { return 1; }
 
-XYPOSITION SurfaceImpl::AverageCharWidth(const Font *font_) { return 1; }
+XYPOSITION SurfaceImpl::AverageCharWidth(const Font * /*font_*/) { return 1; }
 
 void SurfaceImpl::SetClip(PRectangle rc) { clip = rc; }
 
@@ -426,37 +430,38 @@ void SurfaceImpl::FlushDrawing() {} // N/A
 
 // Draws the text representation of a lien marker, if possible.
 void SurfaceImpl::DrawLineMarker(
-  const PRectangle &rcWhole, const Font *fontForCharacter, int tFold, const void *data) {
+  const PRectangle &rcWhole, const Font *fontForCharacter, int /*tFold*/, const void *data) {
   // TODO: handle fold marker highlighting.
   auto marker = reinterpret_cast<const LineMarker *>(data);
   wattr_set(win, 0, term_color_pair(marker->fore, marker->back), nullptr);
+  int top = static_cast<int>(rcWhole.top), left = static_cast<int>(rcWhole.left);
   switch (marker->markType) {
-  case MarkerSymbol::Circle: mvwaddstr(win, rcWhole.top, rcWhole.left, "●"); return;
+  case MarkerSymbol::Circle: mvwaddstr(win, top, left, "●"); return;
   case MarkerSymbol::SmallRect:
-  case MarkerSymbol::RoundRect: mvwaddstr(win, rcWhole.top, rcWhole.left, "■"); return;
-  case MarkerSymbol::Arrow: mvwaddstr(win, rcWhole.top, rcWhole.left, "►"); return;
-  case MarkerSymbol::ShortArrow: mvwaddstr(win, rcWhole.top, rcWhole.left, "→"); return;
-  case MarkerSymbol::ArrowDown: mvwaddstr(win, rcWhole.top, rcWhole.left, "▼"); return;
-  case MarkerSymbol::Minus: mvwaddch(win, rcWhole.top, rcWhole.left, '-'); return;
+  case MarkerSymbol::RoundRect: mvwaddstr(win, top, left, "■"); return;
+  case MarkerSymbol::Arrow: mvwaddstr(win, top, left, "►"); return;
+  case MarkerSymbol::ShortArrow: mvwaddstr(win, top, left, "→"); return;
+  case MarkerSymbol::ArrowDown: mvwaddstr(win, top, left, "▼"); return;
+  case MarkerSymbol::Minus: mvwaddch(win, top, left, '-'); return;
   case MarkerSymbol::BoxMinus:
-  case MarkerSymbol::BoxMinusConnected: mvwaddstr(win, rcWhole.top, rcWhole.left, "⊟"); return;
+  case MarkerSymbol::BoxMinusConnected: mvwaddstr(win, top, left, "⊟"); return;
   case MarkerSymbol::CircleMinus:
-  case MarkerSymbol::CircleMinusConnected: mvwaddstr(win, rcWhole.top, rcWhole.left, "⊖"); return;
-  case MarkerSymbol::Plus: mvwaddch(win, rcWhole.top, rcWhole.left, '+'); return;
+  case MarkerSymbol::CircleMinusConnected: mvwaddstr(win, top, left, "⊖"); return;
+  case MarkerSymbol::Plus: mvwaddch(win, top, left, '+'); return;
   case MarkerSymbol::BoxPlus:
-  case MarkerSymbol::BoxPlusConnected: mvwaddstr(win, rcWhole.top, rcWhole.left, "⊞"); return;
+  case MarkerSymbol::BoxPlusConnected: mvwaddstr(win, top, left, "⊞"); return;
   case MarkerSymbol::CirclePlus:
-  case MarkerSymbol::CirclePlusConnected: mvwaddstr(win, rcWhole.top, rcWhole.left, "⊕"); return;
-  case MarkerSymbol::VLine: mvwaddch(win, rcWhole.top, rcWhole.left, ACS_VLINE); return;
+  case MarkerSymbol::CirclePlusConnected: mvwaddstr(win, top, left, "⊕"); return;
+  case MarkerSymbol::VLine: mvwaddch(win, top, left, ACS_VLINE); return;
   case MarkerSymbol::LCorner:
-  case MarkerSymbol::LCornerCurve: mvwaddch(win, rcWhole.top, rcWhole.left, ACS_LLCORNER); return;
+  case MarkerSymbol::LCornerCurve: mvwaddch(win, top, left, ACS_LLCORNER); return;
   case MarkerSymbol::TCorner:
-  case MarkerSymbol::TCornerCurve: mvwaddch(win, rcWhole.top, rcWhole.left, ACS_LTEE); return;
-  case MarkerSymbol::DotDotDot: mvwaddstr(win, rcWhole.top, rcWhole.left, "…"); return;
-  case MarkerSymbol::Arrows: mvwaddstr(win, rcWhole.top, rcWhole.left, "»"); return;
+  case MarkerSymbol::TCornerCurve: mvwaddch(win, top, left, ACS_LTEE); return;
+  case MarkerSymbol::DotDotDot: mvwaddstr(win, top, left, "…"); return;
+  case MarkerSymbol::Arrows: mvwaddstr(win, top, left, "»"); return;
   case MarkerSymbol::FullRect: FillRectangle(rcWhole, marker->back); return;
-  case MarkerSymbol::LeftRect: mvwaddstr(win, rcWhole.top, rcWhole.left, "▌"); return;
-  case MarkerSymbol::Bookmark: mvwaddstr(win, rcWhole.top, rcWhole.left, "Σ"); return;
+  case MarkerSymbol::LeftRect: mvwaddstr(win, top, left, "▌"); return;
+  case MarkerSymbol::Bookmark: mvwaddstr(win, top, left, "Σ"); return;
   default: break; // prevent warning
   }
   if (marker->markType >= MarkerSymbol::Character) {
@@ -471,20 +476,23 @@ void SurfaceImpl::DrawLineMarker(
 // Draws the text representation of a wrap marker.
 void SurfaceImpl::DrawWrapMarker(PRectangle rcPlace, bool isEndMarker, ColourRGBA wrapColour) {
   wattr_set(win, 0, term_color_pair(wrapColour, COLOR_BLACK), nullptr);
-  mvwaddstr(win, rcPlace.top, rcPlace.left, isEndMarker ? "↩" : "↪");
+  mvwaddstr(
+    win, static_cast<int>(rcPlace.top), static_cast<int>(rcPlace.left), isEndMarker ? "↩" : "↪");
 }
 
 // Draws the text representation of a tab arrow.
 void SurfaceImpl::DrawTabArrow(PRectangle rcTab, const ViewStyle &vsDraw) {
   // TODO: set color to vs.whitespaceColours.fore and back.
   wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
-  for (int i = std::max(rcTab.left - 1, clip.left); i < rcTab.right; i++)
-    mvwaddch(win, rcTab.top, i, '-' | A_BOLD);
+  for (int i = static_cast<int>(std::max(rcTab.left - 1, clip.left)); i < rcTab.right; i++)
+    mvwaddch(win, static_cast<int>(rcTab.top), i, '-' | A_BOLD);
   char tail = vsDraw.tabDrawMode == TabDrawMode::LongArrow ? '>' : '-';
-  mvwaddch(win, rcTab.top, rcTab.right, tail | A_BOLD);
+  mvwaddch(win, static_cast<int>(rcTab.top), static_cast<int>(rcTab.right), tail | A_BOLD);
 }
 
-std::unique_ptr<Surface> Surface::Allocate(Technology) { return std::make_unique<SurfaceImpl>(); }
+std::unique_ptr<Surface> Surface::Allocate(Technology /*technology*/) {
+  return std::make_unique<SurfaceImpl>();
+}
 
 // Window handling.
 
@@ -514,13 +522,13 @@ void Window::SetPositionRelative(PRectangle rc, const Window *relativeTo) {
   int begx = 0, begy = 0, x = 0, y = 0;
   // Determine the relative position.
   getbegyx(_WINDOW(relativeTo->GetID()), begy, begx);
-  x = begx + rc.left;
+  x = begx + static_cast<int>(rc.left);
   if (x < begx) x = begx;
-  y = begy + rc.top;
+  y = begy + static_cast<int>(rc.top);
   if (y < begy) y = begy;
   // Correct to fit the parent if necessary.
-  int sizex = rc.right - rc.left;
-  int sizey = rc.bottom - rc.top;
+  int sizex = static_cast<int>(rc.right - rc.left);
+  int sizey = static_cast<int>(rc.bottom - rc.top);
   int screen_width = getmaxx(_WINDOW(relativeTo->GetID()));
   int screen_height = getmaxy(_WINDOW(relativeTo->GetID()));
   if (sizex > screen_width)
@@ -538,29 +546,29 @@ void Window::SetPositionRelative(PRectangle rc, const Window *relativeTo) {
 
 PRectangle Window::GetClientPosition() const { return GetPosition(); }
 
-void Window::Show(bool show) {} // TODO: ?
+void Window::Show(bool /*show*/) {} // TODO: ?
 
 void Window::InvalidateAll() {} // TODO: notify repaint?
 
-void Window::InvalidateRectangle(PRectangle rc) {} // TODO: notify repaint?
+void Window::InvalidateRectangle(PRectangle /*rc*/) {} // TODO: notify repaint?
 
-void Window::SetCursor(Cursor curs) {}
+void Window::SetCursor(Cursor /*curs*/) {}
 
-PRectangle Window::GetMonitorRect(Point pt) { return GetPosition(); }
+PRectangle Window::GetMonitorRect(Point /*pt*/) { return GetPosition(); }
 
 ListBoxImpl::ListBoxImpl() {
   list.reserve(10);
   ClearRegisteredImages();
 }
 
-void ListBoxImpl::SetFont(const Font *font) {}
+void ListBoxImpl::SetFont(const Font * /*font*/) {}
 
-void ListBoxImpl::Create(Window &parent, int ctrlID, Point location_, int lineHeight_,
-  bool unicodeMode_, Technology technology_) {
+void ListBoxImpl::Create(Window & /*parent*/, int /*ctrlID*/, Point /*location_*/,
+  int /*lineHeight_*/, bool /*unicodeMode_*/, Technology /*technology_*/) {
   wid = newwin(1, 1, 0, 0); // will be resized as items are added
 }
 
-void ListBoxImpl::SetAverageCharWidth(int width) {} // N/A
+void ListBoxImpl::SetAverageCharWidth(int /*width*/) {} // N/A
 
 void ListBoxImpl::SetVisibleRows(int rows) {
   height = rows;
@@ -586,14 +594,14 @@ void ListBoxImpl::Append(char *s, int type) {
     list.push_back(std::string(chtype, strlen(chtype)) + s);
   } else
     list.push_back(std::string(" ") + s);
-  int len = strlen(s); // TODO: UTF-8 awareness?
+  int len = static_cast<int>(strlen(s)); // TODO: UTF-8 awareness?
   if (width < len + 1) {
     width = len + 1; // include type character len
     wresize(_WINDOW(wid), height + 2, width + 2);
   }
 }
 
-int ListBoxImpl::Length() { return list.size(); }
+int ListBoxImpl::Length() { return static_cast<int>(list.size()); }
 
 void ListBoxImpl::Select(int n) {
   WINDOW *w = _WINDOW(wid);
@@ -616,7 +624,7 @@ int ListBoxImpl::GetSelection() { return selection; }
 
 // The type is the first (UTF-8) character, so start searching at the second one.
 int ListBoxImpl::Find(const char *prefix) {
-  int len = strlen(prefix);
+  size_t len = strlen(prefix);
   for (unsigned int i = 0; i < list.size(); i++) {
     const char *item = list.at(i).c_str();
     item += UTF8DrawBytes(reinterpret_cast<const char *>(item), strlen(item));
@@ -642,7 +650,7 @@ void ListBoxImpl::RegisterImage(int type, const char *xpm_data) {
 }
 
 void ListBoxImpl::RegisterRGBAImage(
-  int type, int width, int height, const unsigned char *pixelsImage) {} // N/A
+  int /*type*/, int /*width*/, int /*height*/, const unsigned char * /*pixelsImage*/) {} // N/A
 
 // Clear back to ' ' (space).
 void ListBoxImpl::ClearRegisteredImages() {
@@ -653,12 +661,12 @@ void ListBoxImpl::SetDelegate(IListBoxDelegate *lbDelegate) { delegate = lbDeleg
 
 void ListBoxImpl::SetList(const char *listText, char separator, char typesep) {
   Clear();
-  int len = strlen(listText);
+  size_t len = strlen(listText);
   char *text = new char[len + 1];
   if (!text) return;
   memcpy(text, listText, len + 1);
   char *word = text, *type = nullptr;
-  for (int i = 0; i <= len; i++) {
+  for (size_t i = 0; i <= len; i++) {
     if (text[i] == separator || i == len) {
       text[i] = '\0';
       if (type) *type = '\0';
@@ -670,7 +678,7 @@ void ListBoxImpl::SetList(const char *listText, char separator, char typesep) {
   delete[] text;
 }
 
-void ListBoxImpl::SetOptions(ListOptions options_) {}
+void ListBoxImpl::SetOptions(ListOptions /*options_*/) {}
 
 ListBox::ListBox() noexcept = default;
 
@@ -684,7 +692,7 @@ void Menu::CreatePopUp() {}
 
 void Menu::Destroy() noexcept {}
 
-void Menu::Show(Point pt, const Window &w) {}
+void Menu::Show(Point /*pt*/, const Window & /*w*/) {}
 
 // System wide platform parameters.
 
@@ -700,7 +708,7 @@ unsigned int Platform::DoubleClickTime() { return 500; /* ms */ }
 
 void Platform::DebugDisplay(const char *s) noexcept { fprintf(stderr, "%s", s); }
 
-void Platform::DebugPrintf(const char *format, ...) noexcept {}
+void Platform::DebugPrintf(const char * /*format*/, ...) noexcept {}
 
 // bool Platform::ShowAssertionPopUps(bool assertionPopUps_) noexcept { return true; }
 

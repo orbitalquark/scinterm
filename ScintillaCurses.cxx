@@ -65,7 +65,7 @@ namespace {
 
 // Custom drawing function for line markers.
 void DrawLineMarker(Surface *surface, const PRectangle &rcWhole, const Font *fontForCharacter,
-  int tFold, MarginType marginStyle, const void *data) {
+  int tFold, MarginType /*marginStyle*/, const void *data) {
   reinterpret_cast<SurfaceImpl *>(surface)->DrawLineMarker(rcWhole, fontForCharacter, tFold, data);
 }
 
@@ -77,7 +77,7 @@ void DrawWrapVisualMarker(
 
 // Custom drawing function for tab arrows.
 void DrawTabArrow(
-  Surface *surface, PRectangle rcTab, int ymid, const ViewStyle &vsDraw, Stroke stroke) {
+  Surface *surface, PRectangle rcTab, int /*ymid*/, const ViewStyle &vsDraw, Stroke /*stroke*/) {
   reinterpret_cast<SurfaceImpl *>(surface)->DrawTabArrow(rcTab, vsDraw);
 }
 
@@ -270,7 +270,8 @@ void ScintillaCurses::SetVerticalScrollPos() {
   wattr_set(w, 0, term_color_pair(COLOR_WHITE, COLOR_BLACK), nullptr);
   for (int i = 0; i < maxy; i++) mvwaddch(w, i, maxx - 1, ACS_CKBOARD);
   // Draw the bar.
-  scrollBarVPos = static_cast<float>(topLine) / (MaxScrollPos() + LinesOnScreen() - 1) * maxy;
+  scrollBarVPos =
+    static_cast<int>(static_cast<float>(topLine) / (MaxScrollPos() + LinesOnScreen() - 1) * maxy);
   wattr_set(w, 0, term_color_pair(COLOR_BLACK, COLOR_WHITE), nullptr);
   for (int i = scrollBarVPos; i < scrollBarVPos + scrollBarHeight; i++)
     mvwaddch(w, i, maxx - 1, ' ');
@@ -284,7 +285,7 @@ void ScintillaCurses::SetHorizontalScrollPos() {
   wattr_set(w, 0, term_color_pair(COLOR_WHITE, COLOR_BLACK), nullptr);
   for (int i = 0; i < maxx; i++) mvwaddch(w, maxy - 1, i, ACS_CKBOARD);
   // Draw the bar.
-  scrollBarHPos = static_cast<float>(xOffset) / scrollWidth * maxx;
+  scrollBarHPos = static_cast<int>(static_cast<float>(xOffset) / scrollWidth * maxx);
   wattr_set(w, 0, term_color_pair(COLOR_BLACK, COLOR_WHITE), nullptr);
   for (int i = scrollBarHPos; i < scrollBarHPos + scrollBarWidth; i++)
     mvwaddch(w, maxy - 1, i, ' ');
@@ -296,10 +297,10 @@ bool ScintillaCurses::ModifyScrollBars(Sci::Line nMax, Sci::Line nPage) {
   if (!wMain.GetID()) return false;
   WINDOW *w = GetWINDOW();
   int maxy = getmaxy(w), maxx = getmaxx(w);
-  int height = roundf(static_cast<float>(nPage) / nMax * maxy);
-  scrollBarHeight = std::clamp(height, 1, maxy);
-  int width = roundf(static_cast<float>(maxx) / scrollWidth * maxx);
-  scrollBarWidth = std::clamp(width, 1, maxx);
+  int bar_height = static_cast<int>(roundf(static_cast<float>(nPage) / nMax * maxy));
+  scrollBarHeight = std::clamp(bar_height, 1, maxy);
+  int bar_width = static_cast<int>(roundf(static_cast<float>(maxx) / scrollWidth * maxx));
+  scrollBarWidth = std::clamp(bar_width, 1, maxx);
   return true;
 }
 
@@ -352,11 +353,11 @@ void ScintillaCurses::CopyToClipboard(const SelectionText &selectedText) {
   clipboard.Copy(selectedText);
 }
 
-bool ScintillaCurses::FineTickerRunning(TickReason reason) { return false; }
+bool ScintillaCurses::FineTickerRunning(TickReason /*reason*/) { return false; }
 
-void ScintillaCurses::FineTickerStart(TickReason reason, int millis, int tolerance) {}
+void ScintillaCurses::FineTickerStart(TickReason /*reason*/, int /*millis*/, int /*tolerance*/) {}
 
-void ScintillaCurses::FineTickerCancel(TickReason reason) {}
+void ScintillaCurses::FineTickerCancel(TickReason /*reason*/) {}
 
 void ScintillaCurses::SetMouseCapture(bool on) { capturedMouse = on; }
 
@@ -371,7 +372,9 @@ std::string ScintillaCurses::EncodedFromUTF8(std::string_view utf8) const {
   return std::string(utf8);
 }
 
-sptr_t ScintillaCurses::DefWndProc(Message iMessage, uptr_t wParam, sptr_t lParam) { return 0; }
+sptr_t ScintillaCurses::DefWndProc(Message /*iMessage*/, uptr_t /*wParam*/, sptr_t /*lParam*/) {
+  return 0;
+}
 
 void ScintillaCurses::CreateCallTipWindow(PRectangle rc) {
   if (!wMain.GetID()) return;
@@ -379,27 +382,28 @@ void ScintillaCurses::CreateCallTipWindow(PRectangle rc) {
     rc.right -= 1; // remove right-side padding
     int begx = 0, begy = 0, maxx = 0, maxy = 0;
     getbegyx(GetWINDOW(), begy, begx);
-    int xoffset = begx - rc.left, yoffset = begy - rc.top;
+    int xoffset = static_cast<int>(begx - rc.left), yoffset = static_cast<int>(begy - rc.top);
     if (xoffset > 0) rc.left += xoffset, rc.right += xoffset;
     if (yoffset > 0) rc.top += yoffset, rc.bottom += yoffset;
     getmaxyx(GetWINDOW(), maxy, maxx);
     if (rc.Width() > maxx) rc.right = rc.left + maxx;
     if (rc.Height() > maxy) rc.bottom = rc.top + maxy;
-    ct.wCallTip = newwin(rc.Height(), rc.Width(), rc.top, rc.left);
+    ct.wCallTip = newwin(static_cast<int>(rc.Height()), static_cast<int>(rc.Width()),
+      static_cast<int>(rc.top), static_cast<int>(rc.left));
   }
   WindowID wid = ct.wCallTip.GetID();
-  std::unique_ptr<Surface> sur = Surface::Allocate(Technology::Default);
-  if (sur) {
-    sur->Init(wid);
-    dynamic_cast<SurfaceImpl *>(sur.get())->isCallTip = true;
-    ct.PaintCT(sur.get());
+  std::unique_ptr<Surface> surface = Surface::Allocate(Technology::Default);
+  if (surface) {
+    surface->Init(wid);
+    dynamic_cast<SurfaceImpl *>(surface.get())->isCallTip = true;
+    ct.PaintCT(surface.get());
     wattr_set(_WINDOW(wid), 0, term_color_pair(COLOR_WHITE, COLOR_BLACK), nullptr);
     box(_WINDOW(wid), '|', '-');
     wnoutrefresh(_WINDOW(wid));
   }
 }
 
-void ScintillaCurses::AddToPopUp(const char *label, int cmd, bool enabled) {}
+void ScintillaCurses::AddToPopUp(const char * /*label*/, int /*cmd*/, bool /*enabled*/) {}
 
 sptr_t ScintillaCurses::WndProc(Message iMessage, uptr_t wParam, sptr_t lParam) {
   try {
@@ -438,7 +442,7 @@ WINDOW *ScintillaCurses::GetWINDOW() {
 
 // Update even if it's not visible, as the container may have a use for it.
 void ScintillaCurses::UpdateCursor() {
-  int pos = WndProc(Message::GetCurrentPos, 0, 0);
+  sptr_t pos = WndProc(Message::GetCurrentPos, 0, 0);
   if (!SelectionEmpty() && !FlagSet(vs.caret.style, CaretStyle::BlockAfter) &&
     (pos > WndProc(Message::GetAnchor, 0, 0)))
     pos = WndProc(Message::PositionBefore, pos, 0); // draw inside selection
@@ -460,7 +464,8 @@ void ScintillaCurses::NoutRefresh() {
   rcPaint.top = 0, rcPaint.left = 0; // paint from (0, 0), not (begy, begx)
   getmaxyx(w, rcPaint.bottom, rcPaint.right);
   if (rcPaint.bottom != height || rcPaint.right != width)
-    height = rcPaint.bottom, width = rcPaint.right, ChangeSize();
+    height = static_cast<int>(rcPaint.bottom), width = static_cast<int>(rcPaint.right),
+    ChangeSize();
   Paint(sur.get(), rcPaint);
   SetVerticalScrollPos(), SetHorizontalScrollPos();
   wnoutrefresh(w);
@@ -496,7 +501,8 @@ void ScintillaCurses::KeyPress(int key, bool shift, bool ctrl, bool alt) {
 // Returns whether or not the press was handled.
 bool ScintillaCurses::MousePress(int button, int y, int x, bool shift, bool ctrl, bool alt) {
   const auto now = std::chrono::system_clock::now().time_since_epoch();
-  unsigned int time = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+  auto time =
+    static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(now).count());
   GetWINDOW(); // ensure the curses `WINDOW` has been created
   if (ac.Active() && (button == 1 || button == 4 || button == 5)) {
     // Select an autocompletion list item if possible or scroll the list.
@@ -598,7 +604,8 @@ bool ScintillaCurses::MouseMove(int y, int x, bool shift, bool ctrl, bool alt) {
 // Handles a mouse button release, with coordinates relative to this window.
 void ScintillaCurses::MouseRelease(int y, int x, int ctrl) {
   const auto now = std::chrono::system_clock::now().time_since_epoch();
-  unsigned int time = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
+  auto time =
+    static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(now).count());
   GetWINDOW(); // ensure the curses `WINDOW` has been created
   if (draggingVScrollBar || draggingHScrollBar)
     draggingVScrollBar = false, draggingHScrollBar = false;
@@ -613,7 +620,7 @@ void ScintillaCurses::MouseRelease(int y, int x, int ctrl) {
 // secondary X selections.
 // The caller is responsible for `free`ing the returned text.
 char *ScintillaCurses::GetClipboard(int *len) {
-  if (len) *len = clipboard.Length();
+  if (len) *len = static_cast<int>(clipboard.Length());
   char *text = new char[clipboard.Length() + 1];
   memcpy(text, clipboard.Data(), clipboard.Length() + 1);
   return text;
