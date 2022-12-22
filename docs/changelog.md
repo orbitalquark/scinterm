@@ -2,6 +2,24 @@
 
 [Atom Feed](https://github.com/orbitalquark/scinterm/releases.atom)
 
+### 4.1 (22 Dec 2022)
+
+Download:
+
+* [Scinterm 4.1][]
+
+Bugfixes:
+
+* Fixed call tip arrow drawing.
+* Fixed building with Scintilla 5.3.0.
+* Fixed building with some versions of GCC.
+
+Changes:
+
+* Support fold margin color settings (`SCI_SETFOLDMARGIN[HI]COLOUR`).
+
+[Scinterm 4.1]: https://github.com/orbitalquark/scinterm/archive/scinterm_4.1.zip
+
 ### 4.0 (05 Sep 2022)
 
 Download:
