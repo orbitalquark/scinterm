@@ -1,4 +1,4 @@
-// Copyright 2012-2022 Mitchell. See LICENSE.
+// Copyright 2012-2023 Mitchell. See LICENSE.
 // Client header for Scintilla in a curses (terminal) environment.
 
 #ifndef SCINTILLA_CURSES_H

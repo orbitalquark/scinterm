@@ -1,4 +1,4 @@
-// Copyright 2012-2022 Mitchell. See LICENSE.
+// Copyright 2012-2023 Mitchell. See LICENSE.
 // Scintilla platform for a curses (terminal) environment.
 
 #include <cassert>
