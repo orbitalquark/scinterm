@@ -3,7 +3,7 @@
 Scinterm is a curses platform for [Scintilla][] that supports [ncurses][], [PDCurses][], and
 X/Open Curses.
 
-![Scinterm](images/scinterm.png)
+![Scinterm](https://orbitalquark.github.io/scinterm/images/scinterm.png)
 
 It is highly recommended to run Scinterm in a UTF-8-aware terminal with a font that supports
 many UTF-8 characters ("DejaVu Sans Mono" is one of them), since Scinterm makes use of UTF-8
