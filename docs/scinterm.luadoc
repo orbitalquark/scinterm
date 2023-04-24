@@ -1,92 +1,78 @@
--- Copyright 2012-2020 Mitchell. See LICENSE.
+-- Copyright 2012-2023 Mitchell. See LICENSE.
 -- This is a DUMMY FILE used for making LuaDoc for the Scinterm API.
 
----
--- A curses platform for [Scintilla][] that supports curses platforms like [ncurses][].
+--- A curses platform for [Scintilla][] that supports curses platforms like [ncurses][].
 --
 -- [Scintilla]: https://scintilla.org
 -- [ncurses]: https://invisible-island.net/ncurses/
-module('Scinterm')
+-- @module Scinterm
 
----
--- Creates a new Scintilla curses window.
+--- Creates a new Scintilla curses window.
 -- @param callback SCNotification callback function of the form: `void callback(Scintilla *,
 --   int, void *, void *)`.
 -- @param userdata (`void *`) Userdata to pass to *callback*.
 -- @return `Scintilla *`
-function scintilla_new(callback, userdata) end
+-- @function scintilla_new
 
----
--- Returns the curses `WINDOW` associated with the given Scintilla window.
+--- Returns the curses `WINDOW` associated with the given Scintilla window.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @return curses `WINDOW`.
-function scintilla_get_window(sci) end
+-- @function scintilla_get_window
 
----
--- Sends the given message with parameters to the given Scintilla window.
+--- Sends the given message with parameters to the given Scintilla window.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @param iMessage (`int`) The Scintilla message ID.
 -- @param wParam (`uptr_t`) The first parameter.
 -- @param lParam (`sptr_t`) The second parameter.
 -- @return `sptr_t`
-function scintilla_send_message(sci, iMessage, wParam, lParam) end
+-- @function scintilla_send_message
 
----
--- Sends the specified key to the given Scintilla window for processing.
+--- Sends the specified key to the given Scintilla window for processing.
 -- If it is not consumed, an SCNotification will be emitted.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @param key (`int`) The keycode of the key, or, if Scintilla's code page is UTF-8, the UTF-8
 --   code point of the key.
--- @param shift (`bool`) Flag indicating whether or not the shift modifier key is pressed.
--- @param ctrl (`bool`) Flag indicating whether or not the control modifier key is pressed.
--- @param alt (`bool`) Flag indicating whether or not the alt modifier key is pressed.
+-- @param modifiers (`int`) Bit-mask of `SCMOD_*` modifier keys.
 -- @return `void`
-function scintilla_send_key(sci, key, shift, ctrl, alt) end
+-- @function scintilla_send_key
 
----
--- Sends the specified mouse event to the given Scintilla window for processing.
+--- Sends the specified mouse event to the given Scintilla window for processing.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @param event (`int`) The mouse event (`SCM_CLICK`, `SCM_DRAG`, or `SCM_RELEASE`).
 -- @param button (`int`) The button number pressed, or `0` if none.
+-- @param modifiers (`int`) Bit-mask of `SCMOD_*` modifier keys.
 -- @param y (`int`) The absolute y coordinate of the mouse event.
 -- @param x (`int`) The absolute x coordinate of the mouse event.
--- @param shift (`bool`) Flag indicating whether or not the shift modifier key is pressed.
--- @param ctrl (`bool`) Flag indicating whether or not the control modifier key is pressed.
--- @param alt (`bool`) Flag indicating whether or not the alt modifier key is pressed.
 -- @return `bool` whether or not Scintilla handled the mouse event.
-function scintilla_send_mouse(sci, event, button, y, x, shift, ctrl, alt) end
+-- @function scintilla_send_mouse
 
----
--- Returns a null-terminated copy of the text on Scintilla's internal clipboard (not the primary
+--- Returns a null-terminated copy of the text on Scintilla's internal clipboard (not the primary
 -- and/or secondary X selections) and stores its length in *len*.
 -- The caller is responsible for `free`ing the returned text.
 -- Keep in mind clipboard text may contain null bytes.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @param len (`int *`) The length of the returned text.
 -- @return `char *` clipboard text (caller is responsible for `free`ing it)
-function scintilla_get_clipboard(sci, len) end
+-- @function scintilla_get_clipboard
 
----
--- Refreshes the Scintilla window on the virtual screen.
+--- Refreshes the Scintilla window on the virtual screen.
 -- This should be done along with the normal curses `noutrefresh()`.
 -- Note: the terminal cursor may be hidden if Scintilla thinks this window has focus
 -- (e.g. `SCI_SETFOCUS`) and Scintilla's caret is out of view. If another non-Scintilla window
 -- has the real focus, call `curs_set(1)` in order to show the terminal cursor for that window.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
-function scintilla_noutrefresh(sci) end
+-- @function scintilla_noutrefresh
 
----
--- Refreshes the Scintilla window on the physical screen.
+--- Refreshes the Scintilla window on the physical screen.
 -- This should be done along with the normal curses `refresh()`.
 -- Note: the terminal cursor may be hidden if Scintilla thinks this window has focus
 -- (e.g. `SCI_SETFOCUS`) and Scintilla's caret is out of view. If another non-Scintilla window
 -- has the real focus, call `curs_set(1)` in order to show the terminal cursor for that window.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @return `void`
-function scintilla_refresh(sci) end
+-- @function scintilla_refresh
 
----
--- Updates the curses window cursor for the Scintilla window so the terminal draws the cursor
+--- Updates the curses window cursor for the Scintilla window so the terminal draws the cursor
 -- in the correct position.
 -- This only needs to be called when `scintilla_refresh()` or `scintilla_noutrefresh()` is not
 -- the last curses draw command issued (for any window, not just the Scintilla window).
@@ -95,10 +81,9 @@ function scintilla_refresh(sci) end
 -- has the real focus, call `curs_set(1)` in order to show the terminal cursor for that window.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @return `void`
-function scintilla_update_cursor(sci) end
+-- @function scintilla_update_cursor
 
----
--- Deletes the given Scintilla window.
+--- Deletes the given Scintilla window.
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @return `void`
-function scintilla_delete(sci) end
+-- @function scintilla_delete
