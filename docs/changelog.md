@@ -2,6 +2,23 @@
 
 [Atom Feed](https://github.com/orbitalquark/scinterm/releases.atom)
 
+### 5.0 (24 Apr 2023)
+
+Download:
+
+* [Scinterm 5.0][]
+
+Bugfixes:
+
+* None.
+
+Changes:
+
+* Use bit-mask of key modifiers instead of individual booleans for `scintilla_send_key()` and
+  `scintilla_send_mouse()`.
+
+[Scinterm 5.0]: https://github.com/orbitalquark/scinterm/archive/scinterm_5.0.zip
+
 ### 4.1 (22 Dec 2022)
 
 Download:
