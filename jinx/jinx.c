@@ -71,15 +71,18 @@ int main(int argc, char **argv) {
         c = SCK_LEFT;
       else if (c == KEY_RIGHT)
         c = SCK_RIGHT;
-      scintilla_send_key(sci, c, FALSE, FALSE, FALSE);
+      scintilla_send_key(sci, c, SCMOD_NORM);
     } else if (getmouse(&mouse) == OK) {
       int event = SCM_DRAG, button = 0;
       if (mouse.bstate & BUTTON1_PRESSED)
         event = SCM_PRESS, button = 1;
       else if (mouse.bstate & BUTTON1_RELEASED)
         event = SCM_RELEASE, button = 1;
-      scintilla_send_mouse(sci, event, button, mouse.y, mouse.x, mouse.bstate & BUTTON_SHIFT,
-        mouse.bstate & BUTTON_CTRL, mouse.bstate & BUTTON_ALT);
+      bool shift = mouse.bstate & BUTTON_SHIFT;
+      bool ctrl = mouse.bstate & BUTTON_CTRL;
+      bool alt = mouse.bstate & BUTTON_ALT;
+      int modifiers = (shift ? SCMOD_SHIFT : 0) | (ctrl ? SCMOD_CTRL : 0) | (alt ? SCMOD_ALT : 0);
+      scintilla_send_mouse(sci, event, button, modifiers, mouse.y, mouse.x);
     }
     scintilla_refresh(sci);
     // scintilla_update_cursor(sci); // use this when doing other curses drawing

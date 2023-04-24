@@ -179,11 +179,11 @@ public:
   void NoutRefresh();
   void Refresh();
 
-  void KeyPress(int key, bool shift, bool ctrl, bool alt);
+  void KeyPress(int key, KeyMod modifiers);
 
-  bool MousePress(int button, int y, int x, bool shift, bool ctrl, bool alt);
-  bool MouseMove(int y, int x, bool shift, bool ctrl, bool alt);
-  void MouseRelease(int y, int x, int ctrl);
+  bool MousePress(int y, int x, int button, KeyMod modifiers);
+  bool MouseMove(int y, int x, KeyMod modifiers);
+  void MouseRelease(int y, int x, KeyMod modifiers);
 
   char *GetClipboard(int *len);
 };
@@ -493,13 +493,13 @@ void ScintillaCurses::Refresh() {
 // Usually if a key is consumed, the screen should be repainted. However, when autocomplete is
 // active, that window is consuming the keys and any repainting of the main Scintilla window
 // will overwrite the autocomplete window.
-void ScintillaCurses::KeyPress(int key, bool shift, bool ctrl, bool alt) {
-  KeyDownWithModifiers(static_cast<Keys>(key), ModifierFlags(shift, ctrl, alt), nullptr);
+void ScintillaCurses::KeyPress(int key, KeyMod modifiers) {
+  KeyDownWithModifiers(static_cast<Keys>(key), modifiers, nullptr);
 }
 
 // Handles a mouse button press, with coordinates relative to this window.
 // Returns whether or not the press was handled.
-bool ScintillaCurses::MousePress(int button, int y, int x, bool shift, bool ctrl, bool alt) {
+bool ScintillaCurses::MousePress(int y, int x, int button, KeyMod modifiers) {
   const auto now = std::chrono::system_clock::now().time_since_epoch();
   auto time =
     static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(now).count());
@@ -570,11 +570,12 @@ bool ScintillaCurses::MousePress(int button, int y, int x, bool shift, bool ctrl
       draggingHScrollBar = true, dragOffset = x - scrollBarHPos;
     } else {
       // Have Scintilla handle the click.
-      ButtonDownWithModifiers(Point(x, y), time, ModifierFlags(shift, ctrl, alt));
+      ButtonDownWithModifiers(Point(x, y), time, modifiers);
       return true;
     }
   } else if (button == 4 || button == 5) {
     // Scroll the view (horizontally if shift is pressed).
+    bool shift = (modifiers & KeyMod::Shift) == KeyMod::Shift;
     int offset = std::max((!shift ? getmaxy(GetWINDOW()) : getmaxx(GetWINDOW())) / 4, 1);
     if (button == 4) offset *= -1;
     return (!shift ? ScrollTo(topLine + offset) : HorizontalScrollTo(xOffset + offset), true);
@@ -584,10 +585,10 @@ bool ScintillaCurses::MousePress(int button, int y, int x, bool shift, bool ctrl
 
 // Handles a mouse move, with coordinates relative to this window.
 // Returns whether or not the press was handled.
-bool ScintillaCurses::MouseMove(int y, int x, bool shift, bool ctrl, bool alt) {
+bool ScintillaCurses::MouseMove(int y, int x, KeyMod modifiers) {
   GetWINDOW(); // ensure the curses `WINDOW` has been created
   if (!draggingVScrollBar && !draggingHScrollBar) {
-    ButtonMoveWithModifiers(Point(x, y), 0, ModifierFlags(shift, ctrl, alt));
+    ButtonMoveWithModifiers(Point(x, y), 0, modifiers);
   } else if (draggingVScrollBar) {
     int maxy = getmaxy(GetWINDOW()) - scrollBarHeight, pos = y - dragOffset;
     if (pos >= 0 && pos <= maxy) ScrollTo(pos * MaxScrollPos() / maxy);
@@ -602,7 +603,7 @@ bool ScintillaCurses::MouseMove(int y, int x, bool shift, bool ctrl, bool alt) {
 }
 
 // Handles a mouse button release, with coordinates relative to this window.
-void ScintillaCurses::MouseRelease(int y, int x, int ctrl) {
+void ScintillaCurses::MouseRelease(int y, int x, KeyMod modifiers) {
   const auto now = std::chrono::system_clock::now().time_since_epoch();
   auto time =
     static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(now).count());
@@ -610,7 +611,7 @@ void ScintillaCurses::MouseRelease(int y, int x, int ctrl) {
   if (draggingVScrollBar || draggingHScrollBar)
     draggingVScrollBar = false, draggingHScrollBar = false;
   else if (HaveMouseCapture()) {
-    ButtonUpWithModifiers(Point(x, y), time, ModifierFlags(ctrl, false, false));
+    ButtonUpWithModifiers(Point(x, y), time, modifiers);
     // TODO: ListBoxEvent event(ListBoxEvent::EventType::selectionChange);
     // TODO: listbox->delegate->ListNotify(&event);
   }
@@ -646,12 +647,12 @@ sptr_t scintilla_send_message(void *sci, unsigned int iMessage, uptr_t wParam, s
     static_cast<Scintilla::Message>(iMessage), wParam, lParam);
 }
 
-void scintilla_send_key(void *sci, int key, bool shift, bool ctrl, bool alt) {
-  reinterpret_cast<ScintillaCurses *>(sci)->KeyPress(key, shift, ctrl, alt);
+void scintilla_send_key(void *sci, int key, int modifiers) {
+  reinterpret_cast<ScintillaCurses *>(sci)->KeyPress(
+    key, static_cast<Scintilla::KeyMod>(modifiers));
 }
 
-bool scintilla_send_mouse(
-  void *sci, int event, int button, int y, int x, bool shift, bool ctrl, bool alt) {
+bool scintilla_send_mouse(void *sci, int event, int button, int modifiers, int y, int x) {
   auto scicurses = reinterpret_cast<ScintillaCurses *>(sci);
   WINDOW *w = scicurses->GetWINDOW();
   int begy = getbegy(w), begx = getbegx(w);
@@ -661,9 +662,12 @@ bool scintilla_send_mouse(
     button != 5 && event != SCM_DRAG)
     return false;
   y = y - begy, x = x - begx;
-  if (event == SCM_PRESS) return scicurses->MousePress(button, y, x, shift, ctrl, alt);
-  if (event == SCM_DRAG) return scicurses->MouseMove(y, x, shift, ctrl, alt);
-  if (event == SCM_RELEASE) return (scicurses->MouseRelease(y, x, ctrl), true);
+  if (event == SCM_PRESS)
+    return scicurses->MousePress(y, x, button, static_cast<Scintilla::KeyMod>(modifiers));
+  if (event == SCM_DRAG)
+    return scicurses->MouseMove(y, x, static_cast<Scintilla::KeyMod>(modifiers));
+  if (event == SCM_RELEASE)
+    return (scicurses->MouseRelease(y, x, static_cast<Scintilla::KeyMod>(modifiers)), true);
   return false;
 }
 

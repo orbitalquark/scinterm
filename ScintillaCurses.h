@@ -45,11 +45,9 @@ sptr_t scintilla_send_message(void *sci, unsigned int iMessage, uptr_t wParam, s
  * Curses does not have to be initialized before calling this function.
  * @param sci The Scintilla window returned by `scintilla_new()`.
  * @param key The keycode of the key.
- * @param shift Flag indicating whether or not the shift modifier key is pressed.
- * @param ctrl Flag indicating whether or not the control modifier key is pressed.
- * @param alt Flag indicating whether or not the alt modifier key is pressed.
+ * @param modifiers Bit-mask of `SCMOD_*` modifier keys.
  */
-void scintilla_send_key(void *sci, int key, bool shift, bool ctrl, bool alt);
+void scintilla_send_key(void *sci, int key, int modifiers);
 
 /**
  * Sends the specified mouse event to the given Scintilla window for processing.
@@ -57,15 +55,12 @@ void scintilla_send_key(void *sci, int key, bool shift, bool ctrl, bool alt);
  * @param sci The Scintilla window returned by `scintilla_new()`.
  * @param event The mouse event (`SCM_CLICK`, `SCM_DRAG`, or `SCM_RELEASE`).
  * @param button The button number pressed, or `0` if none.
+ * @param modifiers Bit-mask of `SCMOD_*` modifier keys.
  * @param y The absolute y coordinate of the mouse event.
  * @param x The absolute x coordinate of the mouse event.
- * @param shift Flag indicating whether or not the shift modifier key is pressed.
- * @param ctrl Flag indicating whether or not the control modifier key is pressed.
- * @param alt Flag indicating whether or not the alt modifier key is pressed.
  * @return whether or not Scintilla handled the mouse event
  */
-bool scintilla_send_mouse(
-  void *sci, int event, int button, int y, int x, bool shift, bool ctrl, bool alt);
+bool scintilla_send_mouse(void *sci, int event, int button, int modifiers, int y, int x);
 
 /**
  * Returns a NUL-terminated copy of the text on Scintilla's internal clipboard, not the primary
