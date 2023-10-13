@@ -448,6 +448,7 @@ void ScintillaCurses::UpdateCursor() {
     pos = WndProc(Message::PositionBefore, pos, 0); // draw inside selection
   Point point = LocationFromPosition(pos);
   auto y = static_cast<int>(point.y), x = static_cast<int>(point.x);
+  if (UserVirtualSpace()) x += static_cast<int>(sel.RangeMain().caret.VirtualSpace());
   WINDOW *win = GetWINDOW();
   bool in_view = x >= 0 && x <= getmaxx(win) && y >= 0 && y <= getmaxy(win);
   if (in_view) wmove(win, y, x), wrefresh(win);
