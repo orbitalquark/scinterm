@@ -19,7 +19,7 @@ extern "C" {
  * @param userdata Userdata to pass to *callback*.
  */
 void *scintilla_new(
-  void (*callback)(void *sci, int iMessage, SCNotification *n, void *userdata), void *userdata);
+	void (*callback)(void *sci, int iMessage, SCNotification *n, void *userdata), void *userdata);
 
 /**
  * Returns the curses `WINDOW` associated with the given Scintilla window.
