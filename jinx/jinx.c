@@ -1,4 +1,4 @@
-// Copyright 2012-2023 Mitchell. See LICENSE.
+// Copyright 2012-2024 Mitchell. See LICENSE.
 
 #include <dlfcn.h>
 #include <locale.h>

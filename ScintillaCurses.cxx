@@ -1,4 +1,4 @@
-// Copyright 2012-2023 Mitchell. See LICENSE.
+// Copyright 2012-2024 Mitchell. See LICENSE.
 // Note: setlocale(LC_CTYPE, "") must be called before initializing curses in order to display
 // UTF-8 characters properly in ncursesw.
 
