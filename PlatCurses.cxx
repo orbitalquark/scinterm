@@ -269,7 +269,7 @@ void SurfaceImpl::RoundedRectangle(PRectangle /*rc*/, FillStroke /*fillStroke*/)
 // Does not draw INDIC_FULLBOX correctly.
 void SurfaceImpl::AlphaRectangle(PRectangle rc, XYPOSITION /*cornerSize*/, FillStroke fillStroke) {
 	ColourRGBA &fill = fillStroke.fill.colour;
-	for (int x = static_cast<int>(std::max(rc.left, clip.left)), y = static_cast<int>(rc.top - 1);
+	for (int x = static_cast<int>(std::max(rc.left, clip.left)), y = static_cast<int>(rc.top);
 			 x < rc.right; x++) {
 		attr_t attrs = mvwinch(win, y, x) & A_ATTRIBUTES;
 		short pair = PAIR_NUMBER(attrs), fore = COLOR_WHITE, unused;
