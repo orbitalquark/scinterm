@@ -14,7 +14,7 @@ Bugfixes:
 
 Changes:
 
-* None.
+* Fixed building with Scintilla 5.4.2.
 
 [Scinterm 5.1]: https://github.com/orbitalquark/scinterm/archive/scinterm_5.1.zip
 
