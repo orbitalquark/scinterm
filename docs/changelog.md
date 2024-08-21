@@ -2,6 +2,22 @@
 
 [Atom Feed](https://github.com/orbitalquark/scinterm/releases.atom)
 
+### 5.1 (21 Aug 2024)
+
+Download:
+
+* [Scinterm 5.1][]
+
+Bugfixes:
+
+* Show the caret inside virtual space if applicable.
+
+Changes:
+
+* None.
+
+[Scinterm 5.1]: https://github.com/orbitalquark/scinterm/archive/scinterm_5.1.zip
+
 ### 5.0 (24 Apr 2023)
 
 Download:

@@ -15,8 +15,9 @@ characters when drawing wrap symbols, some marker symbols, and call tip arrows.
 
 ## Requirements
 
-* Scinterm 5.x requires Scintilla 5.3.0 - 5.x.
-* Scinterm 4.x requires Scintilla 5.3.0 - 5.x.
+* Scinterm 5.x requires Scintilla 5.4.2 - 5.x.
+* Scinterm 5.0 requires Scintilla 5.3.0 - 5.4.1.
+* Scinterm 4.x requires Scintilla 5.3.0 - 5.4.1.
 * Scinterm 3.2 requires Scintilla 5.1.4 - 5.2.4.
 * Scinterm 3.1 requires Scintilla 5.1.0 - 5.1.1.
 * Scinterm 3.0 requires Scintilla 3.20.0 - 3.21.0.
