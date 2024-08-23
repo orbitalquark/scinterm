@@ -8,11 +8,11 @@ basedir ?= $(srcdir)/..
 AR = ar
 CC = gcc
 CXX = g++
-CXXFLAGS = -std=c++17 -pedantic -DCURSES -DSCI_LEXER -I$(basedir)/include -I$(basedir)/src -Wall
+CXX_BASE_FLAGS = -std=c++17 -pedantic -DCURSES -DSCI_LEXER -I$(basedir)/include -I$(basedir)/src -Wall
 ifdef DEBUG
-  CXXFLAGS += -DDEBUG -g
+  CXX_BASE_FLAGS += -DDEBUG -g
 else
-  CXXFLAGS += -DNDEBUG -Os
+  CXX_BASE_FLAGS += -DNDEBUG -Os
 endif
 CURSES_FLAGS =
 
@@ -28,7 +28,7 @@ vpath %.cxx $(srcdir) $(basedir)/src
 
 all: $(scintilla)
 $(sci) PlatCurses.o ScintillaCurses.o: %.o: %.cxx
-	$(CXX) $(CXXFLAGS) $(CURSES_FLAGS) -c $<
+	$(CXX) $(CXX_BASE_FLAGS) $(CXXFLAGS) $(CURSES_FLAGS) -c $<
 $(scintilla): $(sci) PlatCurses.o ScintillaCurses.o
 	$(AR) rc $@ $^
 	touch $@
