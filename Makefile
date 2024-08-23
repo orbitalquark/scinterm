@@ -2,10 +2,13 @@
 
 .SUFFIXES: .cxx .c .o .h .a
 
+srcdir ?= .
+basedir ?= $(srcdir)/..
+
 AR = ar
 CC = gcc
 CXX = g++
-CXXFLAGS = -std=c++17 -pedantic -DCURSES -DSCI_LEXER -I../include -I../src -Wall
+CXXFLAGS = -std=c++17 -pedantic -DCURSES -DSCI_LEXER -I$(basedir)/include -I$(basedir)/src -Wall
 ifdef DEBUG
   CXXFLAGS += -DDEBUG -g
 else
@@ -20,8 +23,8 @@ sci = AutoComplete.o CallTip.o CaseConvert.o CaseFolder.o CellBuffer.o ChangeHis
   MarginView.o PerLine.o PositionCache.o RESearch.o RunStyles.o ScintillaBase.o Selection.o \
   Style.o UniConversion.o UniqueString.o ViewStyle.o XPM.o
 
-vpath %.h ../src ../include
-vpath %.cxx ../src
+vpath %.h $(srcdir) $(basedir)/src $(basedir)/include
+vpath %.cxx $(srcdir) $(basedir)/src
 
 all: $(scintilla)
 $(sci) PlatCurses.o ScintillaCurses.o: %.o: %.cxx
