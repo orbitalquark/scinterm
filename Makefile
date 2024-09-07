@@ -16,7 +16,7 @@ else
 endif
 CURSES_FLAGS =
 
-scintilla = $(basedir)/bin/scintilla.a
+scintilla = ../bin/scintilla.a
 sci = AutoComplete.o CallTip.o CaseConvert.o CaseFolder.o CellBuffer.o ChangeHistory.o \
   CharacterCategoryMap.o CharacterType.o CharClassify.o ContractionState.o DBCS.o Decoration.o \
   Document.o EditModel.o Editor.o EditView.o Geometry.o Indicator.o KeyMap.o LineMarker.o \
