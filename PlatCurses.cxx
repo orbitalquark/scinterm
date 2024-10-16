@@ -61,10 +61,9 @@ namespace Scintilla::Internal {
 // Font handling.
 
 FontImpl::FontImpl(const FontParameters &fp) {
-	if (fp.weight == FontWeight::Bold)
-		attrs = A_BOLD;
-	else if (fp.weight != FontWeight::Normal && fp.weight != FontWeight::SemiBold)
-		attrs = static_cast<int>(fp.weight); // font attributes are stored in fp.weight
+	if (fp.weight == FontWeight::Bold) attrs = A_BOLD;
+	if (fp.italic) attrs |= A_ITALIC;
+	if (static_cast<int>(fp.stretch) == A_UNDERLINE) attrs |= A_UNDERLINE;
 }
 
 std::shared_ptr<Font> Font::Allocate(const FontParameters &fp) {

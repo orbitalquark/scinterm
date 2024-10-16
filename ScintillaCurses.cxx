@@ -416,6 +416,16 @@ sptr_t ScintillaCurses::WndProc(Message iMessage, uptr_t wParam, sptr_t lParam) 
 		case Message::SetPhasesDraw:
 		case Message::SetExtraAscent:
 		case Message::SetExtraDescent: return 0;
+		// Intercept StyleSetUnderline to utilize StyleSetStretch.
+		// Scintilla does not store the underline property in the FontParameters struct because
+		// it draws underlines independently of drawing text. However, curses draws underlines
+		// while drawing text, so the font needs to contain underlining information. The only
+		// font properties accessible are weight and stretch. Since weight is tied to bold,
+		// utilize stretch, which also happens to be meaningless in curses.
+		case Message::StyleSetUnderline:
+			ScintillaBase::WndProc(Message::StyleSetStretch, wParam,
+				lParam ? A_UNDERLINE : static_cast<int>(FontStretch::Normal));
+			[[fallthrough]];
 		// Pass to Scintilla.
 		default: return ScintillaBase::WndProc(iMessage, wParam, lParam);
 		}

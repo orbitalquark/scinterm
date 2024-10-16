@@ -96,8 +96,8 @@ Scinterm lacks some Scintilla features due to the terminal's constraints:
   these color values with Scintilla; unrecognized colors are set to white by default. For some
   terminals, you may need to set a lexer style's `bold` attribute in order to use the light
   color variant.
-* Some styles settings like font name, font size, and italic do not display properly (terminals
-  use one only font, size and variant).
+* Some styles settings like font name and font size do not display properly (terminals use
+  only one font and size).
 * X selections (primary and secondary) are not integrated into the clipboard.
 * Zoom is not supported (terminal font size is fixed).
 * When using the mouse in the Windows console, Shift+Double-click extends selections and

@@ -10,5 +10,5 @@ scintilla = ../../bin/scintilla.a ../../../lexilla/bin/liblexilla.a
 
 all: jinx
 jinx.o: jinx.c ; $(CC) $(CFLAGS) -c $<
-jinx: jinx.o $(scintilla) ; $(CXX) $^ -o $@ -lncursesw -ldl -lpthread
+jinx: jinx.o $(scintilla) ; $(CXX) $^ -o $@ -lncurses -ldl -lpthread
 clean: ; rm -f jinx *.o

@@ -11,9 +11,6 @@ public:
 	/**
 	 * Sets terminal character attributes for a particular font.
 	 * These attributes are a union of curses attributes and stored in the font's `attrs` member.
-	 * The curses attributes are not constructed from various fields in *fp* since there is no
-	 * `underline` parameter. Instead, you need to manually set the `weight` parameter to be the
-	 * union of your desired attributes. Scintilla's lexers/LexLPeg.cxx has an example of this.
 	 */
 	FontImpl(const FontParameters &fp);
 	virtual ~FontImpl() noexcept override = default;
