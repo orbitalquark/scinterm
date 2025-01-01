@@ -1,4 +1,4 @@
--- Copyright 2012-2024 Mitchell. See LICENSE.
+-- Copyright 2012-2025 Mitchell. See LICENSE.
 
 -- Markdown filter for LDoc.
 -- @usage ldoc --filter markdowndoc.ldoc [ldoc opts] > api.md

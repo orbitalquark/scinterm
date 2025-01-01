@@ -1,4 +1,4 @@
-# Copyright 2012-2024 Mitchell. See LICENSE.
+# Copyright 2012-2025 Mitchell. See LICENSE.
 
 .SUFFIXES: .cxx .c .o .h .a
 
