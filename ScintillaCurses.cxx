@@ -600,11 +600,11 @@ bool ScintillaCurses::MouseMove(int y, int x, KeyMod modifiers) {
 		ButtonMoveWithModifiers(Point(x, y), 0, modifiers);
 	} else if (draggingVScrollBar) {
 		int maxy = getmaxy(GetWINDOW()) - scrollBarHeight, pos = y - dragOffset;
-		if (pos >= 0 && pos <= maxy) ScrollTo(pos * MaxScrollPos() / maxy);
+		if (maxy > 0 && pos >= 0 && pos <= maxy) ScrollTo(pos * MaxScrollPos() / maxy);
 		return true;
 	} else if (draggingHScrollBar) {
 		int maxx = getmaxx(GetWINDOW()) - scrollBarWidth, pos = x - dragOffset;
-		if (pos >= 0 && pos <= maxx)
+		if (maxx > 0 && pos >= 0 && pos <= maxx)
 			HorizontalScrollTo(pos * (scrollWidth - maxx - scrollBarWidth) / maxx);
 		return true;
 	}
