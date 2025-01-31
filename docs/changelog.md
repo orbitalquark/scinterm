@@ -2,6 +2,22 @@
 
 [Atom Feed](https://github.com/orbitalquark/scinterm/releases.atom)
 
+### 5.3 (31 Jan 2025)
+
+Download:
+
+* [Scinterm 5.3][]
+
+Bugfixes:
+
+* Fixed occasional crash when attempting to scroll an unscrollable view.
+
+Changes:
+
+* None.
+
+[Scinterm 5.3]: https://github.com/orbitalquark/scinterm/archive/scinterm_5.3.zip
+
 ### 5.2 (30 Nov 2024)
 
 Download:
