@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 			scintilla_send_mouse(sci, event, button, modifiers, mouse.y, mouse.x);
 		}
 		scintilla_refresh(sci);
-		// scintilla_update_cursor(sci); // use this when doing other curses drawing
+		// scintilla_update_cursor(sci), doupdate(); // use this when doing other curses drawing
 	}
 	// UTF-8 input.
 	// SSM(SCI_SETCODEPAGE, SC_CP_UTF8, 0);

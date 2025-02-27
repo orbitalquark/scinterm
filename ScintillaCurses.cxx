@@ -459,7 +459,7 @@ void ScintillaCurses::UpdateCursor() {
 	if (UserVirtualSpace()) x += static_cast<int>(sel.RangeMain().caret.VirtualSpace());
 	WINDOW *win = GetWINDOW();
 	bool in_view = x >= 0 && x <= getmaxx(win) && y >= 0 && y <= getmaxy(win);
-	if (in_view) wmove(win, y, x), wrefresh(win);
+	if (in_view) wmove(win, y, x);
 	if (hasFocus && FlagSet(vs.caret.style, CaretStyle::Curses)) curs_set(in_view ? 1 : 0);
 }
 
