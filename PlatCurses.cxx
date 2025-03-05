@@ -212,7 +212,7 @@ void SurfaceImpl::PolyLine(const Point * /*pts*/, size_t /*npts*/, Stroke /*stro
 // normally drawn as polygons are handled in `DrawLineMarker()`.
 void SurfaceImpl::Polygon(const Point *pts, size_t npts, FillStroke fillStroke) {
 	ColourRGBA &back = fillStroke.fill.colour;
-	wattr_set(win, 0, term_color_pair(back, COLOR_WHITE), nullptr); // invert
+	wattrset(win, term_color_attr(back, COLOR_WHITE)); // invert
 	if (pts[0].y < pts[npts - 1].y) // up arrow
 		mvwaddstr(win, static_cast<int>(pts[0].y), static_cast<int>(pts[npts - 1].x - 2), "▲");
 	else if (pts[0].y > pts[npts - 1].y) // down arrow
@@ -235,13 +235,13 @@ void SurfaceImpl::FillRectangle(PRectangle rc, Fill fill) {
 		pixmapColor = fill.colour;
 		return;
 	}
-	wattr_set(win, 0, term_color_pair(COLOR_WHITE, fill.colour), nullptr);
+	wattrset(win, term_color_attr(COLOR_WHITE, fill.colour));
 	chtype ch = ' ';
 	if (fabs(rc.left - static_cast<int>(rc.left)) > 0.1) {
 		// If rc.left is a fractional value (e.g. 4.5) then whitespace dots are being drawn. Draw
 		// them appropriately.
 		// TODO: set color to vs.whitespaceColours.fore and back.
-		wcolor_set(win, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
+		wattrset(win, term_color_attr(COLOR_BLACK, COLOR_BLACK));
 		rc.right = static_cast<int>(rc.right), ch = ACS_BULLET | A_BOLD;
 	}
 	for (int y = static_cast<int>(rc.top); y < rc.bottom; y++)
@@ -275,7 +275,8 @@ void SurfaceImpl::AlphaRectangle(PRectangle rc, XYPOSITION /*cornerSize*/, FillS
 		attr_t attrs = mvwinch(win, y, x) & A_ATTRIBUTES;
 		short pair = PAIR_NUMBER(attrs), fore = COLOR_WHITE, unused;
 		if (pair > 0) pair_content(pair, &fore, &unused);
-		mvwchgat(win, y, x, 1, attrs, term_color_pair(fore, fill), nullptr);
+		attrs |= term_color_attr(fore, fill);
+		mvwchgat(win, y, x, 1, attrs, PAIR_NUMBER(attrs), nullptr);
 	}
 }
 
@@ -297,7 +298,7 @@ void SurfaceImpl::Stadium(PRectangle /*rc*/, FillStroke /*fillStroke*/, Ends /*e
 void SurfaceImpl::Copy(PRectangle rc, Point /*from*/, Surface & /*surfaceSource*/) {
 	// TODO: handle indent guide highlighting.
 	if (rc.left - 1 < clip.left) return;
-	wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
+	wattrset(win, term_color_attr(COLOR_BLACK, COLOR_BLACK));
 	mvwaddch(win, static_cast<int>(rc.top), static_cast<int>(rc.left - 1), '|' | A_BOLD);
 }
 
@@ -324,7 +325,7 @@ int grapheme_width(const char *s) {
 void SurfaceImpl::DrawTextNoClip(PRectangle rc, const Font *font_, XYPOSITION /*ybase*/,
 	std::string_view text, ColourRGBA fore, ColourRGBA back) {
 	attr_t attrs = dynamic_cast<const FontImpl *>(font_)->attrs;
-	wattr_set(win, attrs, term_color_pair(fore, back), nullptr);
+	wattrset(win, attrs | term_color_attr(fore, back));
 	if (rc.left < clip.left) {
 		// Do not overwrite margin text.
 		auto clip_chars = static_cast<int>(clip.left - rc.left);
@@ -434,7 +435,7 @@ void SurfaceImpl::DrawLineMarker(
 	const PRectangle &rcWhole, const Font *fontForCharacter, int /*tFold*/, const void *data) {
 	// TODO: handle fold marker highlighting.
 	auto marker = reinterpret_cast<const LineMarker *>(data);
-	wattr_set(win, 0, term_color_pair(marker->fore, marker->back), nullptr);
+	wattrset(win, term_color_attr(marker->fore, marker->back));
 	int top = static_cast<int>(rcWhole.top), left = static_cast<int>(rcWhole.left);
 	switch (marker->markType) {
 	case MarkerSymbol::Circle: mvwaddstr(win, top, left, "●"); return;
@@ -476,7 +477,7 @@ void SurfaceImpl::DrawLineMarker(
 
 // Draws the text representation of a wrap marker.
 void SurfaceImpl::DrawWrapMarker(PRectangle rcPlace, bool isEndMarker, ColourRGBA wrapColour) {
-	wattr_set(win, 0, term_color_pair(wrapColour, COLOR_BLACK), nullptr);
+	wattrset(win, term_color_attr(wrapColour, COLOR_BLACK));
 	mvwaddstr(
 		win, static_cast<int>(rcPlace.top), static_cast<int>(rcPlace.left), isEndMarker ? "↩" : "↪");
 }
@@ -484,7 +485,7 @@ void SurfaceImpl::DrawWrapMarker(PRectangle rcPlace, bool isEndMarker, ColourRGB
 // Draws the text representation of a tab arrow.
 void SurfaceImpl::DrawTabArrow(PRectangle rcTab, const ViewStyle &vsDraw) {
 	// TODO: set color to vs.whitespaceColours.fore and back.
-	wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
+	wattrset(win, term_color_attr(COLOR_BLACK, COLOR_BLACK));
 	for (int i = static_cast<int>(std::max(rcTab.left - 1, clip.left)); i < rcTab.right; i++)
 		mvwaddch(win, static_cast<int>(rcTab.top), i, '-' | A_BOLD);
 	char tail = vsDraw.tabDrawMode == TabDrawMode::LongArrow ? '>' : '-';

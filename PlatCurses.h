@@ -4,6 +4,8 @@
 #ifndef PLAT_CURSES_H
 #define PLAT_CURSES_H
 
+#include <curses.h>
+
 namespace Scintilla::Internal {
 
 class FontImpl : public Font {
@@ -137,8 +139,6 @@ void init_colors();
 short term_color(ColourRGBA color);
 short term_color(short color);
 
-} // namespace Scintilla::Internal
-
 /**
  * Returns the given Scintilla `WindowID` as a curses `WINDOW`.
  * @param w A Scintilla `WindowID`.
@@ -158,11 +158,25 @@ short term_color(short color);
 #define SCI_COLOR_PAIR(f, b) ((b) * ((COLORS < 16) ? 8 : 16) + (f) + 1)
 
 /**
- * Returns a curses color pair from the given fore and back colors.
+ * Returns a curses attribute from the given fore and back colors.
  * @param f Foreground color, either a Scintilla color or curses color.
  * @param b Background color, either a Scintilla color or curses color.
- * @return curses color pair suitable for calling `COLOR_PAIR()` with.
+ * @return curses attribute
  */
-#define term_color_pair(f, b) SCI_COLOR_PAIR(term_color(f), term_color(b))
+template<typename FT, typename BT>
+static inline attr_t term_color_attr(FT f, BT b)
+{
+	if (has_colors())
+		return COLOR_PAIR(SCI_COLOR_PAIR(term_color(f), term_color(b)));
+
+	/*
+	 * Basic support for monochrome terminals:
+	 * Every background, that is not black is assumed to be a
+	 * dark-on-bright area, rendered in reverse.
+	 */
+	return term_color(b) != COLOR_BLACK ? A_REVERSE : 0;
+}
+
+} // namespace Scintilla::Internal
 
 #endif
