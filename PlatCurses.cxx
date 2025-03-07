@@ -364,10 +364,16 @@ void SurfaceImpl::DrawTextClipped(PRectangle rc, const Font *font_, XYPOSITION y
 void SurfaceImpl::DrawTextTransparent(
 	PRectangle rc, const Font *font_, XYPOSITION ybase, std::string_view text, ColourRGBA fore) {
 	if (static_cast<int>(rc.top) > getmaxy(win) - 1) return;
-	auto left = static_cast<int>(rc.left);
-	attr_t attrs = left >= clip.left ? mvwinch(win, static_cast<int>(rc.top), left) : 0;
-	short pair = PAIR_NUMBER(attrs), unused, back = COLOR_BLACK;
-	if (pair > 0 && !isCallTip) pair_content(pair, &unused, &back);
+	short back = COLOR_BLACK;
+	if (!isCallTip) {
+		auto left = static_cast<int>(rc.left);
+		attr_t attrs = left >= clip.left ? mvwinch(win, static_cast<int>(rc.top), left) : 0;
+		short pair = PAIR_NUMBER(attrs), unused;
+		if (pair > 0)
+			pair_content(pair, &unused, &back);
+		else if (attrs & A_REVERSE) // monochrome terminal
+			back = COLOR_WHITE;
+	}
 	DrawTextNoClip(rc, font_, ybase, text, fore, SCI_COLORS[back]);
 }
 
