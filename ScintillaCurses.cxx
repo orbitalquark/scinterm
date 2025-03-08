@@ -689,7 +689,9 @@ void scintilla_noutrefresh(void *sci) { reinterpret_cast<ScintillaCurses *>(sci)
 void scintilla_refresh(void *sci) { reinterpret_cast<ScintillaCurses *>(sci)->Refresh(); }
 
 void scintilla_update_cursor(void *sci) {
-	reinterpret_cast<ScintillaCurses *>(sci)->UpdateCursor();
+	auto scicurses = reinterpret_cast<ScintillaCurses *>(sci);
+	scicurses->UpdateCursor();
+	wnoutrefresh(scicurses->GetWINDOW());
 }
 
 void scintilla_delete(void *sci) { delete reinterpret_cast<ScintillaCurses *>(sci); }
