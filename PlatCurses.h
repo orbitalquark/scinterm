@@ -134,35 +134,22 @@ public:
 };
 
 void init_colors();
+/** Returns the curses `COLOR_PAIR` for the given curses foreground and background  `COLOR`s. */
+inline short color_pair(short fore, short back) { return back * (COLORS < 16 ? 8 : 16) + fore + 1; }
+inline short term_color(int color) { return color; }
 short term_color(ColourRGBA color);
-short term_color(short color);
+/**
+ * Returns a curses attribute for drawing with the given foreground and background colors.
+ * If curses does not support colors, returns an attribute that represents black or white.
+ */
+template <typename FT, typename BT>
+attr_t color_attr(const FT &fore, const BT &back) {
+	if (!has_colors()) return term_color(back) != COLOR_BLACK ? A_REVERSE : 0;
+	return COLOR_PAIR(color_pair(term_color(fore), term_color(back)));
+}
+
+inline WINDOW *_WINDOW(WindowID wid) { return reinterpret_cast<WINDOW *>(wid); }
 
 } // namespace Scintilla::Internal
-
-/**
- * Returns the given Scintilla `WindowID` as a curses `WINDOW`.
- * @param w A Scintilla `WindowID`.
- * @return curses `WINDOW`.
- */
-#define _WINDOW(w) reinterpret_cast<WINDOW *>(w)
-
-/**
- * Returns the curses `COLOR_PAIR` for the given curses foreground and background `COLOR`s.
- * This is used simply to enumerate every possible color combination.
- * Note: only 256 combinations are possible due to curses portability.
- * Note: This references the global curses variable `COLORS` and is not a constant expression.
- * @param f The curses foreground `COLOR`.
- * @param b The curses background `COLOR`.
- * @return int number for defining a curses `COLOR_PAIR`.
- */
-#define SCI_COLOR_PAIR(f, b) ((b) * ((COLORS < 16) ? 8 : 16) + (f) + 1)
-
-/**
- * Returns a curses color pair from the given fore and back colors.
- * @param f Foreground color, either a Scintilla color or curses color.
- * @param b Background color, either a Scintilla color or curses color.
- * @return curses color pair suitable for calling `COLOR_PAIR()` with.
- */
-#define term_color_pair(f, b) SCI_COLOR_PAIR(term_color(f), term_color(b))
 
 #endif

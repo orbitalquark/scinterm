@@ -8,6 +8,7 @@ AllowShortCaseLabelsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: true
 AllowShortLoopsOnASingleLine: true
 BreakBeforeTernaryOperators: false
+BreakTemplateDeclarations: true
 ColumnLimit: 100
 ContinuationIndentWidth: 2
 SortIncludes: false

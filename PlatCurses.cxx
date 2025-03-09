@@ -76,41 +76,43 @@ std::shared_ptr<Font> Font::Allocate(const FontParameters &fp) {
 
 namespace {
 
-short COLOR_LBLACK = COLOR_BLACK + 8;
-short COLOR_LRED = COLOR_RED + 8;
-short COLOR_LGREEN = COLOR_GREEN + 8;
-short COLOR_LYELLOW = COLOR_YELLOW + 8;
-short COLOR_LBLUE = COLOR_BLUE + 8;
-short COLOR_LMAGENTA = COLOR_MAGENTA + 8;
-short COLOR_LCYAN = COLOR_CYAN + 8;
-short COLOR_LWHITE = COLOR_WHITE + 8;
+int COLOR_LBLACK = COLOR_BLACK + 8;
+int COLOR_LRED = COLOR_RED + 8;
+int COLOR_LGREEN = COLOR_GREEN + 8;
+int COLOR_LYELLOW = COLOR_YELLOW + 8;
+int COLOR_LBLUE = COLOR_BLUE + 8;
+int COLOR_LMAGENTA = COLOR_MAGENTA + 8;
+int COLOR_LCYAN = COLOR_CYAN + 8;
+int COLOR_LWHITE = COLOR_WHITE + 8;
 
 bool initialized_colors = false;
 
-ColourRGBA BLACK(0, 0, 0);
-ColourRGBA RED(0x80, 0, 0);
-ColourRGBA GREEN(0, 0x80, 0);
-ColourRGBA YELLOW(0x80, 0x80, 0);
-ColourRGBA BLUE(0, 0, 0x80);
-ColourRGBA MAGENTA(0x80, 0, 0x80);
-ColourRGBA CYAN(0, 0x80, 0x80);
-ColourRGBA WHITE(0xC0, 0xC0, 0xC0);
-ColourRGBA LBLACK(0x40, 0x40, 0x40);
-ColourRGBA LRED(0xFF, 0, 0);
-ColourRGBA LGREEN(0, 0xFF, 0);
-ColourRGBA LYELLOW(0xFF, 0xFF, 0);
-ColourRGBA LBLUE(0, 0, 0xFF);
-ColourRGBA LMAGENTA(0xFF, 0, 0xFF);
-ColourRGBA LCYAN(0, 0xFF, 0xFF);
-ColourRGBA LWHITE(0xFF, 0xFF, 0xFF);
-ColourRGBA SCI_COLORS[] = {BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, LBLACK, LRED,
+const ColourRGBA BLACK(0, 0, 0);
+const ColourRGBA RED(0x80, 0, 0);
+const ColourRGBA GREEN(0, 0x80, 0);
+const ColourRGBA YELLOW(0x80, 0x80, 0);
+const ColourRGBA BLUE(0, 0, 0x80);
+const ColourRGBA MAGENTA(0x80, 0, 0x80);
+const ColourRGBA CYAN(0, 0x80, 0x80);
+const ColourRGBA WHITE(0xC0, 0xC0, 0xC0);
+const ColourRGBA LBLACK(0x40, 0x40, 0x40);
+const ColourRGBA LRED(0xFF, 0, 0);
+const ColourRGBA LGREEN(0, 0xFF, 0);
+const ColourRGBA LYELLOW(0xFF, 0xFF, 0);
+const ColourRGBA LBLUE(0, 0, 0xFF);
+const ColourRGBA LMAGENTA(0xFF, 0, 0xFF);
+const ColourRGBA LCYAN(0, 0xFF, 0xFF);
+const ColourRGBA LWHITE(0xFF, 0xFF, 0xFF);
+
+// Map of curses `COLOR`s to Scintilla colors.
+ColourRGBA sc_colors[] = {BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, LBLACK, LRED,
 	LGREEN, LYELLOW, LBLUE, LMAGENTA, LCYAN, LWHITE};
 
 } // namespace
 
 /**
  * Initializes colors in curses if they have not already been initialized.
- * Creates all possible color pairs using the `SCI_COLOR_PAIR()` macro.
+ * Creates all possible color pairs.
  * This is called automatically from `scintilla_new()`.
  */
 void init_colors() {
@@ -118,7 +120,7 @@ void init_colors() {
 	start_color();
 	for (short back = 0; back < ((COLORS < 16) ? 8 : 16); back++)
 		for (short fore = 0; fore < ((COLORS < 16) ? 8 : 16); fore++)
-			init_pair(SCI_COLOR_PAIR(fore, back), fore, back);
+			init_pair(color_pair(fore, back), fore, back);
 	if (COLORS < 16) {
 		// Do not distinguish between light and normal colors.
 		COLOR_LBLACK -= 8;
@@ -134,12 +136,7 @@ void init_colors() {
 }
 
 /**
- * Returns a curses color for the given Scintilla color.
- * Recognized colors are: black (0x000000), red (0x800000), green (0x008000), yellow (0x808000),
- * blue (0x000080), magenta (0x800080), cyan (0x008080), white (0xc0c0c0), light black (0x404040),
- * light red (0xff0000), light green (0x00ff00), light yellow (0xffff00), light blue (0x0000ff),
- * light magenta (0xff00ff), light cyan (0x00ffff), and light white (0xffffff). If the color
- * is not recognized, returns `COLOR_WHITE` by default.
+ * Returns a curses color for the given Scintilla color, or `COLOR_WHITE` if it was not recognized.
  * @param color Color to get a curses color for.
  * @return curses color
  */
@@ -162,12 +159,6 @@ short term_color(ColourRGBA color) {
 	if (color == LWHITE) return COLOR_LWHITE;
 	return COLOR_WHITE;
 }
-
-/**
- * Returns a curses color for the given curses color.
- * This overloaded method only exists for the `term_color_pair()` macro.
- */
-short term_color(short color) { return color; }
 
 // Surface handling.
 
@@ -212,7 +203,7 @@ void SurfaceImpl::PolyLine(const Point * /*pts*/, size_t /*npts*/, Stroke /*stro
 // normally drawn as polygons are handled in `DrawLineMarker()`.
 void SurfaceImpl::Polygon(const Point *pts, size_t npts, FillStroke fillStroke) {
 	ColourRGBA &back = fillStroke.fill.colour;
-	wattr_set(win, 0, term_color_pair(back, COLOR_WHITE), nullptr); // invert
+	wattrset(win, color_attr(back, COLOR_WHITE)); // invert
 	if (pts[0].y < pts[npts - 1].y) // up arrow
 		mvwaddstr(win, static_cast<int>(pts[0].y), static_cast<int>(pts[npts - 1].x - 2), "▲");
 	else if (pts[0].y > pts[npts - 1].y) // down arrow
@@ -235,13 +226,13 @@ void SurfaceImpl::FillRectangle(PRectangle rc, Fill fill) {
 		pixmapColor = fill.colour;
 		return;
 	}
-	wattr_set(win, 0, term_color_pair(COLOR_WHITE, fill.colour), nullptr);
+	wattrset(win, color_attr(COLOR_WHITE, fill.colour));
 	chtype ch = ' ';
 	if (fabs(rc.left - static_cast<int>(rc.left)) > 0.1) {
 		// If rc.left is a fractional value (e.g. 4.5) then whitespace dots are being drawn. Draw
 		// them appropriately.
 		// TODO: set color to vs.whitespaceColours.fore and back.
-		wcolor_set(win, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
+		wattrset(win, color_attr(COLOR_BLACK, COLOR_BLACK));
 		rc.right = static_cast<int>(rc.right), ch = ACS_BULLET | A_BOLD;
 	}
 	for (int y = static_cast<int>(rc.top); y < rc.bottom; y++)
@@ -275,7 +266,8 @@ void SurfaceImpl::AlphaRectangle(PRectangle rc, XYPOSITION /*cornerSize*/, FillS
 		attr_t attrs = mvwinch(win, y, x) & A_ATTRIBUTES;
 		short pair = PAIR_NUMBER(attrs), fore = COLOR_WHITE, unused;
 		if (pair > 0) pair_content(pair, &fore, &unused);
-		mvwchgat(win, y, x, 1, attrs, term_color_pair(fore, fill), nullptr);
+		attrs |= color_attr(fore, fill);
+		mvwchgat(win, y, x, 1, attrs, PAIR_NUMBER(attrs), nullptr);
 	}
 }
 
@@ -297,7 +289,7 @@ void SurfaceImpl::Stadium(PRectangle /*rc*/, FillStroke /*fillStroke*/, Ends /*e
 void SurfaceImpl::Copy(PRectangle rc, Point /*from*/, Surface & /*surfaceSource*/) {
 	// TODO: handle indent guide highlighting.
 	if (rc.left - 1 < clip.left) return;
-	wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
+	wattrset(win, color_attr(COLOR_BLACK, COLOR_BLACK));
 	mvwaddch(win, static_cast<int>(rc.top), static_cast<int>(rc.left - 1), '|' | A_BOLD);
 }
 
@@ -324,7 +316,7 @@ int grapheme_width(const char *s) {
 void SurfaceImpl::DrawTextNoClip(PRectangle rc, const Font *font_, XYPOSITION /*ybase*/,
 	std::string_view text, ColourRGBA fore, ColourRGBA back) {
 	attr_t attrs = dynamic_cast<const FontImpl *>(font_)->attrs;
-	wattr_set(win, attrs, term_color_pair(fore, back), nullptr);
+	wattrset(win, attrs | color_attr(fore, back));
 	if (rc.left < clip.left) {
 		// Do not overwrite margin text.
 		auto clip_chars = static_cast<int>(clip.left - rc.left);
@@ -363,11 +355,17 @@ void SurfaceImpl::DrawTextClipped(PRectangle rc, const Font *font_, XYPOSITION y
 void SurfaceImpl::DrawTextTransparent(
 	PRectangle rc, const Font *font_, XYPOSITION ybase, std::string_view text, ColourRGBA fore) {
 	if (static_cast<int>(rc.top) > getmaxy(win) - 1) return;
-	auto left = static_cast<int>(rc.left);
-	attr_t attrs = left >= clip.left ? mvwinch(win, static_cast<int>(rc.top), left) : 0;
-	short pair = PAIR_NUMBER(attrs), unused, back = COLOR_BLACK;
-	if (pair > 0 && !isCallTip) pair_content(pair, &unused, &back);
-	DrawTextNoClip(rc, font_, ybase, text, fore, SCI_COLORS[back]);
+	short back = COLOR_BLACK;
+	if (!isCallTip) {
+		auto left = static_cast<int>(rc.left);
+		attr_t attrs = left >= clip.left ? mvwinch(win, static_cast<int>(rc.top), left) : 0;
+		short pair = PAIR_NUMBER(attrs), unused;
+		if (pair > 0)
+			pair_content(pair, &unused, &back);
+		else if (attrs & A_REVERSE) // !hascolors() and white terminal background
+			back = COLOR_WHITE;
+	}
+	DrawTextNoClip(rc, font_, ybase, text, fore, sc_colors[back]);
 }
 
 // Curses characters always have a width of 1 if they are not UTF-8 trailing bytes.
@@ -434,7 +432,7 @@ void SurfaceImpl::DrawLineMarker(
 	const PRectangle &rcWhole, const Font *fontForCharacter, int /*tFold*/, const void *data) {
 	// TODO: handle fold marker highlighting.
 	auto marker = reinterpret_cast<const LineMarker *>(data);
-	wattr_set(win, 0, term_color_pair(marker->fore, marker->back), nullptr);
+	wattrset(win, color_attr(marker->fore, marker->back));
 	int top = static_cast<int>(rcWhole.top), left = static_cast<int>(rcWhole.left);
 	switch (marker->markType) {
 	case MarkerSymbol::Circle: mvwaddstr(win, top, left, "●"); return;
@@ -476,7 +474,7 @@ void SurfaceImpl::DrawLineMarker(
 
 // Draws the text representation of a wrap marker.
 void SurfaceImpl::DrawWrapMarker(PRectangle rcPlace, bool isEndMarker, ColourRGBA wrapColour) {
-	wattr_set(win, 0, term_color_pair(wrapColour, COLOR_BLACK), nullptr);
+	wattrset(win, color_attr(wrapColour, COLOR_BLACK));
 	mvwaddstr(
 		win, static_cast<int>(rcPlace.top), static_cast<int>(rcPlace.left), isEndMarker ? "↩" : "↪");
 }
@@ -484,7 +482,7 @@ void SurfaceImpl::DrawWrapMarker(PRectangle rcPlace, bool isEndMarker, ColourRGB
 // Draws the text representation of a tab arrow.
 void SurfaceImpl::DrawTabArrow(PRectangle rcTab, const ViewStyle &vsDraw) {
 	// TODO: set color to vs.whitespaceColours.fore and back.
-	wattr_set(win, 0, term_color_pair(COLOR_BLACK, COLOR_BLACK), nullptr);
+	wattrset(win, color_attr(COLOR_BLACK, COLOR_BLACK));
 	for (int i = static_cast<int>(std::max(rcTab.left - 1, clip.left)); i < rcTab.right; i++)
 		mvwaddch(win, static_cast<int>(rcTab.top), i, '-' | A_BOLD);
 	char tail = vsDraw.tabDrawMode == TabDrawMode::LongArrow ? '>' : '-';
