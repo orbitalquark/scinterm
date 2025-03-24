@@ -1,8 +1,8 @@
-## Changelog
+# Changelog
 
 [Atom Feed](https://github.com/orbitalquark/scinterm/releases.atom)
 
-### 5.3 (31 Jan 2025)
+## 5.3 (31 Jan 2025)
 
 Download:
 
@@ -18,7 +18,7 @@ Changes:
 
 [Scinterm 5.3]: https://github.com/orbitalquark/scinterm/archive/scinterm_5.3.zip
 
-### 5.2 (30 Nov 2024)
+## 5.2 (30 Nov 2024)
 
 Download:
 
@@ -34,7 +34,7 @@ Changes:
 
 [Scinterm 5.2]: https://github.com/orbitalquark/scinterm/archive/scinterm_5.2.zip
 
-### 5.1 (21 Aug 2024)
+## 5.1 (21 Aug 2024)
 
 Download:
 
@@ -50,7 +50,7 @@ Changes:
 
 [Scinterm 5.1]: https://github.com/orbitalquark/scinterm/archive/scinterm_5.1.zip
 
-### 5.0 (24 Apr 2023)
+## 5.0 (24 Apr 2023)
 
 Download:
 
@@ -67,7 +67,7 @@ Changes:
 
 [Scinterm 5.0]: https://github.com/orbitalquark/scinterm/archive/scinterm_5.0.zip
 
-### 4.1 (22 Dec 2022)
+## 4.1 (22 Dec 2022)
 
 Download:
 
@@ -85,7 +85,7 @@ Changes:
 
 [Scinterm 4.1]: https://github.com/orbitalquark/scinterm/archive/scinterm_4.1.zip
 
-### 4.0 (05 Sep 2022)
+## 4.0 (05 Sep 2022)
 
 Download:
 
@@ -105,7 +105,7 @@ Changes:
 [Scintilla]: https://scintilla.org
 
 
-### 3.2 (11 Nov 2021)
+## 3.2 (11 Nov 2021)
 
 Download:
 
@@ -126,7 +126,7 @@ Changes:
 [Scinterm 3.2]: https://github.com/orbitalquark/scinterm/archive/scinterm_3.2.zip
 [Scintilla]: https://scintilla.org
 
-### 3.1 (26 Jun 2021)
+## 3.1 (26 Jun 2021)
 
 Download:
 
@@ -145,7 +145,7 @@ Changes:
 [`scintilla_update_cursor()`]: api.html#scintilla_update_cursor
 [Scintilla]: https://scintilla.org
 
-### 3.0 (27 Jul 2020)
+## 3.0 (27 Jul 2020)
 
 Download:
 
@@ -163,7 +163,7 @@ Changes:
 [Scintilla 3.21.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.21.0/scintilla3210.zip/download
 [`scintilla_get_clipboard()`]: api.html#scintilla_get_clipboard
 
-### 2.0 (09 May 2020)
+## 2.0 (09 May 2020)
 
 Download:
 
@@ -185,7 +185,7 @@ Changes:
 [`scintilla_new()`]: api.html#scintilla_new
 [Scintilla]: https://scintilla.sourceforge.io/LongTermDownload.html
 
-### 1.12 (30 Aug 2019)
+## 1.12 (30 Aug 2019)
 
 Download:
 
@@ -203,7 +203,7 @@ Changes:
 [Scintilla 3.11.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.11.0/scintilla3110.zip/download
 [Scintilla]: https://scintilla.sourceforge.io/LongTermDownload.html
 
-### 1.11 (30 Jun 2018)
+## 1.11 (30 Jun 2018)
 
 Download:
 
@@ -221,7 +221,7 @@ Changes:
 [Scintilla 3.10.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.10.0/scintilla3100.zip/download
 [Scintilla]: https://scintilla.sourceforge.io/LongTermDownload.html
 
-### 1.10 (26 Mar 2018)
+## 1.10 (26 Mar 2018)
 
 Download:
 
@@ -241,7 +241,7 @@ Changes:
 [Scintilla 3.8.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.8.0/scintilla380.zip/download
 [Scintilla]: https://scintilla.sourceforge.io/LongTermDownload.html
 
-### 1.9 (25 Jun 2017)
+## 1.9 (25 Jun 2017)
 
 Download:
 
@@ -260,7 +260,7 @@ Changes:
 [Scinterm 1.9]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.9.zip
 [Scintilla]: https://scintilla.org
 
-### 1.8 (26 Apr 2016)
+## 1.8 (26 Apr 2016)
 
 Download:
 
@@ -280,7 +280,7 @@ Changes:
 [Scintilla]: https://scintilla.org
 [`scintilla_noutrefresh()`]: api.html#scintilla_noutrefresh
 
-### 1.7 (03 Feb 2016)
+## 1.7 (03 Feb 2016)
 
 Download:
 
@@ -298,7 +298,7 @@ Changes:
 [Scinterm 1.7]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.7.zip
 [Scintilla]: https://scintilla.org
 
-### 1.6 (18 Apr 2015)
+## 1.6 (18 Apr 2015)
 
 Download:
 
@@ -315,7 +315,7 @@ Changes:
 [Scinterm 1.6]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.6.zip
 [Scintilla]: https://scintilla.org
 
-### 1.5 (10 Dec 2014)
+## 1.5 (10 Dec 2014)
 
 Download:
 
@@ -343,7 +343,7 @@ Changes:
 [Scinterm 1.5]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.5.zip
 [Scintilla]: https://scintilla.org
 
-### 1.4 (01 Sep 2014)
+## 1.4 (01 Sep 2014)
 
 Download:
 
@@ -360,7 +360,7 @@ Changes:
 [Scinterm 1.4]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.4.zip
 [Scintilla]: https://scintilla.org
 
-### 1.3 (09 Jul 2014)
+## 1.3 (09 Jul 2014)
 
 Download:
 
@@ -378,7 +378,7 @@ Changes:
 [Scinterm 1.3]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.3.zip
 [Scintilla]: https://scintilla.org
 
-### 1.2 (05 Feb 2014)
+## 1.2 (05 Feb 2014)
 
 Download:
 
@@ -402,7 +402,7 @@ Changes:
 [Scinterm 1.2]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.2.zip
 [Scintilla]: https://scintilla.org
 
-### 1.1 (11 Dec 2012)
+## 1.1 (11 Dec 2012)
 
 Download:
 
@@ -422,7 +422,7 @@ Changes:
 [Scinterm 1.1]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.1.zip
 [`SCI_COLOR_PAIR()`]: api.html#SCI_COLOR_PAIR
 
-### 1.0 (31 Aug 2012)
+## 1.0 (31 Aug 2012)
 
 Download:
 

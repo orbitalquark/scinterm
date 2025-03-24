@@ -41,10 +41,4 @@ clean: ; rm -f *.o $(scintilla)
 
 # Documentation.
 
-docs: docs/index.md docs/api.md $(wildcard docs/*.md) | docs/_layouts/default.html
-	for file in $(basename $^); do cat $| | docs/fill_layout.lua $$file.md > $$file.html; done
-docs/index.md: README.md
-	sed -e 's/^\# [[:alpha:]]\+/## Introduction/;' -e \
-		's|https://[[:alpha:]]\+\.github\.io/[[:alpha:]]\+/||;' $< > $@
 docs/api.md: docs/scinterm.luadoc ; ldoc --filter docs.markdowndoc.ldoc $^ > $@
-cleandocs: ; rm -f docs/*.html docs/index.md docs/api.md

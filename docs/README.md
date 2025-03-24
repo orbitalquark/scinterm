@@ -1,9 +1,9 @@
-## Introduction
+# Scinterm
 
 Scinterm is a curses platform for [Scintilla][] that supports [ncurses][], [PDCurses][], and
 X/Open Curses.
 
-![Scinterm](images/scinterm.png)
+<a href="assets/images/scinterm.png"><img src="assets/images/scinterm.png" width="500" alt="scinterm"/></a>
 
 It is highly recommended to run Scinterm in a UTF-8-aware terminal with a font that supports
 many UTF-8 characters ("DejaVu Sans Mono" is one of them), since Scinterm makes use of UTF-8
@@ -62,7 +62,7 @@ Scinterm's Application Programming Interface [(API) documentation][] is located 
 *docs/* directory and covers how to create and interact with a Scintilla widget in a terminal
 application.
 
-[(API) documentation]: api.html
+[(API) documentation]: api.md
 
 ## Curses Compatibility
 
@@ -96,8 +96,8 @@ Scinterm lacks some Scintilla features due to the terminal's constraints:
   these color values with Scintilla; unrecognized colors are set to white by default. For some
   terminals, you may need to set a lexer style's `bold` attribute in order to use the light
   color variant.
-* Some styles settings like font name and font size do not display properly (terminals use
-  only one font and size).
+* Some styles settings like font name, font size, and italic do not display properly (terminals
+  use one only font, size and variant).
 * X selections (primary and secondary) are not integrated into the clipboard.
 * Zoom is not supported (terminal font size is fixed).
 * When using the mouse in the Windows console, Shift+Double-click extends selections and
@@ -105,10 +105,11 @@ Scinterm lacks some Scintilla features due to the terminal's constraints:
 
 [`SCI_REGISTERIMAGE`]: https://scintilla.org/ScintillaDoc.html#SCI_REGISTERIMAGE
 
-## Contribute
+## Support
 
-Scinterm is [open source][]. Feel free to report bugs and submit patches. Thanks to [everyone][]
-who has contributed.
+- [API Documentation](api.md)
+- [Project page](https://github.com/orbitalquark/scinterm)
+- [Issue tracker](https://github.com/orbitalquark/scinterm/issues)
+- [Credits](thanks.md)
 
-[open source]: https://github.com/orbitalquark/scinterm
-[everyone]: thanks.html
+You can contact me personally at code att foicica.com.
