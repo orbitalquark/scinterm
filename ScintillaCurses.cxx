@@ -266,6 +266,7 @@ void ScintillaCurses::SetVerticalScrollPos() {
 	if (!wMain.GetID() || !verticalScrollBarVisible) return;
 	WINDOW *w = GetWINDOW();
 	int maxy = getmaxy(w), maxx = getmaxx(w);
+	if (scrollBarHeight == maxy) return; // no point in drawing a non-scrollable bar yet
 	// Draw the gutter.
 	wattrset(w, color_attr(COLOR_WHITE, COLOR_BLACK));
 	for (int i = 0; i < maxy; i++) mvwaddch(w, i, maxx - 1, ACS_CKBOARD);
@@ -274,13 +275,14 @@ void ScintillaCurses::SetVerticalScrollPos() {
 		static_cast<int>(static_cast<float>(topLine) / (MaxScrollPos() + LinesOnScreen() - 1) * maxy);
 	wattrset(w, color_attr(COLOR_BLACK, COLOR_WHITE));
 	for (int i = scrollBarVPos; i < scrollBarVPos + scrollBarHeight; i++)
-		mvwaddch(w, i, maxx - 1, ' ');
+		mvwaddch(w, i, maxx - 1, ACS_VLINE);
 }
 
 void ScintillaCurses::SetHorizontalScrollPos() {
 	if (!wMain.GetID() || !horizontalScrollBarVisible) return;
 	WINDOW *w = GetWINDOW();
 	int maxy = getmaxy(w), maxx = getmaxx(w);
+	if (scrollBarWidth == maxx) return; // no point in drawing a non-scrollable bar yet
 	// Draw the gutter.
 	wattrset(w, color_attr(COLOR_WHITE, COLOR_BLACK));
 	for (int i = 0; i < maxx; i++) mvwaddch(w, maxy - 1, i, ACS_CKBOARD);
@@ -288,7 +290,7 @@ void ScintillaCurses::SetHorizontalScrollPos() {
 	scrollBarHPos = static_cast<int>(static_cast<float>(xOffset) / scrollWidth * maxx);
 	wattrset(w, color_attr(COLOR_BLACK, COLOR_WHITE));
 	for (int i = scrollBarHPos; i < scrollBarHPos + scrollBarWidth; i++)
-		mvwaddch(w, maxy - 1, i, ' ');
+		mvwaddch(w, maxy - 1, i, ACS_HLINE);
 }
 
 // The height is based on the given size of a page and the total number of pages. The width is
