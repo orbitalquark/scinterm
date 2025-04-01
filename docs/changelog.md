@@ -2,6 +2,24 @@
 
 [Atom Feed](https://github.com/orbitalquark/scinterm/releases.atom)
 
+## 5.4 (31 Mar 2025)
+
+Download:
+
+* [Scinterm 5.4][]
+
+Bugfixes:
+
+* Reduced flickering.
+* Fixed scrollbar drawing glitch when holding down the Enter key.
+
+Changes:
+
+* Support monochrome terminals.
+* Only show scrollbars when they can be scrolled.
+
+[Scinterm 5.4]: https://github.com/orbitalquark/scinterm/archive/scinterm_5.4.zip
+
 ## 5.3 (31 Jan 2025)
 
 Download:
