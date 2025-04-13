@@ -382,14 +382,18 @@ void ScintillaCurses::CreateCallTipWindow(PRectangle rc) {
 	if (!wMain.GetID()) return;
 	if (!ct.wCallTip.Created()) {
 		rc.right -= 1; // remove right-side padding
-		int begx = 0, begy = 0, maxx = 0, maxy = 0;
+		int begx = 0, begy = 0;
 		getbegyx(GetWINDOW(), begy, begx);
-		int xoffset = static_cast<int>(begx - rc.left), yoffset = static_cast<int>(begy - rc.top);
-		if (xoffset > 0) rc.left += xoffset, rc.right += xoffset;
-		if (yoffset > 0) rc.top += yoffset, rc.bottom += yoffset;
-		getmaxyx(GetWINDOW(), maxy, maxx);
-		if (rc.Width() > maxx) rc.right = rc.left + maxx;
-		if (rc.Height() > maxy) rc.bottom = rc.top + maxy;
+		int xoffset = static_cast<int>(begx - rc.left);
+		rc.left += xoffset, rc.right += xoffset;
+		if (rc.top >= 0) {
+			int yoffset = static_cast<int>(begy - rc.top);
+			rc.top += yoffset, rc.bottom += yoffset;
+		} else // draw above the window
+			rc.top += begy, rc.bottom += begy;
+		if (rc.left + rc.Width() > COLS) rc.right = COLS;
+		if (rc.top + rc.Height() > LINES - 1) // TODO: parameterize; assume statusbar on last line
+			rc.bottom = LINES - 1;
 		ct.wCallTip = newwin(static_cast<int>(rc.Height()), static_cast<int>(rc.Width()),
 			static_cast<int>(rc.top), static_cast<int>(rc.left));
 	}
