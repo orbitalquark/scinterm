@@ -133,20 +133,27 @@ public:
 	void SetOptions(ListOptions options_) override;
 };
 
-void init_colors();
-/** Returns the curses `COLOR_PAIR` for the given curses foreground and background  `COLOR`s. */
-inline short color_pair(short fore, short back) { return back * (COLORS < 16 ? 8 : 16) + fore + 1; }
-inline short term_color(int color) { return color; }
-short term_color(ColourRGBA color);
-/**
- * Returns a curses attribute for drawing with the given foreground and background colors.
- * If curses does not support colors, returns an attribute that represents black or white.
+/** Singleton curses color and color pair manager.
+ * Colors and pairs do not need to be declared ahead of time; they are initialized on demand.
  */
-template <typename FT, typename BT>
-attr_t color_attr(const FT &fore, const BT &back) {
-	if (!has_colors()) return term_color(back) != COLOR_BLACK ? A_REVERSE : 0;
-	return COLOR_PAIR(color_pair(term_color(fore), term_color(back)));
-}
+class Colors {
+	std::map<int, short> colors; // map of RGB ints to curses color numbers.
+	std::map<std::pair<short, short>, short> pairs; // map of curses colors to their pair numbers
+
+	Colors();
+	static Colors &instance();
+	/** Returns the curses number for a Scintilla color, initializing it if necessary. */
+	short get(const ColourRGBA &color);
+
+public:
+	static ColourRGBA Black, Red, Green, Yellow, Blue, Magenta, Cyan, White;
+	static ColourRGBA LBlack, LRed, LGreen, LYellow, LBlue, LMagenta, LCyan, LWhite;
+
+	/** Returns the curses pair number for a Scintilla color pair, initializing it if necessary. */
+	static attr_t Pair(const ColourRGBA &fore, const ColourRGBA &back);
+	/** Returns the Scintilla color for a given curses color number. */
+	static ColourRGBA Find(const short color);
+};
 
 inline WINDOW *_WINDOW(WindowID wid) { return reinterpret_cast<WINDOW *>(wid); }
 
