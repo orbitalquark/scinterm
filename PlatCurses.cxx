@@ -538,11 +538,11 @@ void Window::SetPositionRelative(PRectangle rc, const Window *relativeTo) {
 
 PRectangle Window::GetClientPosition() const { return GetPosition(); }
 
-void Window::Show(bool /*show*/) {} // TODO: ?
+void Window::Show(bool /*show*/) {} // this curses window will be painted over others as necessary
 
-void Window::InvalidateAll() {} // TODO: notify repaint?
+void Window::InvalidateAll() {} // this window will be completely repainted anyway
 
-void Window::InvalidateRectangle(PRectangle /*rc*/) {} // TODO: notify repaint?
+void Window::InvalidateRectangle(PRectangle /*rc*/) {} // this window will be repainted anyway
 
 void Window::SetCursor(Cursor /*curs*/) {}
 

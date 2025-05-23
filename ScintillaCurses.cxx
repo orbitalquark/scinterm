@@ -624,11 +624,8 @@ void ScintillaCurses::MouseRelease(int y, int x, KeyMod modifiers) {
 	GetWINDOW(); // ensure the curses `WINDOW` has been created
 	if (draggingVScrollBar || draggingHScrollBar)
 		draggingVScrollBar = false, draggingHScrollBar = false;
-	else if (HaveMouseCapture()) {
+	else if (HaveMouseCapture())
 		ButtonUpWithModifiers(Point(x, y), time, modifiers);
-		// TODO: ListBoxEvent event(ListBoxEvent::EventType::selectionChange);
-		// TODO: listbox->delegate->ListNotify(&event);
-	}
 }
 
 // Returns a NUL-terminated copy of the text on the internal clipboard, not the primary and/or
