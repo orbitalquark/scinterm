@@ -234,8 +234,7 @@ void SurfaceImpl::FillRectangle(PRectangle rc, Fill fill) {
 	if (fabs(rc.left - static_cast<int>(rc.left)) > 0.1) {
 		// If rc.left is a fractional value (e.g. 4.5) then whitespace dots are being drawn. Draw
 		// them appropriately.
-		// TODO: set color to vs.whitespaceColours.fore and back.
-		wattrset(win, Colors::Pair(Colors::Black, Colors::Black));
+		wattrset(win, Colors::Pair(fill.colour, fill.colour));
 		rc.right = static_cast<int>(rc.right), ch = ACS_BULLET | A_BOLD;
 	}
 	for (int y = static_cast<int>(rc.top); y < rc.bottom; y++)
@@ -485,8 +484,9 @@ void SurfaceImpl::DrawWrapMarker(PRectangle rcPlace, bool isEndMarker, ColourRGB
 
 // Draws the text representation of a tab arrow.
 void SurfaceImpl::DrawTabArrow(PRectangle rcTab, const ViewStyle &vsDraw) {
-	// TODO: set color to vs.whitespaceColours.fore and back.
-	wattrset(win, Colors::Pair(Colors::Black, Colors::Black));
+	const ColourRGBA &fore = vsDraw.ElementColour(Element::WhiteSpace).value_or(Colors::Black);
+	const ColourRGBA &back = vsDraw.ElementColour(Element::WhiteSpaceBack).value_or(Colors::Black);
+	wattrset(win, Colors::Pair(fore, back));
 	for (int i = static_cast<int>(std::max(rcTab.left - 1, clip.left)); i < rcTab.right; i++)
 		mvwaddch(win, static_cast<int>(rcTab.top), i, '-' | A_BOLD);
 	char tail = vsDraw.tabDrawMode == TabDrawMode::LongArrow ? '>' : '-';
