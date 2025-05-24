@@ -165,9 +165,18 @@ void SurfaceImpl::Init(WindowID wid) {
 
 void SurfaceImpl::Init(SurfaceID /*sid*/, WindowID wid) { Init(wid); }
 
-std::unique_ptr<Surface> SurfaceImpl::AllocatePixMap(int /*width*/, int /*height*/) {
+// Pixmap surfaces are not supported, but this must return a surface because Scintilla assumes the
+// allocation succeeded.
+// Some surfaces can be inferred, like indent guides, which have a width of 1.
+std::unique_ptr<Surface> SurfaceImpl::AllocatePixMap(int width, int /*height*/) {
 	// Not supported, but cannot return a nullptr because Scintilla assumes the allocation succeeded.
-	return std::make_unique<SurfaceImpl>();
+	static int count = 0;
+	auto surface = std::make_unique<SurfaceImpl>();
+	if (width == 1) {
+		// Scintilla allocates pixmap indent guides in pairs.
+		surface->isIndentGuideHighlight = ++count % 2 == 0;
+	}
+	return surface;
 }
 
 void SurfaceImpl::SetMode(SurfaceMode /*mode*/) {}
@@ -279,10 +288,12 @@ void SurfaceImpl::Stadium(PRectangle /*rc*/, FillStroke /*fillStroke*/, Ends /*e
 // Draw an indentation guide.
 // Only called when drawing indentation guides or during certain drawing operations when double
 // buffering is enabled. Since the latter is not supported, assume the former.
-void SurfaceImpl::Copy(PRectangle rc, Point /*from*/, Surface & /*surfaceSource*/) {
-	// TODO: handle indent guide highlighting.
+void SurfaceImpl::Copy(PRectangle rc, Point /*from*/, Surface &surfaceSource) {
+	const ColourRGBA &fore = dynamic_cast<SurfaceImpl *>(&surfaceSource)->isIndentGuideHighlight ?
+		Colors::White :
+		Colors::Black;
 	if (rc.left - 1 < clip.left) return;
-	wattrset(win, Colors::Pair(Colors::Black, Colors::Black));
+	wattrset(win, Colors::Pair(fore, Colors::Black));
 	mvwaddch(win, static_cast<int>(rc.top), static_cast<int>(rc.left - 1), '|' | A_BOLD);
 }
 

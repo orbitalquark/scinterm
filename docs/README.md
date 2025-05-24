@@ -99,6 +99,7 @@ Scinterm lacks some Scintilla features due to the terminal's constraints:
 * Extra ascent and descent for lines is not supported.
 * Fold lines cannot be drawn above or below lines.
 * Hotspot underlines are not drawn on mouse hover (`surface->FillRectangle()` is not supported).
+* Indent guides can only highlight in white, not the brace highlight color.
 * Indicators other than `INDIC_ROUNDBOX` and `INDIC_STRAIGHTBOX` are not drawn (`surface->LineTo()`
   and `surface->FillRectangle()` are not supported for drawing indicator shapes and pixmap
   surfaces are not supported). Translucent drawing and rounded corners are not supported either.

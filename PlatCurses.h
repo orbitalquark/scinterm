@@ -94,6 +94,7 @@ public:
 	void DrawWrapMarker(PRectangle rcPlace, bool isEndMarker, ColourRGBA wrapColour);
 	void DrawTabArrow(PRectangle rcTab, const ViewStyle &vsDraw);
 
+	bool isIndentGuideHighlight = false;
 	bool isCallTip = false;
 };
 
