@@ -301,7 +301,10 @@ std::unique_ptr<IScreenLineLayout> SurfaceImpl::Layout(const IScreenLine * /*scr
 }
 
 #if _WIN32
-#define wcwidth(_) 1 // TODO: http://www.cl.cam.ac.uk/~mgk25/ucs/wcwidth.c
+extern "C" {
+int wcwidth(wchar_t ucs);
+int wcswidth(const wchar_t *pwcs, size_t n);
+}
 #endif
 
 /**
@@ -598,7 +601,8 @@ void ListBoxImpl::Append(char *s, int type) {
 		list.push_back(std::string(chtype, strlen(chtype)) + s);
 	} else
 		list.push_back(std::string(" ") + s);
-	int len = static_cast<int>(strlen(s)); // TODO: UTF-8 awareness?
+	std::wstring ws = WStringFromUTF8(s);
+	int len = wcswidth(ws.c_str(), ws.size());
 	if (width < len + 1) {
 		width = len + 1; // include type character len
 		wresize(_WINDOW(wid), height + 2, width + 2);
