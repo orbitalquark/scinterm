@@ -432,10 +432,11 @@ void SurfaceImpl::FlushDrawing() {} // N/A
 
 // Draws the text representation of a lien marker, if possible.
 void SurfaceImpl::DrawLineMarker(
-	const PRectangle &rcWhole, const Font *fontForCharacter, int /*tFold*/, const void *data) {
-	// TODO: handle fold marker highlighting.
+	const PRectangle &rcWhole, const Font *fontForCharacter, int tFold, const void *data) {
 	auto marker = reinterpret_cast<const LineMarker *>(data);
-	wattrset(win, Colors::Pair(marker->fore, marker->back));
+	attr_t attr = Colors::Pair(marker->fore, marker->back);
+	if (tFold) attr |= A_BOLD;
+	wattrset(win, attr);
 	int top = static_cast<int>(rcWhole.top), left = static_cast<int>(rcWhole.left);
 	switch (marker->markType) {
 	case MarkerSymbol::Circle: mvwaddstr(win, top, left, "●"); return;

@@ -98,6 +98,8 @@ Scinterm lacks some Scintilla features due to the terminal's constraints:
 * Edge lines are not displayed properly (the line is drawn over by text lines).
 * Extra ascent and descent for lines is not supported.
 * Fold lines cannot be drawn above or below lines.
+* Fold marker highlighting consists only of bold-facing the foreground color; setting the
+  selected background color has no effect.
 * Hotspot underlines are not drawn on mouse hover (`surface->FillRectangle()` is not supported).
 * Indent guides can only highlight in white, not the brace highlight color.
 * Indicators other than `INDIC_ROUNDBOX` and `INDIC_STRAIGHTBOX` are not drawn (`surface->LineTo()`
