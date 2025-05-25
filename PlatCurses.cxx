@@ -446,7 +446,7 @@ void SurfaceImpl::DrawLineMarker(
 	case MarkerSymbol::SmallRect:
 	case MarkerSymbol::RoundRect: mvwaddstr(win, top, left, "■"); return;
 	case MarkerSymbol::Arrow: mvwaddstr(win, top, left, "►"); return;
-	case MarkerSymbol::ShortArrow: mvwaddstr(win, top, left, "→"); return;
+	case MarkerSymbol::ShortArrow: mvwaddstr(win, top, left, "➡"); return;
 	case MarkerSymbol::ArrowDown: mvwaddstr(win, top, left, "▼"); return;
 	case MarkerSymbol::Minus: mvwaddch(win, top, left, '-'); return;
 	case MarkerSymbol::BoxMinus:
@@ -467,7 +467,9 @@ void SurfaceImpl::DrawLineMarker(
 	case MarkerSymbol::Arrows: mvwaddstr(win, top, left, "»"); return;
 	case MarkerSymbol::FullRect: FillRectangle(rcWhole, marker->back); return;
 	case MarkerSymbol::LeftRect: mvwaddstr(win, top, left, "▌"); return;
-	case MarkerSymbol::Bookmark: mvwaddstr(win, top, left, "Σ"); return;
+	case MarkerSymbol::Bookmark:
+	case MarkerSymbol::VerticalBookmark: mvwaddstr(win, top, left, "⚑"); return;
+	case MarkerSymbol::Bar: mvwaddch(win, top, left, ACS_VLINE); return;
 	default: break; // prevent warning
 	}
 	if (marker->markType >= MarkerSymbol::Character) {
