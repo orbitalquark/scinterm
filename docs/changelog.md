@@ -2,21 +2,42 @@
 
 [Atom Feed](https://github.com/orbitalquark/scinterm/releases.atom)
 
+## 5.5 (25 May 2025)
+
+Download:
+
+- [Scinterm 5.5][]
+
+Bugfixes:
+
+- Allow drawing calltips above the current Scintilla window.
+- Draw whitespace with the proper color.
+- Better wide character support in autocompletion lists and on Windows.
+
+Changes:
+
+- Support arbitrary RGB colors in addition to the 16-color terminal palette.
+- Implement indent guide highlighting.
+- Implement fold marker highlighting.
+- Updated line marker glyphs.
+
+[Scinterm 5.5]: https://github.com/orbitalquark/scinterm/archive/scinterm_5.5.zip
+
 ## 5.4 (31 Mar 2025)
 
 Download:
 
-* [Scinterm 5.4][]
+- [Scinterm 5.4][]
 
 Bugfixes:
 
-* Reduced flickering.
-* Fixed scrollbar drawing glitch when holding down the Enter key.
+- Reduced flickering.
+- Fixed scrollbar drawing glitch when holding down the Enter key.
 
 Changes:
 
-* Support monochrome terminals.
-* Only show scrollbars when they can be scrolled.
+- Support monochrome terminals.
+- Only show scrollbars when they can be scrolled.
 
 [Scinterm 5.4]: https://github.com/orbitalquark/scinterm/archive/scinterm_5.4.zip
 
@@ -24,15 +45,15 @@ Changes:
 
 Download:
 
-* [Scinterm 5.3][]
+- [Scinterm 5.3][]
 
 Bugfixes:
 
-* Fixed occasional crash when attempting to scroll an unscrollable view.
+- Fixed occasional crash when attempting to scroll an unscrollable view.
 
 Changes:
 
-* None.
+- None.
 
 [Scinterm 5.3]: https://github.com/orbitalquark/scinterm/archive/scinterm_5.3.zip
 
@@ -40,15 +61,15 @@ Changes:
 
 Download:
 
-* [Scinterm 5.2][]
+- [Scinterm 5.2][]
 
 Bugfixes:
 
-* None.
+- None.
 
 Changes:
 
-* Support italic and underline styles.
+- Support italic and underline styles.
 
 [Scinterm 5.2]: https://github.com/orbitalquark/scinterm/archive/scinterm_5.2.zip
 
@@ -56,15 +77,15 @@ Changes:
 
 Download:
 
-* [Scinterm 5.1][]
+- [Scinterm 5.1][]
 
 Bugfixes:
 
-* Show the caret inside virtual space if applicable.
+- Show the caret inside virtual space if applicable.
 
 Changes:
 
-* Fixed building with Scintilla 5.4.2.
+- Fixed building with Scintilla 5.4.2.
 
 [Scinterm 5.1]: https://github.com/orbitalquark/scinterm/archive/scinterm_5.1.zip
 
@@ -72,16 +93,16 @@ Changes:
 
 Download:
 
-* [Scinterm 5.0][]
+- [Scinterm 5.0][]
 
 Bugfixes:
 
-* None.
+- None.
 
 Changes:
 
-* Use bit-mask of key modifiers instead of individual booleans for `scintilla_send_key()` and
-  `scintilla_send_mouse()`.
+- Use bit-mask of key modifiers instead of individual booleans for `scintilla_send_key()` and
+	`scintilla_send_mouse()`.
 
 [Scinterm 5.0]: https://github.com/orbitalquark/scinterm/archive/scinterm_5.0.zip
 
@@ -89,17 +110,17 @@ Changes:
 
 Download:
 
-* [Scinterm 4.1][]
+- [Scinterm 4.1][]
 
 Bugfixes:
 
-* Fixed call tip arrow drawing.
-* Fixed building with Scintilla 5.3.0.
-* Fixed building with some versions of GCC.
+- Fixed call tip arrow drawing.
+- Fixed building with Scintilla 5.3.0.
+- Fixed building with some versions of GCC.
 
 Changes:
 
-* Support fold margin color settings (`SCI_SETFOLDMARGIN[HI]COLOUR`).
+- Support fold margin color settings (`SCI_SETFOLDMARGIN[HI]COLOUR`).
 
 [Scinterm 4.1]: https://github.com/orbitalquark/scinterm/archive/scinterm_4.1.zip
 
@@ -107,17 +128,17 @@ Changes:
 
 Download:
 
-* [Scinterm 4.0][]
+- [Scinterm 4.0][]
 
 Bugfixes:
 
-* None.
+- None.
 
 Changes:
 
-* Enable horizontal scroll with Shift+Mouse Wheel.
-* Changed `scintilla_send_mouse()` API to no longer require a time argument.
-* Updated to [Scintilla][] 5.3.0.
+- Enable horizontal scroll with Shift+Mouse Wheel.
+- Changed `scintilla_send_mouse()` API to no longer require a time argument.
+- Updated to [Scintilla][] 5.3.0.
 
 [Scinterm 4.0]: https://github.com/orbitalquark/scinterm/archive/scinterm_4.0.zip
 [Scintilla]: https://scintilla.org
@@ -127,19 +148,19 @@ Changes:
 
 Download:
 
-* [Scinterm 3.2][]
+- [Scinterm 3.2][]
 
 Bugfixes:
 
-* Fixed accidental drawing of whitespace, tab arrows, and indentation guides in margins when
-  scrolling horizontally.
-* Fixed accidental highlighting in margins when scrolling horizontally.
-* Fixed occasional incorrect drawing when scrolling horizontally.
+- Fixed accidental drawing of whitespace, tab arrows, and indentation guides in margins when
+	scrolling horizontally.
+- Fixed accidental highlighting in margins when scrolling horizontally.
+- Fixed occasional incorrect drawing when scrolling horizontally.
 
 Changes:
 
-* Hide the terminal cursor when Scintilla's caret is out of view.
-* Updated to [Scintilla][] 5.1.4.
+- Hide the terminal cursor when Scintilla's caret is out of view.
+- Updated to [Scintilla][] 5.1.4.
 
 [Scinterm 3.2]: https://github.com/orbitalquark/scinterm/archive/scinterm_3.2.zip
 [Scintilla]: https://scintilla.org
@@ -148,16 +169,16 @@ Changes:
 
 Download:
 
-* [Scinterm 3.1][]
+- [Scinterm 3.1][]
 
 Bugfixes:
 
-* None.
+- None.
 
 Changes:
 
-* Added support for native terminal caret and added [`scintilla_update_cursor()`][].
-* Updated to [Scintilla][] 5.1.0.
+- Added support for native terminal caret and added [`scintilla_update_cursor()`][].
+- Updated to [Scintilla][] 5.1.0.
 
 [Scinterm 3.1]: https://github.com/orbitalquark/scinterm/archive/scinterm_3.1.zip
 [`scintilla_update_cursor()`]: api.html#scintilla_update_cursor
@@ -167,15 +188,15 @@ Changes:
 
 Download:
 
-* [Scinterm 3.0][] (Released in [Scintilla 3.21.0][])
+- [Scinterm 3.0][] (Released in [Scintilla 3.21.0][])
 
 Bugfixes:
 
-* None.
+- None.
 
 Changes:
 
-* [`scintilla_get_clipboard()`][] now returns a copy of clipboard text directly.
+- [`scintilla_get_clipboard()`][] now returns a copy of clipboard text directly.
 
 [Scinterm 3.0]: https://github.com/orbitalquark/scinterm/archive/scinterm_3.0.zip
 [Scintilla 3.21.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.21.0/scintilla3210.zip/download
@@ -185,18 +206,18 @@ Changes:
 
 Download:
 
-* [Scinterm 2.0][] (Released in [Scintilla 3.20.0][])
+- [Scinterm 2.0][] (Released in [Scintilla 3.20.0][])
 
 Bugfixes:
 
-* Fixed overlapping window drawing bug in Windows.
-* Fixed drawing of block caret in overtype mode.
+- Fixed overlapping window drawing bug in Windows.
+- Fixed drawing of block caret in overtype mode.
 
 Changes:
 
-* Added userdata pointer for SCNotifications in [`scintilla_new()`][].
-* Enable autoscrolling when clicking and dragging the mouse to make selections.
-* Updated to [Scintilla][] 3.20.0.
+- Added userdata pointer for SCNotifications in [`scintilla_new()`][].
+- Enable autoscrolling when clicking and dragging the mouse to make selections.
+- Updated to [Scintilla][] 3.20.0.
 
 [Scinterm 2.0]: https://github.com/orbitalquark/scinterm/archive/scinterm_2.0.zip
 [Scintilla 3.20.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.20.0/scintilla3200.zip/download
@@ -207,15 +228,15 @@ Changes:
 
 Download:
 
-* [Scinterm 1.12][] (Released in [Scintilla 3.11.0][])
+- [Scinterm 1.12][] (Released in [Scintilla 3.11.0][])
 
 Bugfixes:
 
-* None.
+- None.
 
 Changes:
 
-* Updated to [Scintilla][] 3.11.0.
+- Updated to [Scintilla][] 3.11.0.
 
 [Scinterm 1.12]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.12.zip
 [Scintilla 3.11.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.11.0/scintilla3110.zip/download
@@ -225,15 +246,15 @@ Changes:
 
 Download:
 
-* [Scinterm 1.11][] (Released in [Scintilla 3.10.0][])
+- [Scinterm 1.11][] (Released in [Scintilla 3.10.0][])
 
 Bugfixes:
 
-* Fixed potential crashes with newer versions of ncurses.
+- Fixed potential crashes with newer versions of ncurses.
 
 Changes:
 
-* Updated to [Scintilla][] 3.10.0.
+- Updated to [Scintilla][] 3.10.0.
 
 [Scinterm 1.11]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.11.zip
 [Scintilla 3.10.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.10.0/scintilla3100.zip/download
@@ -243,17 +264,17 @@ Changes:
 
 Download:
 
-* [Scinterm 1.10][] (Released in [Scintilla 3.8.0][])
+- [Scinterm 1.10][] (Released in [Scintilla 3.8.0][])
 
 Bugfixes:
 
-* None.
+- None.
 
 Changes:
 
-* Update the cursor position when drawing focused views.
-* Renamed *ScintillaCurses.\** to *ScintillaTerm.\**.
-* Updated to [Scintilla][] 3.8.0.
+- Update the cursor position when drawing focused views.
+- Renamed *ScintillaCurses.\** to *ScintillaTerm.\**.
+- Updated to [Scintilla][] 3.8.0.
 
 [Scinterm 1.10]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.10.zip
 [Scintilla 3.8.0]: https://sourceforge.net/projects/scintilla/files/scintilla/3.8.0/scintilla380.zip/download
@@ -263,17 +284,17 @@ Changes:
 
 Download:
 
-* [Scinterm 1.9][]
+- [Scinterm 1.9][]
 
 Bugfixes:
 
-* Fixed various compiler warnings.
+- Fixed various compiler warnings.
 
 Changes:
 
-* Use a curses primitive instead of implementation-specific workaround when changing text
-  attributes.
-* Updated to [Scintilla][] 3.7.5.
+- Use a curses primitive instead of implementation-specific workaround when changing text
+	attributes.
+- Updated to [Scintilla][] 3.7.5.
 
 [Scinterm 1.9]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.9.zip
 [Scintilla]: https://scintilla.org
@@ -282,17 +303,17 @@ Changes:
 
 Download:
 
-* [Scinterm 1.8][]
+- [Scinterm 1.8][]
 
 Bugfixes:
 
-* Many improvements to UTF-8 character handling.
-* Fix building on some versions of Mac OSX.
+- Many improvements to UTF-8 character handling.
+- Fix building on some versions of Mac OSX.
 
 Changes:
 
-* Improved ncurses wide-character detection.
-* Added [`scintilla_noutrefresh()`][] for more efficient refreshing.
+- Improved ncurses wide-character detection.
+- Added [`scintilla_noutrefresh()`][] for more efficient refreshing.
 
 [Scinterm 1.8]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.8.zip
 [Scintilla]: https://scintilla.org
@@ -302,16 +323,16 @@ Changes:
 
 Download:
 
-* [Scinterm 1.7][]
+- [Scinterm 1.7][]
 
 Bugfixes:
 
-* None.
+- None.
 
 Changes:
 
-* Delay creation of curses `WINDOW`s for as long as possible.
-* Updated to [Scintilla][] 3.6.3.
+- Delay creation of curses `WINDOW`s for as long as possible.
+- Updated to [Scintilla][] 3.6.3.
 
 [Scinterm 1.7]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.7.zip
 [Scintilla]: https://scintilla.org
@@ -320,15 +341,15 @@ Changes:
 
 Download:
 
-* [Scinterm 1.6][]
+- [Scinterm 1.6][]
 
 Bugfixes:
 
-* Fixed indicator drawing over multiple styles.
+- Fixed indicator drawing over multiple styles.
 
 Changes:
 
-* Updated to [Scintilla][] 3.5.5.
+- Updated to [Scintilla][] 3.5.5.
 
 [Scinterm 1.6]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.6.zip
 [Scintilla]: https://scintilla.org
@@ -337,26 +358,26 @@ Changes:
 
 Download:
 
-* [Scinterm 1.5][]
+- [Scinterm 1.5][]
 
 Bugfixes:
 
-* Fixed positioning of autocomplete and call tips in some edge cases.
-* Margins are no longer overwritten by long lines.
-* Allow UTF-8 characters as list images.
+- Fixed positioning of autocomplete and call tips in some edge cases.
+- Margins are no longer overwritten by long lines.
+- Allow UTF-8 characters as list images.
 
 Changes:
 
-* Added complete mouse support.
-* Added support for drawing call tip arrows.
-* Implemented scrollbars.
-* Added support for drawing tab arrows when visualizing whitespace.
-* Added support for drawing wrap markers. (Requires a font with good glyph support, like DejaVu
-  Sans Mono.)
-* Added support for drawing nearly all line markers. (Requires a font with good glyph support,
-  like DejaVu Sans Mono or Liberation Mono.)
-* Added support for drawing indentation guides.
-* Updated to [Scintilla][] 3.5.2.
+- Added complete mouse support.
+- Added support for drawing call tip arrows.
+- Implemented scrollbars.
+- Added support for drawing tab arrows when visualizing whitespace.
+- Added support for drawing wrap markers. (Requires a font with good glyph support, like DejaVu
+	Sans Mono.)
+- Added support for drawing nearly all line markers. (Requires a font with good glyph support,
+	like DejaVu Sans Mono or Liberation Mono.)
+- Added support for drawing indentation guides.
+- Updated to [Scintilla][] 3.5.2.
 
 [Scinterm 1.5]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.5.zip
 [Scintilla]: https://scintilla.org
@@ -365,15 +386,15 @@ Changes:
 
 Download:
 
-* [Scinterm 1.4][]
+- [Scinterm 1.4][]
 
 Bugfixes:
 
-* Fixed nested folding marker drawing.
+- Fixed nested folding marker drawing.
 
 Changes:
 
-* Updated to [Scintilla][] 3.5.0.
+- Updated to [Scintilla][] 3.5.0.
 
 [Scinterm 1.4]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.4.zip
 [Scintilla]: https://scintilla.org
@@ -382,16 +403,16 @@ Changes:
 
 Download:
 
-* [Scinterm 1.3][]
+- [Scinterm 1.3][]
 
 Bugfixes:
 
-* Clip long lines properly when view width is less than `COLS`.
-* Fixed painting bug in resized views.
+- Clip long lines properly when view width is less than `COLS`.
+- Fixed painting bug in resized views.
 
 Changes:
 
-* Updated to [Scintilla][] 3.4.2.
+- Updated to [Scintilla][] 3.4.2.
 
 [Scinterm 1.3]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.3.zip
 [Scintilla]: https://scintilla.org
@@ -400,22 +421,22 @@ Changes:
 
 Download:
 
-* [Scinterm 1.2][]
+- [Scinterm 1.2][]
 
 Bugfixes:
 
-* Fixed bug with calltip styles.
-* Fixed various compile issues and warnings.
-* Interpret UTF-8 input correctly.
-* Fix crash when trying to draw a call tip larger than the window.
-* Fixed bug in nested fold markers not showing up.
+- Fixed bug with calltip styles.
+- Fixed various compile issues and warnings.
+- Interpret UTF-8 input correctly.
+- Fix crash when trying to draw a call tip larger than the window.
+- Fixed bug in nested fold markers not showing up.
 
 Changes:
 
-* Added support for `INDIC_ROUNDBOX` and `INDIC_STRAIGHTBOX`, but with no translucency.
-* Support curses, PDCurses, and X/Open Curses.
-* Recognize up to 16 separate colors for terminals that support it.
-* Updated to [Scintilla][] 3.3.7.
+- Added support for `INDIC_ROUNDBOX` and `INDIC_STRAIGHTBOX`, but with no translucency.
+- Support curses, PDCurses, and X/Open Curses.
+- Recognize up to 16 separate colors for terminals that support it.
+- Updated to [Scintilla][] 3.3.7.
 
 [Scinterm 1.2]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.2.zip
 [Scintilla]: https://scintilla.org
@@ -424,27 +445,26 @@ Changes:
 
 Download:
 
-* [Scinterm 1.1][]
+- [Scinterm 1.1][]
 
 Bugfixes:
 
-* Fixed crash when pasting uninitialized clipboard text.
-* Fixed bug with drawing around italic characters at EOLs.
-* Display control characters properly.
-* Fixed bug in searching autocompletion lists.
+- Fixed crash when pasting uninitialized clipboard text.
+- Fixed bug with drawing around italic characters at EOLs.
+- Display control characters properly.
+- Fixed bug in searching autocompletion lists.
 
 Changes:
 
-* Expose [`SCI_COLOR_PAIR()`][] macro.
+- Expose `SCI_COLOR_PAIR()` macro.
 
 [Scinterm 1.1]: https://github.com/orbitalquark/scinterm/archive/scinterm_1.1.zip
-[`SCI_COLOR_PAIR()`]: api.html#SCI_COLOR_PAIR
 
 ## 1.0 (31 Aug 2012)
 
 Download:
 
-* [Scinterm 1.0][]
+- [Scinterm 1.0][]
 
 Initial release.
 
