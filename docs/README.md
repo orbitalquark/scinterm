@@ -87,11 +87,13 @@ to set a style's bold attribute in order to use the light color variant.
 Scinterm lacks some Scintilla features due to the terminal's constraints:
 
 * Any settings with alpha values are not supported.
-* Autocompletion lists cannot show images (pixmap surfaces are not supported).  Instead, they
+* Autocompletion lists cannot show images (pixmap surfaces are not supported). Instead, they
   show the first character in the string passed to [`SCI_REGISTERIMAGE`][].
 * Buffered drawing is not supported.
 * Caret settings like period, line style, and width are not supported (terminals use block
   carets with their own period definitions).
+* Clipboard operations do not interact with the system clipboard, including X selections
+  (primary and secondary).
 * Code pages other than UTF-8 have not been tested and it is possible some curses implementations
   do not support them.
 * Drag and drop is not supported.
@@ -110,7 +112,6 @@ Scinterm lacks some Scintilla features due to the terminal's constraints:
 * Mouse cursor types are not supported.
 * Some styles settings like font name, font size, and italic do not display properly (terminals
   use one only font, size and variant).
-* X selections (primary and secondary) are not integrated into the clipboard.
 * Zoom is not supported (terminal font size is fixed).
 * When using the mouse in the Windows console, Shift+Double-click extends selections and
   quadruple-clicking inside a selection collapses it.
