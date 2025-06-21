@@ -129,7 +129,7 @@ short Colors::get(const ColourRGBA &color) {
 	if (const auto entry = colors.find(color.OpaqueRGB()); entry != colors.end())
 		return entry->second;
 	if (colors.size() >= std::numeric_limits<short>::max()) return COLOR_WHITE;
-	const auto c = static_cast<short>(colors.size());
+	const auto c = colorOffset + static_cast<short>(colors.size());
 	init_color(c, color.GetRed() * 1000.0 / 255, color.GetGreen() * 1000.0 / 255,
 		color.GetBlue() * 1000.0 / 255);
 	colors.emplace(color.OpaqueRGB(), c);
@@ -142,7 +142,7 @@ attr_t Colors::Pair(const ColourRGBA &fore, const ColourRGBA &back) {
 	const auto pair = std::make_pair(instance().get(fore), instance().get(back));
 	if (const auto entry = pairs.find(pair); entry != pairs.end()) return entry->second;
 	if (pairs.size() >= static_cast<size_t>(COLORS)) return 0;
-	const short n = pairs.size() + 1; // starts from 1, not 0
+	const short n = instance().pairOffset + pairs.size() + 1; // starts from 1, not 0
 	init_pair(n, pair.first, pair.second);
 	pairs.emplace(pair, COLOR_PAIR(n));
 	return COLOR_PAIR(n);
@@ -152,6 +152,11 @@ ColourRGBA Colors::Find(const short color) {
 	for (const auto pair : instance().colors)
 		if (pair.second == color) return ColourRGBA(pair.first);
 	return Colors::White;
+}
+
+void Colors::SetOffsets(int colorOffset, int pairOffset) {
+	instance().colorOffset = colorOffset;
+	instance().pairOffset = pairOffset;
 }
 
 // Surface handling.
