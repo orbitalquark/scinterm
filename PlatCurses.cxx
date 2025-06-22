@@ -159,6 +159,11 @@ void Colors::SetOffsets(int colorOffset, int pairOffset) {
 	instance().pairOffset = pairOffset;
 }
 
+void Colors::GetAllocated(int *colors, int *pairs) {
+	*colors = instance().colors.size();
+	*pairs = instance().pairs.size();
+}
+
 // Surface handling.
 
 SurfaceImpl::~SurfaceImpl() noexcept { Release(); }

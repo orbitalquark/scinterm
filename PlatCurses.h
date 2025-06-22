@@ -158,6 +158,8 @@ public:
 
 	/** Sets the offsets for colors and color pairs generated on-demand. */
 	static void SetOffsets(int colorOffset, int pairOffset);
+	/** Gets the number of allocated colors and pairs. */
+	static void GetAllocated(int *colors, int *pairs);
 };
 
 inline WINDOW *_WINDOW(WindowID wid) { return reinterpret_cast<WINDOW *>(wid); }

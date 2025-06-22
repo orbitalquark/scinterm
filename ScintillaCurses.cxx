@@ -701,4 +701,8 @@ void scintilla_delete(void *sci) { delete reinterpret_cast<ScintillaCurses *>(sc
 void scintilla_set_color_offsets(int color_offset, int pair_offset) {
 	Scintilla::Internal::Colors::SetOffsets(color_offset, pair_offset);
 }
+
+void scintilla_get_allocated_colors(int *colors, int *pairs) {
+	Scintilla::Internal::Colors::GetAllocated(colors, pairs);
+}
 }

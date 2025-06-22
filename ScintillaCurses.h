@@ -122,6 +122,13 @@ void scintilla_delete(void *sci);
  */
 void scintilla_set_color_offsets(int color_offset, int pair_offset);
 
+/**
+ * Stores the number of Scinterm-allocated colors and color pairs in the given arguments.
+ * These numbers combined with any offsets given to `scintilla_set_color_offsets()` can be used
+ * to query curses for color and pair content.
+ */
+void scintilla_get_allocated_colors(int *colors, int *pairs);
+
 #define IMAGE_MAX 31
 
 #define SCM_PRESS 1
