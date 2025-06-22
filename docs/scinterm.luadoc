@@ -87,3 +87,16 @@
 -- @param sci The Scintilla window returned by `scintilla_new()`.
 -- @return `void`
 -- @function scintilla_delete
+
+--- Sets the offsets for colors and color pairs generated on-demand.
+-- Applications that define their own colors and color pairs can tell Scinterm where to start from.
+-- @param color_offset The offset for Scinterm's calls to `init_color()`.
+-- @param pair_offset The offset for Scinterm's calls to `init_pair()`.
+-- @function scintilla_set_color_offsets
+
+--- Stores the number of Scinterm-allocated colors and color pairs in the given arguments.
+-- These numbers combined with any offsets given to `scintilla_set_color_offsets()` can be used
+-- to query curses for color and pair content.
+-- @param colors (pointer) Where to store the number of allocated colors to.
+-- @param pairs (pointer) Where to store the numer of allocated pairs to.
+-- @function scintilla_get_allocated_colors

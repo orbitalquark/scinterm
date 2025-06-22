@@ -16,6 +16,18 @@ Parameters:
 
 Returns: `void`
 
+<a id="scintilla_get_allocated_colors"></a>
+### `scintilla_get_allocated_colors`(*colors*, *pairs*)
+
+Stores the number of Scinterm-allocated colors and color pairs in the given arguments.
+
+These numbers combined with any offsets given to `scintilla_set_color_offsets()` can be used
+to query curses for color and pair content.
+
+Parameters:
+- *colors*:  (pointer) Where to store the number of allocated colors to.
+- *pairs*:  (pointer) Where to store the numer of allocated pairs to.
+
 <a id="scintilla_get_clipboard"></a>
 ### `scintilla_get_clipboard`(*sci*, *len*)
 
@@ -123,6 +135,17 @@ Parameters:
 - *x*:  (`int`) The absolute x coordinate of the mouse event.
 
 Returns: `bool` whether or not Scintilla handled the mouse event.
+
+<a id="scintilla_set_color_offsets"></a>
+### `scintilla_set_color_offsets`(*color_offset*, *pair_offset*)
+
+Sets the offsets for colors and color pairs generated on-demand.
+
+Applications that define their own colors and color pairs can tell Scinterm where to start from.
+
+Parameters:
+- *color_offset*:  The offset for Scinterm's calls to `init_color()`.
+- *pair_offset*:  The offset for Scinterm's calls to `init_pair()`.
 
 <a id="scintilla_update_cursor"></a>
 ### `scintilla_update_cursor`(*sci*)
