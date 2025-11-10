@@ -266,9 +266,12 @@ void SurfaceImpl::AlphaRectangle(PRectangle rc, XYPOSITION /*cornerSize*/, FillS
 	for (int x = static_cast<int>(std::max(rc.left, clip.left)), y = static_cast<int>(rc.top - 1);
 		x < rc.right; x++) {
 		attr_t attrs = mvwinch(win, y, x) & A_ATTRIBUTES;
-		short pair = PAIR_NUMBER(attrs), fore = COLOR_WHITE, unused;
-		if (pair > 0) pair_content(pair, &fore, &unused);
-		mvwchgat(win, y, x, 1, attrs, PAIR_NUMBER(Colors::Pair(Colors::Find(fore), fill)), nullptr);
+		short pair = PAIR_NUMBER(attrs), fore = COLOR_WHITE, back = COLOR_BLACK;
+		if (pair > 0) pair_content(pair, &fore, &back);
+		if (fill.GetAlpha())
+			mvwchgat(win, y, x, 1, attrs, PAIR_NUMBER(Colors::Pair(Colors::Find(fore), fill)), nullptr);
+		else
+			mvwchgat(win, y, x, 1, attrs | A_UNDERLINE, PAIR_NUMBER(Colors::Pair(fill, Colors::Find(back))), nullptr);
 	}
 }
 
