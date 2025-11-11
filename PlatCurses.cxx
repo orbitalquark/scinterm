@@ -109,14 +109,14 @@ Colors::Colors() {
 	colors.emplace(Cyan.OpaqueRGB(), COLOR_CYAN);
 	colors.emplace(White.OpaqueRGB(), COLOR_WHITE);
 	if (COLORS >= 16) {
-		get(LBlack);
-		get(LRed);
-		get(LGreen);
-		get(LYellow);
-		get(LBlue);
-		get(LMagenta);
-		get(LCyan);
-		get(LWhite);
+		colors.emplace(LBlack.OpaqueRGB(), COLOR_BLACK + 8);
+		colors.emplace(LRed.OpaqueRGB(), COLOR_RED + 8);
+		colors.emplace(LGreen.OpaqueRGB(), COLOR_GREEN + 8);
+		colors.emplace(LYellow.OpaqueRGB(), COLOR_YELLOW + 8);
+		colors.emplace(LBlue.OpaqueRGB(), COLOR_BLUE + 8);
+		colors.emplace(LMagenta.OpaqueRGB(), COLOR_MAGENTA + 8);
+		colors.emplace(LCyan.OpaqueRGB(), COLOR_CYAN + 8);
+		colors.emplace(LWhite.OpaqueRGB(), COLOR_WHITE + 8);
 	}
 }
 
