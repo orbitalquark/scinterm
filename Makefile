@@ -27,9 +27,9 @@ vpath %.h $(srcdir) $(basedir)/src $(basedir)/include
 vpath %.cxx $(srcdir) $(basedir)/src
 
 all: $(scintilla)
-$(sci) PlatCurses.o ScintillaCurses.o: %.o: %.cxx
+$(sci) PlatCurses.o ScintillaCurses.o wcwidth.o: %.o: %.cxx
 	$(CXX) $(CXX_BASE_FLAGS) $(CXXFLAGS) $(CURSES_FLAGS) -c $<
-$(scintilla): $(sci) PlatCurses.o ScintillaCurses.o
+$(scintilla): $(sci) PlatCurses.o ScintillaCurses.o wcwidth.o
 	$(AR) rc $@ $^
 	touch $@
 patch: $(wildcard patches/*.patch)
