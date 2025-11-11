@@ -22,6 +22,7 @@ sci = AutoComplete.o CallTip.o CaseConvert.o CaseFolder.o CellBuffer.o ChangeHis
   Document.o EditModel.o Editor.o EditView.o Geometry.o Indicator.o KeyMap.o LineMarker.o \
   MarginView.o PerLine.o PositionCache.o RESearch.o RunStyles.o ScintillaBase.o Selection.o \
   Style.o UndoHistory.o UniConversion.o UniqueString.o ViewStyle.o XPM.o
+wcwidth = wcwidth.o
 
 vpath %.h $(srcdir) $(basedir)/src $(basedir)/include
 vpath %.cxx $(srcdir) $(basedir)/src
@@ -29,7 +30,8 @@ vpath %.cxx $(srcdir) $(basedir)/src
 all: $(scintilla)
 $(sci) PlatCurses.o ScintillaCurses.o: %.o: %.cxx
 	$(CXX) $(CXX_BASE_FLAGS) $(CXXFLAGS) $(CURSES_FLAGS) -c $<
-$(scintilla): $(sci) PlatCurses.o ScintillaCurses.o
+$(wcwidth): %.o: %.c ; $(CC) $(CFLAGS) -c $<
+$(scintilla): $(sci) PlatCurses.o ScintillaCurses.o $(wcwidth)
 	$(AR) rc $@ $^
 	touch $@
 patch: $(wildcard patches/*.patch)
