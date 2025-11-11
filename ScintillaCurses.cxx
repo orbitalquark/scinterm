@@ -129,7 +129,7 @@ class ScintillaCurses : public ScintillaBase {
 
 public:
 	ScintillaCurses(void (*callback_)(void *, int, SCNotification *, void *), void *userdata_);
-	virtual ~ScintillaCurses() override;
+	~ScintillaCurses() override;
 
 private:
 	void Initialise() override;
@@ -193,7 +193,6 @@ public:
 ScintillaCurses::ScintillaCurses(
 	void (*callback_)(void *, int, SCNotification *, void *), void *userdata_)
 		: sur(Surface::Allocate(Technology::Default)), callback(callback_), userdata(userdata_) {
-
 	// Defaults for curses.
 	marginView.wrapMarkerPaddingRight = 0; // no padding for margin wrap markers
 	marginView.customDrawWrapMarker = DrawWrapVisualMarker; // draw text markers

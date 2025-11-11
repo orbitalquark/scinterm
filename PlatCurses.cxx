@@ -149,7 +149,7 @@ attr_t Colors::Pair(const ColourRGBA &fore, const ColourRGBA &back) {
 }
 
 ColourRGBA Colors::Find(const short color) {
-	for (const auto pair : instance().colors)
+	for (const auto &pair : instance().colors)
 		if (pair.second == color) return ColourRGBA(pair.first);
 	return Colors::White;
 }
@@ -724,7 +724,7 @@ void Platform::DebugPrintf(const char * /*format*/, ...) noexcept {}
 
 void Platform::Assert(const char *c, const char *file, int line) noexcept {
 	char buffer[2000];
-	sprintf(buffer, "Assertion [%s] failed at %s %d\r\n", c, file, line);
+	snprintf(buffer, sizeof(buffer), "Assertion [%s] failed at %s %d\r\n", c, file, line);
 	Platform::DebugDisplay(buffer);
 	abort();
 }

@@ -12,8 +12,8 @@ public:
 	 * Sets terminal character attributes for a particular font.
 	 * These attributes are a union of curses attributes and stored in the font's `attrs` member.
 	 */
-	FontImpl(const FontParameters &fp);
-	virtual ~FontImpl() noexcept override = default;
+	explicit FontImpl(const FontParameters &fp);
+	~FontImpl() noexcept override = default;
 
 	attr_t attrs = 0;
 };
