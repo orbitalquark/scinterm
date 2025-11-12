@@ -26,6 +26,7 @@ wcwidth = wcwidth.o
 
 vpath %.h $(srcdir) $(basedir)/src $(basedir)/include
 vpath %.cxx $(srcdir) $(basedir)/src
+vpath %.c $(srcdir)
 
 all: $(scintilla)
 $(sci) PlatCurses.o ScintillaCurses.o: %.o: %.cxx
