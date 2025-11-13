@@ -141,6 +141,7 @@ class Colors {
 	std::map<int, short> colors; // map of RGB ints to curses color numbers.
 	std::map<std::pair<short, short>, short> pairs; // map of curses colors to their pair numbers
 	int colorOffset = 0, pairOffset = 0;
+	bool usePalette = true;
 
 	Colors();
 	static Colors &instance();
@@ -156,6 +157,8 @@ public:
 	/** Returns the Scintilla color for a given curses color number. */
 	static ColourRGBA Find(const short color);
 
+	/** Disables use of the terminal's default color palette. */
+	static void DisablePalette();
 	/** Sets the offsets for colors and color pairs generated on-demand. */
 	static void SetOffsets(int colorOffset, int pairOffset);
 };

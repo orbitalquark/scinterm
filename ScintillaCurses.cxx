@@ -699,6 +699,8 @@ void scintilla_update_cursor(void *sci) {
 
 void scintilla_delete(void *sci) { delete reinterpret_cast<ScintillaCurses *>(sci); }
 
+void scintilla_disable_color_palette() { Scintilla::Internal::Colors::DisablePalette(); }
+
 void scintilla_set_color_offsets(int color_offset, int pair_offset) {
 	Scintilla::Internal::Colors::SetOffsets(color_offset, pair_offset);
 }

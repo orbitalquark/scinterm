@@ -131,12 +131,15 @@ Colors &Colors::instance() {
 short Colors::get(const ColourRGBA &color) {
 	if (const auto entry = colors.find(color.OpaqueRGB()); entry != colors.end())
 		return entry->second;
-	if (colorOffset + colors.size() >= std::numeric_limits<short>::max()) return COLOR_WHITE;
-	const short c = colorOffset + colors.size();
-	init_color(c, color.GetRed() * 1000.0 / 255, color.GetGreen() * 1000.0 / 255,
+	short i = colorOffset + colors.size();
+	// try not to overwrite a default color
+	if (!usePalette && COLORS > 16 && colorOffset < 16)
+		i += 16 - colorOffset;
+	if (i >= COLORS || i >= std::numeric_limits<short>::max()) return COLOR_WHITE;
+	init_color(i, color.GetRed() * 1000.0 / 255, color.GetGreen() * 1000.0 / 255,
 		color.GetBlue() * 1000.0 / 255);
-	colors.emplace(color.OpaqueRGB(), c);
-	return c;
+	colors.emplace(color.OpaqueRGB(), i);
+	return i;
 }
 
 short Colors::Pair(const ColourRGBA &fore, const ColourRGBA &back) {
@@ -158,6 +161,12 @@ ColourRGBA Colors::Find(const short color) {
 	for (const auto &pair : instance().colors)
 		if (pair.second == color) return ColourRGBA(pair.first);
 	return Colors::White;
+}
+
+void Colors::DisablePalette() {
+	instance().usePalette = false;
+	instance().colors.clear();
+	instance().pairs.clear();
 }
 
 void Colors::SetOffsets(int colorOffset, int pairOffset) {
