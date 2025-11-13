@@ -141,7 +141,7 @@ attr_t Colors::Pair(const ColourRGBA &fore, const ColourRGBA &back) {
 	auto &pairs = instance().pairs;
 	const auto pair = std::make_pair(instance().get(fore), instance().get(back));
 	if (const auto entry = pairs.find(pair); entry != pairs.end()) return entry->second;
-	if (instance().pairOffset + pairs.size() >= static_cast<size_t>(COLORS)) return 0;
+	if (instance().pairOffset + pairs.size() >= static_cast<size_t>(COLOR_PAIRS)) return 0;
 	const short n = instance().pairOffset + pairs.size() + 1; // starts from 1, not 0
 	init_pair(n, pair.first, pair.second);
 	pairs.emplace(pair, COLOR_PAIR(n));
