@@ -116,6 +116,12 @@ void scintilla_update_cursor(void *sci);
  */
 void scintilla_delete(void *sci);
 
+/**
+ * Sets the offsets for colors and color pairs generated on-demand.
+ * Applications that define their own colors and color pairs can tell Scinterm where to start from.
+ */
+void scintilla_set_color_offsets(int color_offset, int pair_offset);
+
 #define IMAGE_MAX 31
 
 #define SCM_PRESS 1

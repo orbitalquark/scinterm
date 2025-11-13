@@ -124,6 +124,17 @@ Parameters:
 
 Returns: `bool` whether or not Scintilla handled the mouse event.
 
+<a id="scintilla_set_color_offsets"></a>
+### `scintilla_set_color_offsets`(*color_offset*, *pair_offset*)
+
+Sets the offsets for colors and color pairs generated on-demand.
+
+Applications that define their own colors and color pairs can tell Scinterm where to start from.
+
+Parameters:
+- *color_offset*:  The offset for Scinterm's calls to `init_color()`.
+- *pair_offset*:  The offset for Scinterm's calls to `init_pair()`.
+
 <a id="scintilla_update_cursor"></a>
 ### `scintilla_update_cursor`(*sci*)
 
