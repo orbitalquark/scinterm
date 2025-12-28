@@ -200,11 +200,25 @@ int SurfaceImpl::PixelDivisions() { return 1; }
 
 int SurfaceImpl::DeviceHeightFont(int /*points*/) { return 1; }
 
-// Drawing lines is not implemented because more often than not, lines are being drawn for
-// decoration (e.g. line markers, underlines, indicators, arrows, etc.)
+// Called to draw diagonal indicators.
+// This is also called by Scintilla's default `DrawTabArrow()` implementation, but we have our own
+// here.
 void SurfaceImpl::LineDraw(Point /*start*/, Point /*end*/, Stroke /*stroke*/) {}
 
-void SurfaceImpl::PolyLine(const Point * /*pts*/, size_t /*npts*/, Stroke /*stroke*/) {}
+// Called to draw squiggle indicators, but draw as a straight underline instead.
+// This is also called by Scintilla's default `DrawTabArrow()`, `DrawWrapMarker()`, and some line
+// marker drawing routines, but we override all these with custom implementations.
+void SurfaceImpl::PolyLine(const Point *pts, size_t npts, Stroke stroke) {
+	int maxx = static_cast<int>(pts[npts - 1].x);
+	if (clip.left == static_cast<int>(pts[0].x) && clip.top == clip.bottom) maxx = clip.right;
+	for (int x = static_cast<int>(pts[0].x), y = static_cast<int>(pts[0].y - 1); x < maxx; x++) {
+		attr_t attrs = mvwinch(win, y, x) & A_ATTRIBUTES;
+		short pair = PAIR_NUMBER(attrs), unused, back = COLOR_BLACK;
+		if (pair > 0) pair_content(pair, &unused, &back);
+		mvwchgat(win, y, x, 1, attrs | A_UNDERLINE,
+			PAIR_NUMBER(Colors::Pair(stroke.colour, Colors::Find(back))), nullptr);
+	}
+}
 
 // Draws the character equivalent of shape outlined by the given polygon's points.
 // Only called for CallTip arrows and INDIC_POINT[CHARACTER]. Assume the former. Line markers
@@ -438,7 +452,7 @@ void SurfaceImpl::FlushCachedState() {}
 
 void SurfaceImpl::FlushDrawing() {} // N/A
 
-// Draws the text representation of a lien marker, if possible.
+// Draws the text representation of a line marker, if possible.
 void SurfaceImpl::DrawLineMarker(
 	const PRectangle &rcWhole, const Font *fontForCharacter, int tFold, const void *data) {
 	auto marker = reinterpret_cast<const LineMarker *>(data);

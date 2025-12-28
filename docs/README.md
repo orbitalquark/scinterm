@@ -104,9 +104,13 @@ Scinterm lacks some Scintilla features due to the terminal's constraints:
   selected background color has no effect.
 * Hotspot underlines are not drawn on mouse hover (`surface->FillRectangle()` is not supported).
 * Indent guides can only highlight in white, not the brace highlight color.
-* Indicators other than `INDIC_ROUNDBOX` and `INDIC_STRAIGHTBOX` are not drawn (`surface->LineTo()`
-  and `surface->FillRectangle()` are not supported for drawing indicator shapes and pixmap
-  surfaces are not supported). Translucent drawing and rounded corners are not supported either.
+* Only the following indicators are drawn:
+  - `INDIC_ROUNDBOX` and `INDIC_STRAIGHTBOX` (translucent drawing and rounded corners are not
+    supported, though).
+  - `INDIC_SQUIGGLE` and `INDIC_SQUIGGLELOW` are substitutes for `INDIC_PLAIN`, and drawn as
+    straight underlines, not squiggles.
+  - No other indicators are drawn because `surface->LineTo()` and `surface->FillRectangle()`
+    are not supported for drawing indicator shapes, nor are pixmap surfaces supported.
 * Some complex marker types are not drawn properly or at all (pixmap surfaces are not supported
   and `surface->LineTo()` is not supported for drawing some marker shapes).
 * Mouse cursor types are not supported.
