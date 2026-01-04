@@ -140,11 +140,11 @@ attr_t Colors::Pair(const ColourRGBA &fore, const ColourRGBA &back) {
 	if (!has_colors()) return back.Opaque() == Black ? 0 : A_REVERSE;
 	auto &pairs = instance().pairs;
 	const auto pair = std::make_pair(instance().get(fore), instance().get(back));
-	if (const auto entry = pairs.find(pair); entry != pairs.end()) return entry->second;
+	if (const auto entry = pairs.find(pair); entry != pairs.end()) return COLOR_PAIR(entry->second);
 	if (instance().pairOffset + pairs.size() >= static_cast<size_t>(COLOR_PAIRS)) return 0;
 	const short n = instance().pairOffset + pairs.size() + 1; // starts from 1, not 0
 	init_pair(n, pair.first, pair.second);
-	pairs.emplace(pair, COLOR_PAIR(n));
+	pairs.emplace(pair, n);
 	return COLOR_PAIR(n);
 }
 
