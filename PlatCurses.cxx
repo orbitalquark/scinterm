@@ -215,6 +215,7 @@ void SurfaceImpl::PolyLine(const Point *pts, size_t npts, Stroke stroke) {
 		attr_t attrs = mvwinch(win, y, x) & A_ATTRIBUTES;
 		short pair = PAIR_NUMBER(attrs), unused, back = COLOR_BLACK;
 		if (pair > 0) pair_content(pair, &unused, &back);
+		attrs &= ~A_COLOR; // strip color information
 		mvwchgat(win, y, x, 1, attrs | A_UNDERLINE,
 			PAIR_NUMBER(Colors::Pair(stroke.colour, Colors::Find(back))), nullptr);
 	}
@@ -287,6 +288,7 @@ void SurfaceImpl::AlphaRectangle(PRectangle rc, XYPOSITION /*cornerSize*/, FillS
 		attr_t attrs = mvwinch(win, y, x) & A_ATTRIBUTES;
 		short pair = PAIR_NUMBER(attrs), fore = COLOR_WHITE, unused;
 		if (pair > 0) pair_content(pair, &fore, &unused);
+		attrs &= ~A_COLOR; // strip color information
 		mvwchgat(win, y, x, 1, attrs, PAIR_NUMBER(Colors::Pair(Colors::Find(fore), fill)), nullptr);
 	}
 }
