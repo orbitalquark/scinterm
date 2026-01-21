@@ -95,7 +95,7 @@ ColourRGBA Colors::LCyan = ColourRGBA(0, 0xFF, 0xFF);
 ColourRGBA Colors::LWhite = ColourRGBA(0xFF, 0xFF, 0xFF);
 
 Colors::Colors() {
-	if (!has_colors()) return;
+	// You need at least COLOR_BLACK even if has_colors() == false.
 	start_color();
 
 	// Populate the colors map with builtin curses colors.
@@ -141,8 +141,9 @@ attr_t Colors::Pair(const ColourRGBA &fore, const ColourRGBA &back) {
 	auto &pairs = instance().pairs;
 	const auto pair = std::make_pair(instance().get(fore), instance().get(back));
 	if (const auto entry = pairs.find(pair); entry != pairs.end()) return COLOR_PAIR(entry->second);
-	if (instance().pairOffset + pairs.size() >= static_cast<size_t>(COLOR_PAIRS)) return 0;
 	const short n = instance().pairOffset + pairs.size() + 1; // starts from 1, not 0
+	// COLOR_PAIR() accepts only 256 pairs (1-255)
+	if (n >= 256) return 0;
 	init_pair(n, pair.first, pair.second);
 	pairs.emplace(pair, n);
 	return COLOR_PAIR(n);
