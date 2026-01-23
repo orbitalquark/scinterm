@@ -95,12 +95,10 @@ ColourRGBA Colors::LCyan = ColourRGBA(0, 0xFF, 0xFF);
 ColourRGBA Colors::LWhite = ColourRGBA(0xFF, 0xFF, 0xFF);
 
 Colors::Colors() {
+	// Populate the colors map with builtin curses colors.
+	colors.emplace(Black.OpaqueRGB(), COLOR_BLACK);
 	if (!has_colors()) return;
 	start_color();
-
-	// Populate the colors map with builtin curses colors.
-	// Also initialize the bold/light variants for terminals that support more than 8 colors.
-	colors.emplace(Black.OpaqueRGB(), COLOR_BLACK);
 	colors.emplace(Red.OpaqueRGB(), COLOR_RED);
 	colors.emplace(Green.OpaqueRGB(), COLOR_GREEN);
 	colors.emplace(Yellow.OpaqueRGB(), COLOR_YELLOW);
@@ -108,16 +106,16 @@ Colors::Colors() {
 	colors.emplace(Magenta.OpaqueRGB(), COLOR_MAGENTA);
 	colors.emplace(Cyan.OpaqueRGB(), COLOR_CYAN);
 	colors.emplace(White.OpaqueRGB(), COLOR_WHITE);
-	if (COLORS >= 16) {
-		colors.emplace(LBlack.OpaqueRGB(), COLOR_BLACK + 8);
-		colors.emplace(LRed.OpaqueRGB(), COLOR_RED + 8);
-		colors.emplace(LGreen.OpaqueRGB(), COLOR_GREEN + 8);
-		colors.emplace(LYellow.OpaqueRGB(), COLOR_YELLOW + 8);
-		colors.emplace(LBlue.OpaqueRGB(), COLOR_BLUE + 8);
-		colors.emplace(LMagenta.OpaqueRGB(), COLOR_MAGENTA + 8);
-		colors.emplace(LCyan.OpaqueRGB(), COLOR_CYAN + 8);
-		colors.emplace(LWhite.OpaqueRGB(), COLOR_WHITE + 8);
-	}
+	// Initialize the bold/light variants for terminals that support more than 8 colors.
+	if (COLORS < 16) return;
+	colors.emplace(LBlack.OpaqueRGB(), COLOR_BLACK + 8);
+	colors.emplace(LRed.OpaqueRGB(), COLOR_RED + 8);
+	colors.emplace(LGreen.OpaqueRGB(), COLOR_GREEN + 8);
+	colors.emplace(LYellow.OpaqueRGB(), COLOR_YELLOW + 8);
+	colors.emplace(LBlue.OpaqueRGB(), COLOR_BLUE + 8);
+	colors.emplace(LMagenta.OpaqueRGB(), COLOR_MAGENTA + 8);
+	colors.emplace(LCyan.OpaqueRGB(), COLOR_CYAN + 8);
+	colors.emplace(LWhite.OpaqueRGB(), COLOR_WHITE + 8);
 }
 
 Colors &Colors::instance() {
