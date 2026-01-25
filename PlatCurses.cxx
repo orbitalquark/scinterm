@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <climits>
 #include <cmath>
 
 #include <stdexcept>
@@ -134,16 +135,26 @@ short Colors::get(const ColourRGBA &color) {
 	return c;
 }
 
-attr_t Colors::Pair(const ColourRGBA &fore, const ColourRGBA &back) {
-	if (!has_colors()) return back.Opaque() == Black ? 0 : A_REVERSE;
+// NOTE: There is also an "extended" API for `int` colors and pairs.
+// It is not supported by X/Open Curses or NetBSD Curses, though.
+short Colors::Pair(const ColourRGBA &fore, const ColourRGBA &back, attr_t &attr) {
+	if (!has_colors()) {
+		if (!(back.Opaque() == Black)) attr |= A_REVERSE;
+		return 0;
+	}
 	auto &pairs = instance().pairs;
 	const auto pair = std::make_pair(instance().get(fore), instance().get(back));
-	if (const auto entry = pairs.find(pair); entry != pairs.end()) return COLOR_PAIR(entry->second);
-	if (instance().pairOffset + pairs.size() >= static_cast<size_t>(COLOR_PAIRS)) return 0;
+	if (const auto entry = pairs.find(pair); entry != pairs.end()) return entry->second;
 	const short n = instance().pairOffset + pairs.size() + 1; // starts from 1, not 0
+	if (n >= std::min(COLOR_PAIRS, SHRT_MAX)) return 0;
 	init_pair(n, pair.first, pair.second);
 	pairs.emplace(pair, n);
-	return COLOR_PAIR(n);
+	return n;
+}
+
+int Colors::wattr_set(WINDOW *win, const ColourRGBA &fore, const ColourRGBA &back, attr_t attr) {
+	short pair = Colors::Pair(fore, back, attr);
+	return ::wattr_set(win, attr, pair, nullptr);
 }
 
 ColourRGBA Colors::Find(const short color) {
@@ -210,12 +221,14 @@ void SurfaceImpl::PolyLine(const Point *pts, size_t npts, Stroke stroke) {
 	int maxx = static_cast<int>(pts[npts - 1].x);
 	if (clip.left == static_cast<int>(pts[0].x) && clip.top == clip.bottom) maxx = clip.right;
 	for (int x = static_cast<int>(pts[0].x), y = static_cast<int>(pts[0].y - 1); x < maxx; x++) {
-		attr_t attrs = mvwinch(win, y, x) & A_ATTRIBUTES;
-		short pair = PAIR_NUMBER(attrs), unused, back = COLOR_BLACK;
+		attr_t attrs = 0;
+		short pair = 0, unused, back = COLOR_BLACK;
+		wmove(win, y, x);
+		wattr_get(win, &attrs, &pair, nullptr);
 		if (pair > 0) pair_content(pair, &unused, &back);
 		attrs &= ~A_COLOR; // strip color information
-		mvwchgat(win, y, x, 1, attrs | A_UNDERLINE,
-			PAIR_NUMBER(Colors::Pair(stroke.colour, Colors::Find(back))), nullptr);
+		pair = Colors::Pair(stroke.colour, Colors::Find(back), attrs);
+		mvwchgat(win, y, x, 1, attrs | A_UNDERLINE, pair, nullptr);
 	}
 }
 
@@ -224,7 +237,7 @@ void SurfaceImpl::PolyLine(const Point *pts, size_t npts, Stroke stroke) {
 // normally drawn as polygons are handled in `DrawLineMarker()`.
 void SurfaceImpl::Polygon(const Point *pts, size_t npts, FillStroke fillStroke) {
 	ColourRGBA &back = fillStroke.fill.colour;
-	wattrset(win, Colors::Pair(back, Colors::White)); // invert
+	Colors::wattr_set(win, back, Colors::White); // invert
 	if (pts[0].y < pts[npts - 1].y) // up arrow
 		mvwaddstr(win, static_cast<int>(pts[0].y), static_cast<int>(pts[npts - 1].x - 2), "▲");
 	else if (pts[0].y > pts[npts - 1].y) // down arrow
@@ -247,12 +260,12 @@ void SurfaceImpl::FillRectangle(PRectangle rc, Fill fill) {
 		pixmapColor = fill.colour;
 		return;
 	}
-	wattrset(win, Colors::Pair(Colors::White, fill.colour));
+	Colors::wattr_set(win, Colors::White, fill.colour);
 	chtype ch = ' ';
 	if (fabs(rc.left - static_cast<int>(rc.left)) > 0.1) {
 		// If rc.left is a fractional value (e.g. 4.5) then whitespace dots are being drawn. Draw
 		// them appropriately.
-		wattrset(win, Colors::Pair(fill.colour, fill.colour));
+		Colors::wattr_set(win, fill.colour, fill.colour);
 		rc.right = static_cast<int>(rc.right), ch = ACS_BULLET | A_BOLD;
 	}
 	for (int y = static_cast<int>(rc.top); y < rc.bottom; y++)
@@ -283,11 +296,14 @@ void SurfaceImpl::AlphaRectangle(PRectangle rc, XYPOSITION /*cornerSize*/, FillS
 	ColourRGBA &fill = fillStroke.fill.colour;
 	for (int x = static_cast<int>(std::max(rc.left, clip.left)), y = static_cast<int>(rc.top - 1);
 		x < rc.right; x++) {
-		attr_t attrs = mvwinch(win, y, x) & A_ATTRIBUTES;
-		short pair = PAIR_NUMBER(attrs), fore = COLOR_WHITE, unused;
+		attr_t attrs = 0;
+		short pair = 0, fore = COLOR_WHITE, unused;
+		wmove(win, y, x);
+		wattr_get(win, &attrs, &pair, nullptr);
 		if (pair > 0) pair_content(pair, &fore, &unused);
 		attrs &= ~A_COLOR; // strip color information
-		mvwchgat(win, y, x, 1, attrs, PAIR_NUMBER(Colors::Pair(Colors::Find(fore), fill)), nullptr);
+		pair = Colors::Pair(Colors::Find(fore), fill, attrs);
+		mvwchgat(win, y, x, 1, attrs, pair, nullptr);
 	}
 }
 
@@ -311,7 +327,7 @@ void SurfaceImpl::Copy(PRectangle rc, Point /*from*/, Surface &surfaceSource) {
 		Colors::White :
 		Colors::Black;
 	if (rc.left - 1 < clip.left) return;
-	wattrset(win, Colors::Pair(fore, Colors::Black));
+	Colors::wattr_set(win, fore, Colors::Black);
 	mvwaddch(win, static_cast<int>(rc.top), static_cast<int>(rc.left - 1), '|' | A_BOLD);
 }
 
@@ -341,7 +357,7 @@ int grapheme_width(const char *s) {
 void SurfaceImpl::DrawTextNoClip(PRectangle rc, const Font *font_, XYPOSITION /*ybase*/,
 	std::string_view text, ColourRGBA fore, ColourRGBA back) {
 	attr_t attrs = dynamic_cast<const FontImpl *>(font_)->attrs;
-	wattrset(win, attrs | Colors::Pair(fore, back));
+	Colors::wattr_set(win, fore, back, attrs);
 	if (rc.left < clip.left) {
 		// Do not overwrite margin text.
 		auto clip_chars = static_cast<int>(clip.left - rc.left);
@@ -456,9 +472,7 @@ void SurfaceImpl::FlushDrawing() {} // N/A
 void SurfaceImpl::DrawLineMarker(
 	const PRectangle &rcWhole, const Font *fontForCharacter, int tFold, const void *data) {
 	auto marker = reinterpret_cast<const LineMarker *>(data);
-	attr_t attr = Colors::Pair(marker->fore, marker->back);
-	if (tFold) attr |= A_BOLD;
-	wattrset(win, attr);
+	Colors::wattr_set(win, marker->fore, marker->back, tFold ? A_BOLD : 0);
 	int top = static_cast<int>(rcWhole.top), left = static_cast<int>(rcWhole.left);
 	switch (marker->markType) {
 	case MarkerSymbol::Circle: mvwaddstr(win, top, left, "●"); return;
@@ -502,7 +516,7 @@ void SurfaceImpl::DrawLineMarker(
 
 // Draws the text representation of a wrap marker.
 void SurfaceImpl::DrawWrapMarker(PRectangle rcPlace, bool isEndMarker, ColourRGBA wrapColour) {
-	wattrset(win, Colors::Pair(wrapColour, Colors::Black));
+	Colors::wattr_set(win, wrapColour, Colors::Black);
 	mvwaddstr(
 		win, static_cast<int>(rcPlace.top), static_cast<int>(rcPlace.left), isEndMarker ? "↩" : "↪");
 }
@@ -511,7 +525,7 @@ void SurfaceImpl::DrawWrapMarker(PRectangle rcPlace, bool isEndMarker, ColourRGB
 void SurfaceImpl::DrawTabArrow(PRectangle rcTab, const ViewStyle &vsDraw) {
 	const ColourRGBA &fore = vsDraw.ElementColour(Element::WhiteSpace).value_or(Colors::Black);
 	const ColourRGBA &back = vsDraw.ElementColour(Element::WhiteSpaceBack).value_or(Colors::Black);
-	wattrset(win, Colors::Pair(fore, back));
+	Colors::wattr_set(win, fore, back);
 	for (int i = static_cast<int>(std::max(rcTab.left - 1, clip.left)); i < rcTab.right; i++)
 		mvwaddch(win, static_cast<int>(rcTab.top), i, '-' | A_BOLD);
 	char tail = vsDraw.tabDrawMode == TabDrawMode::LongArrow ? '>' : '-';

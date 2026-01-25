@@ -267,12 +267,12 @@ void ScintillaCurses::SetVerticalScrollPos() {
 	int maxy = getmaxy(w), maxx = getmaxx(w);
 	if (scrollBarHeight == maxy) return; // no point in drawing a non-scrollable bar yet
 	// Draw the gutter.
-	wattrset(w, Colors::Pair(Colors::White, Colors::Black));
+	Colors::wattr_set(w, Colors::White, Colors::Black);
 	for (int i = 0; i < maxy; i++) mvwaddch(w, i, maxx - 1, ACS_CKBOARD);
 	// Draw the bar.
 	scrollBarVPos =
 		static_cast<int>(static_cast<float>(topLine) / (MaxScrollPos() + LinesOnScreen() - 1) * maxy);
-	wattrset(w, Colors::Pair(Colors::Black, Colors::White));
+	Colors::wattr_set(w, Colors::Black, Colors::White);
 	for (int i = scrollBarVPos; i < scrollBarVPos + scrollBarHeight; i++)
 		mvwaddch(w, i, maxx - 1, ACS_VLINE);
 }
@@ -283,11 +283,11 @@ void ScintillaCurses::SetHorizontalScrollPos() {
 	int maxy = getmaxy(w), maxx = getmaxx(w);
 	if (scrollBarWidth == maxx) return; // no point in drawing a non-scrollable bar yet
 	// Draw the gutter.
-	wattrset(w, Colors::Pair(Colors::White, Colors::Black));
+	Colors::wattr_set(w, Colors::White, Colors::Black);
 	for (int i = 0; i < maxx; i++) mvwaddch(w, maxy - 1, i, ACS_CKBOARD);
 	// Draw the bar.
 	scrollBarHPos = static_cast<int>(static_cast<float>(xOffset) / scrollWidth * maxx);
-	wattrset(w, Colors::Pair(Colors::Black, Colors::White));
+	Colors::wattr_set(w, Colors::Black, Colors::White);
 	for (int i = scrollBarHPos; i < scrollBarHPos + scrollBarWidth; i++)
 		mvwaddch(w, maxy - 1, i, ACS_HLINE);
 }
@@ -402,7 +402,7 @@ void ScintillaCurses::CreateCallTipWindow(PRectangle rc) {
 		surface->Init(wid);
 		dynamic_cast<SurfaceImpl *>(surface.get())->isCallTip = true;
 		ct.PaintCT(surface.get());
-		wattrset(_WINDOW(wid), Colors::Pair(Colors::White, Colors::Black));
+		Colors::wattr_set(_WINDOW(wid), Colors::White, Colors::Black);
 		box(_WINDOW(wid), '|', '-');
 		wnoutrefresh(_WINDOW(wid));
 	}
