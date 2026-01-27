@@ -152,7 +152,7 @@ public:
 	static ColourRGBA LBlack, LRed, LGreen, LYellow, LBlue, LMagenta, LCyan, LWhite;
 
 	/** Returns the curses pair number for a Scintilla color pair, initializing it if necessary. */
-	static attr_t Pair(const ColourRGBA &fore, const ColourRGBA &back);
+	static short Pair(const ColourRGBA &fore, const ColourRGBA &back);
 	/** Returns the Scintilla color for a given curses color number. */
 	static ColourRGBA Find(const short color);
 
