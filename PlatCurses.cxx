@@ -216,6 +216,9 @@ void SurfaceImpl::PolyLine(const Point *pts, size_t npts, Stroke stroke) {
 		wmove(win, y, x), wattr_get(win, &attrs, &pair, nullptr);
 		attrs &= ~A_COLOR; // strip color information
 		if (pair > 0) pair_content(pair, &unused, &back);
+		// If the terminal is a dumb one without colors, we can work with a "second pair"
+		// that is the reverse of the current one if the background color to draw is
+		// white. This applies to all `mvwchgat()` and `wattr_set()` calls.
 		if (!(has_colors() || Colors::Find(back).Opaque() == Colors::Black)) attrs |= A_REVERSE;
 		mvwchgat(
 			win, y, x, 1, attrs | A_UNDERLINE, Colors::Pair(stroke.colour, Colors::Find(back)), nullptr);
