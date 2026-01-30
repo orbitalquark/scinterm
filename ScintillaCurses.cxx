@@ -272,7 +272,7 @@ void ScintillaCurses::SetVerticalScrollPos() {
 	// Draw the bar.
 	scrollBarVPos =
 		static_cast<int>(static_cast<float>(topLine) / (MaxScrollPos() + LinesOnScreen() - 1) * maxy);
-	const attr_t attr = has_colors() ? 0 : A_REVERSE;
+	const attr_t attr = has_colors() ? 0 : WA_REVERSE;
 	wattr_set(w, attr, Colors::Pair(Colors::Black, Colors::White), nullptr); // invert
 	for (int i = scrollBarVPos; i < scrollBarVPos + scrollBarHeight; i++)
 		mvwaddch(w, i, maxx - 1, ACS_VLINE);
@@ -288,7 +288,7 @@ void ScintillaCurses::SetHorizontalScrollPos() {
 	for (int i = 0; i < maxx; i++) mvwaddch(w, maxy - 1, i, ACS_CKBOARD);
 	// Draw the bar.
 	scrollBarHPos = static_cast<int>(static_cast<float>(xOffset) / scrollWidth * maxx);
-	const attr_t attr = has_colors() ? 0 : A_REVERSE;
+	const attr_t attr = has_colors() ? 0 : WA_REVERSE;
 	wattr_set(w, attr, Colors::Pair(Colors::Black, Colors::White), nullptr); // invert
 	for (int i = scrollBarHPos; i < scrollBarHPos + scrollBarWidth; i++)
 		mvwaddch(w, maxy - 1, i, ACS_HLINE);
@@ -431,7 +431,7 @@ sptr_t ScintillaCurses::WndProc(Message iMessage, uptr_t wParam, sptr_t lParam) 
 		// utilize stretch, which also happens to be meaningless in curses.
 		case Message::StyleSetUnderline:
 			ScintillaBase::WndProc(Message::StyleSetStretch, wParam,
-				lParam ? A_UNDERLINE : static_cast<int>(FontStretch::Normal));
+				lParam ? WA_UNDERLINE : static_cast<int>(FontStretch::Normal));
 			[[fallthrough]];
 		// Pass to Scintilla.
 		default: return ScintillaBase::WndProc(iMessage, wParam, lParam);
