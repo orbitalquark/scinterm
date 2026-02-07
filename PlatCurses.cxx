@@ -15,6 +15,9 @@
 #include <memory>
 #include <limits>
 
+#if __APPLE__
+#define _XOPEN_SOURCE_EXTENDED // for NCURSES_WIDECHAR
+#endif
 #include <curses.h>
 
 #include "ScintillaTypes.h"
@@ -57,16 +60,20 @@
 #include "ScintillaCurses.h"
 #include "PlatCurses.h"
 
+#ifndef CCHARW_MAX
+#define CCHARW_MAX 20 // PDCurses
+#endif
+
 namespace Scintilla::Internal {
 
 // Font handling.
 
 FontImpl::FontImpl(const FontParameters &fp) {
-	if (fp.weight == FontWeight::Bold) attrs = A_BOLD;
-#if defined(A_ITALIC)
-	if (fp.italic) attrs |= A_ITALIC;
+	if (fp.weight == FontWeight::Bold) attrs = WA_BOLD;
+#if defined(WA_ITALIC)
+	if (fp.italic) attrs |= WA_ITALIC;
 #endif
-	if (static_cast<int>(fp.stretch) == A_UNDERLINE) attrs |= A_UNDERLINE;
+	if (static_cast<int>(fp.stretch) == WA_UNDERLINE) attrs |= WA_UNDERLINE;
 }
 
 std::shared_ptr<Font> Font::Allocate(const FontParameters &fp) {
@@ -211,17 +218,18 @@ void SurfaceImpl::PolyLine(const Point *pts, size_t npts, Stroke stroke) {
 	int maxx = static_cast<int>(pts[npts - 1].x);
 	if (clip.left == static_cast<int>(pts[0].x) && clip.top == clip.bottom) maxx = clip.right;
 	for (int x = static_cast<int>(pts[0].x), y = static_cast<int>(pts[0].y - 1); x < maxx; x++) {
+		cchar_t wch;
+		wchar_t unused_wch[CCHARW_MAX + 1];
 		attr_t attrs = 0;
-		short pair = 0, unused, back = COLOR_BLACK;
-		wmove(win, y, x), wattr_get(win, &attrs, &pair, nullptr);
-		attrs &= ~A_COLOR; // strip color information
-		if (pair > 0) pair_content(pair, &unused, &back);
+		short pair = 0, unused_color, back = COLOR_BLACK;
+		mvwin_wch(win, y, x, &wch), getcchar(&wch, unused_wch, &attrs, &pair, nullptr);
+		if (pair > 0) pair_content(pair, &unused_color, &back);
 		// If the terminal is a dumb one without colors, we can work with a "second pair"
 		// that is the reverse of the current one if the background color to draw is
 		// white. This applies to all `mvwchgat()` and `wattr_set()` calls.
-		if (!(has_colors() || Colors::Find(back).Opaque() == Colors::Black)) attrs |= A_REVERSE;
+		if (!(has_colors() || Colors::Find(back).Opaque() == Colors::Black)) attrs |= WA_REVERSE;
 		mvwchgat(
-			win, y, x, 1, attrs | A_UNDERLINE, Colors::Pair(stroke.colour, Colors::Find(back)), nullptr);
+			win, y, x, 1, attrs | WA_UNDERLINE, Colors::Pair(stroke.colour, Colors::Find(back)), nullptr);
 	}
 }
 
@@ -230,7 +238,7 @@ void SurfaceImpl::PolyLine(const Point *pts, size_t npts, Stroke stroke) {
 // normally drawn as polygons are handled in `DrawLineMarker()`.
 void SurfaceImpl::Polygon(const Point *pts, size_t npts, FillStroke fillStroke) {
 	ColourRGBA &back = fillStroke.fill.colour;
-	const attr_t attrs = has_colors() ? 0 : A_REVERSE;
+	const attr_t attrs = has_colors() ? 0 : WA_REVERSE;
 	wattr_set(win, attrs, Colors::Pair(back, Colors::White), nullptr); // invert
 	if (pts[0].y < pts[npts - 1].y) // up arrow
 		mvwaddstr(win, static_cast<int>(pts[0].y), static_cast<int>(pts[npts - 1].x - 2), "▲");
@@ -254,7 +262,7 @@ void SurfaceImpl::FillRectangle(PRectangle rc, Fill fill) {
 		pixmapColor = fill.colour;
 		return;
 	}
-	const attr_t attrs = has_colors() || fill.colour.Opaque() == Colors::Black ? 0 : A_REVERSE;
+	const attr_t attrs = has_colors() || fill.colour.Opaque() == Colors::Black ? 0 : WA_REVERSE;
 	wattr_set(win, attrs, Colors::Pair(Colors::White, fill.colour), nullptr);
 	chtype ch = ' ';
 	if (fabs(rc.left - static_cast<int>(rc.left)) > 0.1) {
@@ -291,12 +299,13 @@ void SurfaceImpl::AlphaRectangle(PRectangle rc, XYPOSITION /*cornerSize*/, FillS
 	ColourRGBA &fill = fillStroke.fill.colour;
 	for (int x = static_cast<int>(std::max(rc.left, clip.left)), y = static_cast<int>(rc.top - 1);
 		x < rc.right; x++) {
+		cchar_t wch;
+		wchar_t unused_wch[CCHARW_MAX + 1];
 		attr_t attrs = 0;
-		short pair = 0, fore = COLOR_WHITE, unused;
-		wmove(win, y, x), wattr_get(win, &attrs, &pair, nullptr);
-		attrs &= ~A_COLOR; // strip color information
-		if (pair > 0) pair_content(pair, &fore, &unused);
-		if (!(has_colors() || fill.Opaque() == Colors::Black)) attrs |= A_REVERSE;
+		short pair = 0, fore = COLOR_WHITE, unused_color;
+		mvwin_wch(win, y, x, &wch), getcchar(&wch, unused_wch, &attrs, &pair, nullptr);
+		if (pair > 0) pair_content(pair, &fore, &unused_color);
+		if (!(has_colors() || fill.Opaque() == Colors::Black)) attrs |= WA_REVERSE;
 		mvwchgat(win, y, x, 1, attrs, Colors::Pair(Colors::Find(fore), fill), nullptr);
 	}
 }
@@ -351,7 +360,7 @@ int grapheme_width(const char *s) {
 void SurfaceImpl::DrawTextNoClip(PRectangle rc, const Font *font_, XYPOSITION /*ybase*/,
 	std::string_view text, ColourRGBA fore, ColourRGBA back) {
 	attr_t attrs = dynamic_cast<const FontImpl *>(font_)->attrs;
-	if (!(has_colors() || back.Opaque() == Colors::Black)) attrs |= A_REVERSE;
+	if (!(has_colors() || back.Opaque() == Colors::Black)) attrs |= WA_REVERSE;
 	wattr_set(win, attrs, Colors::Pair(fore, back), nullptr);
 	if (rc.left < clip.left) {
 		// Do not overwrite margin text.
@@ -393,12 +402,16 @@ void SurfaceImpl::DrawTextTransparent(
 	if (static_cast<int>(rc.top) > getmaxy(win) - 1) return;
 	short back = COLOR_BLACK;
 	if (!isCallTip) {
-		auto left = static_cast<int>(rc.left);
-		attr_t attrs = left >= clip.left ? mvwinch(win, static_cast<int>(rc.top), left) : 0;
-		short pair = PAIR_NUMBER(attrs), unused;
+		auto left = static_cast<int>(rc.left), top = static_cast<int>(rc.top);
+		cchar_t wch;
+		wchar_t unused_wch[CCHARW_MAX + 1];
+		attr_t attrs = 0;
+		short pair = 0, unused_color;
+		if (left >= clip.left)
+			mvwin_wch(win, top, left, &wch), getcchar(&wch, unused_wch, &attrs, &pair, nullptr);
 		if (pair > 0)
-			pair_content(pair, &unused, &back);
-		else if (attrs & A_REVERSE) // !has_colors() and white terminal background
+			pair_content(pair, &unused_color, &back);
+		else if (attrs & WA_REVERSE) // !has_colors() and white terminal background
 			back = COLOR_WHITE;
 	}
 	DrawTextNoClip(rc, font_, ybase, text, fore, Colors::Find(back));
@@ -467,8 +480,8 @@ void SurfaceImpl::FlushDrawing() {} // N/A
 void SurfaceImpl::DrawLineMarker(
 	const PRectangle &rcWhole, const Font *fontForCharacter, int tFold, const void *data) {
 	auto marker = reinterpret_cast<const LineMarker *>(data);
-	attr_t attr = has_colors() || marker->back.Opaque() == Colors::Black ? 0 : A_REVERSE;
-	if (tFold) attr |= A_BOLD;
+	attr_t attr = has_colors() || marker->back.Opaque() == Colors::Black ? 0 : WA_REVERSE;
+	if (tFold) attr |= WA_BOLD;
 	wattr_set(win, attr, Colors::Pair(marker->fore, marker->back), nullptr);
 	int top = static_cast<int>(rcWhole.top), left = static_cast<int>(rcWhole.left);
 	switch (marker->markType) {
@@ -522,7 +535,7 @@ void SurfaceImpl::DrawWrapMarker(PRectangle rcPlace, bool isEndMarker, ColourRGB
 void SurfaceImpl::DrawTabArrow(PRectangle rcTab, const ViewStyle &vsDraw) {
 	const ColourRGBA &fore = vsDraw.ElementColour(Element::WhiteSpace).value_or(Colors::Black);
 	const ColourRGBA &back = vsDraw.ElementColour(Element::WhiteSpaceBack).value_or(Colors::Black);
-	const attr_t attr = has_colors() || back.Opaque() == Colors::Black ? 0 : A_REVERSE;
+	const attr_t attr = has_colors() || back.Opaque() == Colors::Black ? 0 : WA_REVERSE;
 	wattr_set(win, attr, Colors::Pair(fore, back), nullptr);
 	for (int i = static_cast<int>(std::max(rcTab.left - 1, clip.left)); i < rcTab.right; i++)
 		mvwaddch(win, static_cast<int>(rcTab.top), i, '-' | A_BOLD);

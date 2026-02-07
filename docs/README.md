@@ -1,6 +1,6 @@
 # Scinterm
 
-Scinterm is a curses platform for [Scintilla][] that supports [ncurses][], [PDCurses][], and
+Scinterm is a curses platform for [Scintilla][] that supports [ncurses][](w), [PDCurses][], and
 X/Open Curses.
 
 <a href="assets/images/scinterm.png"><img src="assets/images/scinterm.png" width="500" alt="scinterm"/></a>
