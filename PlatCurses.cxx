@@ -664,7 +664,7 @@ void ListBoxImpl::Select(int n) {
 	if (s < 0) s = 0;
 	for (int i = s; i < s + height && i < len; i++) {
 		mvwaddstr(w, i - s + 1, 1, list.at(i).c_str());
-		if (i == n) mvwchgat(w, i - s + 1, 2, width - 1, A_REVERSE, 0, nullptr);
+		if (i == n) mvwchgat(w, i - s + 1, 2, width - 1, WA_REVERSE, 0, nullptr);
 	}
 	wmove(w, n - s + 1, 1); // place cursor on selected line
 	wnoutrefresh(w);
