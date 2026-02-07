@@ -15,7 +15,9 @@
 #include <memory>
 #include <limits>
 
-#if __APPLE__
+#if __WIN32__
+#define PDC_WIDE
+#elif __APPLE__
 #define _XOPEN_SOURCE_EXTENDED // for NCURSES_WIDECHAR
 #endif
 #include <curses.h>
