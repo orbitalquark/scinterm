@@ -8,7 +8,8 @@ basedir = $(srcdir)/..
 AR = ar
 CC = gcc
 CXX = g++
-CXX_BASE_FLAGS = -std=c++17 -pedantic -DCURSES -DSCI_LEXER -I$(basedir)/include -I$(basedir)/src -Wall
+CXX_BASE_FLAGS = -std=c++17 -pedantic -DCURSES -DSCI_LEXER -D_XOPEN_SOURCE_EXTENDED \
+	-I$(basedir)/include -I$(basedir)/src -Wall
 ifdef DEBUG
   CXX_BASE_FLAGS += -DDEBUG -g
 else

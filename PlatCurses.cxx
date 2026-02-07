@@ -15,11 +15,6 @@
 #include <memory>
 #include <limits>
 
-#if _WIN32
-#define PDC_WIDE
-#elif !defined(_XOPEN_SOURCE_EXTENDED)
-#define _XOPEN_SOURCE_EXTENDED // for NCURSES_WIDECHAR
-#endif
 #include <curses.h>
 
 #include "ScintillaTypes.h"
