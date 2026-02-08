@@ -143,9 +143,11 @@ short Colors::Pair(const ColourRGBA &fore, const ColourRGBA &back) {
 	auto &pairs = instance().pairs;
 	const auto pair = std::make_pair(instance().get(fore), instance().get(back));
 	if (const auto entry = pairs.find(pair); entry != pairs.end()) return entry->second;
-	if (instance().pairOffset + pairs.size() >= std::numeric_limits<short>::max()) return 0;
+	size_t max_pairs = COLOR_PAIRS;
+	if (const size_t short_max = std::numeric_limits<short>::max(); short_max < max_pairs)
+		max_pairs = short_max; // some curses allow COLOR_PAIRS to exceed max short value
+	if (instance().pairOffset + pairs.size() >= max_pairs) return 0;
 	const short n = instance().pairOffset + pairs.size() + 1; // starts from 1, not 0
-	if (n >= COLOR_PAIRS) return 0;
 	init_pair(n, pair.first, pair.second);
 	pairs.emplace(pair, n);
 	return n;
