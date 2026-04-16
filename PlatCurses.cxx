@@ -110,16 +110,22 @@ Colors::Colors() {
 	colors.emplace(Magenta.OpaqueRGB(), COLOR_MAGENTA);
 	colors.emplace(Cyan.OpaqueRGB(), COLOR_CYAN);
 	colors.emplace(White.OpaqueRGB(), COLOR_WHITE);
-	// Initialize the bold/light variants for terminals that support more than 8 colors.
-	if (COLORS < 16) return;
-	colors.emplace(LBlack.OpaqueRGB(), COLOR_BLACK + 8);
-	colors.emplace(LRed.OpaqueRGB(), COLOR_RED + 8);
-	colors.emplace(LGreen.OpaqueRGB(), COLOR_GREEN + 8);
-	colors.emplace(LYellow.OpaqueRGB(), COLOR_YELLOW + 8);
-	colors.emplace(LBlue.OpaqueRGB(), COLOR_BLUE + 8);
-	colors.emplace(LMagenta.OpaqueRGB(), COLOR_MAGENTA + 8);
-	colors.emplace(LCyan.OpaqueRGB(), COLOR_CYAN + 8);
-	colors.emplace(LWhite.OpaqueRGB(), COLOR_WHITE + 8);
+	// On 8-color terminals, light variants will be rendered
+	// like the lower 8 colors.
+	// You cannot rely on A_BOLD to produce light colors either,
+	// but on 8-color terminals (Linux/FreeBSD consoles) this is
+	// usually the case.
+	// Light black on black background might be invisible, but
+	// making it bold has a high chance of being rendered as grey.
+	int base = COLORS >= 16 ? 8 : 0;
+	colors.emplace(LBlack.OpaqueRGB(), COLOR_BLACK + base);
+	colors.emplace(LRed.OpaqueRGB(), COLOR_RED + base);
+	colors.emplace(LGreen.OpaqueRGB(), COLOR_GREEN + base);
+	colors.emplace(LYellow.OpaqueRGB(), COLOR_YELLOW + base);
+	colors.emplace(LBlue.OpaqueRGB(), COLOR_BLUE + base);
+	colors.emplace(LMagenta.OpaqueRGB(), COLOR_MAGENTA + base);
+	colors.emplace(LCyan.OpaqueRGB(), COLOR_CYAN + base);
+	colors.emplace(LWhite.OpaqueRGB(), COLOR_WHITE + base);
 }
 
 Colors &Colors::instance() {
