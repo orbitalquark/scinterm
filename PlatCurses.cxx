@@ -111,15 +111,16 @@ Colors::Colors() {
 	colors.emplace(Cyan.OpaqueRGB(), COLOR_CYAN);
 	colors.emplace(White.OpaqueRGB(), COLOR_WHITE);
 	// Initialize the bold/light variants for terminals that support more than 8 colors.
-	if (COLORS < 16) return;
-	colors.emplace(LBlack.OpaqueRGB(), COLOR_BLACK + 8);
-	colors.emplace(LRed.OpaqueRGB(), COLOR_RED + 8);
-	colors.emplace(LGreen.OpaqueRGB(), COLOR_GREEN + 8);
-	colors.emplace(LYellow.OpaqueRGB(), COLOR_YELLOW + 8);
-	colors.emplace(LBlue.OpaqueRGB(), COLOR_BLUE + 8);
-	colors.emplace(LMagenta.OpaqueRGB(), COLOR_MAGENTA + 8);
-	colors.emplace(LCyan.OpaqueRGB(), COLOR_CYAN + 8);
-	colors.emplace(LWhite.OpaqueRGB(), COLOR_WHITE + 8);
+	// Otherwise, do not distinguish between light and normal colors.
+	const int offset = COLORS >= 16 ? 8 : 0;
+	colors.emplace(LBlack.OpaqueRGB(), COLOR_BLACK + offset);
+	colors.emplace(LRed.OpaqueRGB(), COLOR_RED + offset);
+	colors.emplace(LGreen.OpaqueRGB(), COLOR_GREEN + offset);
+	colors.emplace(LYellow.OpaqueRGB(), COLOR_YELLOW + offset);
+	colors.emplace(LBlue.OpaqueRGB(), COLOR_BLUE + offset);
+	colors.emplace(LMagenta.OpaqueRGB(), COLOR_MAGENTA + offset);
+	colors.emplace(LCyan.OpaqueRGB(), COLOR_CYAN + offset);
+	colors.emplace(LWhite.OpaqueRGB(), COLOR_WHITE + offset);
 }
 
 Colors &Colors::instance() {
