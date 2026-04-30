@@ -436,9 +436,9 @@ sptr_t ScintillaCurses::WndProc(Message iMessage, uptr_t wParam, sptr_t lParam) 
 		// Pass to Scintilla.
 		default: return ScintillaBase::WndProc(iMessage, wParam, lParam);
 		}
-	} catch (std::bad_alloc &) { errorStatus = Status::BadAlloc; } catch (...) {
-		errorStatus = Status::Failure;
-	}
+	} catch (std::bad_alloc &) { errorStatus = Status::BadAlloc; } catch (Failure &failure) {
+		errorStatus = failure.status;
+	} catch (...) { errorStatus = Status::Failure; }
 	return 0;
 }
 
