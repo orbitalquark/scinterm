@@ -88,6 +88,10 @@
 -- @return `void`
 -- @function scintilla_delete
 
+--- Disables use of the terminal's default color palette for all Scintilla windows.
+-- This only needs to be called once, and ideally before any calls to `scintilla_new()`.
+-- @function scintilla_disable_color_palette
+
 --- Sets the offsets for colors and color pairs generated on-demand.
 -- Applications that define their own colors and color pairs can tell Scinterm where to start from.
 -- @param color_offset The offset for Scinterm's calls to `init_color()`.

@@ -67,6 +67,8 @@ application.
 ### Colors
 
 If your terminal emulator supports RGB colors, you may use them freely in Scintilla messages.
+However, if you use any of the colors listed below, they will be mapped to your terminal's
+default color palette. To prevent this, call [`scintilla_disable_color_palette()`][].
 
 If you prefer to use your terminal emulator's palette of up to 16 colors, you must use the
 colors from the following table, which are listed in Scintilla's "0xBBGGRR" format.
@@ -81,6 +83,8 @@ colors from the following table, which are listed in Scintilla's "0xBBGGRR" form
 
 Your terminal will map these colors to its palette for display. In some terminals, you may need
 to set a style's bold attribute in order to use the light color variant.
+
+[`scintilla_disable_color_palette`]: api.md#scintilla_disable_color_palette
 
 ## Curses Compatibility
 
