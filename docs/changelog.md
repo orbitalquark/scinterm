@@ -2,6 +2,27 @@
 
 [Atom Feed](https://github.com/orbitalquark/scinterm/releases.atom)
 
+## 6.0 (01 May 2026)
+
+Download:
+
+- [Scinterm 6.0][]
+
+Bugfixes:
+
+- Fixed handling of light colors, particularly in 8-color terminals.
+- Fixed Makefile build on Windows.
+- Fixed inability to generate more than 256 color pairs.
+
+Changes:
+
+- For ncurses, a wide-character version is now required.
+- Allow applications to define color and color pair offsets.
+- Support drawing squiggle indicators as a substitute for plain (underline) ones.
+- Support up to 32767 color pairs.
+
+[Scinterm 6.0]: https://github.com/orbitalquark/scinterm/archive/scinterm_6.0.zip
+
 ## 5.5 (25 May 2025)
 
 Download:
