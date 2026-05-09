@@ -16,6 +16,13 @@ Parameters:
 
 Returns: `void`
 
+<a id="scintilla_disable_color_palette"></a>
+### `scintilla_disable_color_palette`()
+
+Disables use of the terminal's default color palette for all Scintilla windows.
+
+This only needs to be called once, and ideally before any calls to `scintilla_new()`.
+
 <a id="scintilla_get_clipboard"></a>
 ### `scintilla_get_clipboard`(*sci*, *len*)
 

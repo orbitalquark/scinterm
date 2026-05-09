@@ -266,14 +266,21 @@ void ScintillaCurses::SetVerticalScrollPos() {
 	WINDOW *w = GetWINDOW();
 	int maxy = getmaxy(w), maxx = getmaxx(w);
 	if (scrollBarHeight == maxy) return; // no point in drawing a non-scrollable bar yet
+	const ColourRGBA &fore = Colors::GetDefaultFore() >= 0 ?
+		ColourRGBA::FromRGB(Colors::GetDefaultFore()) : Colors::White;
+	const ColourRGBA &back = Colors::GetDefaultBack() >= 0 ?
+		ColourRGBA::FromRGB(Colors::GetDefaultBack()) : Colors::Black;
 	// Draw the gutter.
-	wattr_set(w, 0, Colors::Pair(Colors::White, Colors::Black), nullptr);
+	attr_t attrs = 0;
+	short pair = Colors::Pair(attrs, fore, back);
+	wattr_set(w, attrs, pair, nullptr);
 	for (int i = 0; i < maxy; i++) mvwaddch(w, i, maxx - 1, ACS_CKBOARD);
 	// Draw the bar.
 	scrollBarVPos =
 		static_cast<int>(static_cast<float>(topLine) / (MaxScrollPos() + LinesOnScreen() - 1) * maxy);
-	const attr_t attr = has_colors() ? 0 : WA_REVERSE;
-	wattr_set(w, attr, Colors::Pair(Colors::Black, Colors::White), nullptr); // invert
+	attrs = 0;
+	pair = Colors::Pair(attrs, back, fore); // invert
+	wattr_set(w, attrs, pair, nullptr);
 	for (int i = scrollBarVPos; i < scrollBarVPos + scrollBarHeight; i++)
 		mvwaddch(w, i, maxx - 1, ACS_VLINE);
 }
@@ -283,13 +290,20 @@ void ScintillaCurses::SetHorizontalScrollPos() {
 	WINDOW *w = GetWINDOW();
 	int maxy = getmaxy(w), maxx = getmaxx(w);
 	if (scrollBarWidth == maxx) return; // no point in drawing a non-scrollable bar yet
+	const ColourRGBA &fore = Colors::GetDefaultFore() >= 0 ?
+		ColourRGBA::FromRGB(Colors::GetDefaultFore()) : Colors::White;
+	const ColourRGBA &back = Colors::GetDefaultBack() >= 0 ?
+		ColourRGBA::FromRGB(Colors::GetDefaultBack()) : Colors::Black;
 	// Draw the gutter.
-	wattr_set(w, 0, Colors::Pair(Colors::White, Colors::Black), nullptr);
+	attr_t attrs = 0;
+	short pair = Colors::Pair(attrs, fore, back);
+	wattr_set(w, attrs, pair, nullptr);
 	for (int i = 0; i < maxx; i++) mvwaddch(w, maxy - 1, i, ACS_CKBOARD);
 	// Draw the bar.
 	scrollBarHPos = static_cast<int>(static_cast<float>(xOffset) / scrollWidth * maxx);
-	const attr_t attr = has_colors() ? 0 : WA_REVERSE;
-	wattr_set(w, attr, Colors::Pair(Colors::Black, Colors::White), nullptr); // invert
+	attrs = 0;
+	pair = Colors::Pair(attrs, back, fore); // invert
+	wattr_set(w, attrs, pair, nullptr);
 	for (int i = scrollBarHPos; i < scrollBarHPos + scrollBarWidth; i++)
 		mvwaddch(w, maxy - 1, i, ACS_HLINE);
 }
@@ -404,7 +418,13 @@ void ScintillaCurses::CreateCallTipWindow(PRectangle rc) {
 		surface->Init(wid);
 		dynamic_cast<SurfaceImpl *>(surface.get())->isCallTip = true;
 		ct.PaintCT(surface.get());
-		wattr_set(_WINDOW(wid), 0, Colors::Pair(Colors::White, Colors::Black), nullptr);
+		const ColourRGBA &fore = Colors::GetDefaultFore() >= 0 ?
+			ColourRGBA::FromRGB(Colors::GetDefaultFore()) : Colors::White;
+		const ColourRGBA &back = Colors::GetDefaultBack() >= 0 ?
+			ColourRGBA::FromRGB(Colors::GetDefaultBack()) : Colors::Black;
+		attr_t attrs = 0;
+		short pair = Colors::Pair(attrs, fore, back);
+		wattr_set(_WINDOW(wid), attrs, pair, nullptr);
 		box(_WINDOW(wid), '|', '-');
 		wnoutrefresh(_WINDOW(wid));
 	}
@@ -699,7 +719,13 @@ void scintilla_update_cursor(void *sci) {
 
 void scintilla_delete(void *sci) { delete reinterpret_cast<ScintillaCurses *>(sci); }
 
+void scintilla_disable_color_palette() { Scintilla::Internal::Colors::DisablePalette(); }
+
 void scintilla_set_color_offsets(int color_offset, int pair_offset) {
 	Scintilla::Internal::Colors::SetOffsets(color_offset, pair_offset);
+}
+
+void scintilla_set_default_colors(int fg, int bg) {
+	Scintilla::Internal::Colors::SetDefaultColors(fg, bg);
 }
 }

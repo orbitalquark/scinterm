@@ -141,23 +141,33 @@ class Colors {
 	std::map<int, short> colors; // map of RGB ints to curses color numbers.
 	std::map<std::pair<short, short>, short> pairs; // map of curses colors to their pair numbers
 	int colorOffset = 0, pairOffset = 0;
+	bool usePalette = true;
+	int defaultFore = -1, defaultBack = -1;
 
 	Colors();
 	static Colors &instance();
-	/** Returns the curses number for a Scintilla color, initializing it if necessary. */
-	short get(const ColourRGBA &color);
 
 public:
 	static ColourRGBA Black, Red, Green, Yellow, Blue, Magenta, Cyan, White;
 	static ColourRGBA LBlack, LRed, LGreen, LYellow, LBlue, LMagenta, LCyan, LWhite;
 
+	/** Returns the curses number for a Scintilla color, initializing it if necessary. */
+	static short get(const ColourRGBA &color);
 	/** Returns the curses pair number for a Scintilla color pair, initializing it if necessary. */
-	static short Pair(const ColourRGBA &fore, const ColourRGBA &back);
+	static short Pair(attr_t &attrs, const ColourRGBA &fore, const ColourRGBA &back);
 	/** Returns the Scintilla color for a given curses color number. */
 	static ColourRGBA Find(const short color);
 
+	/** Disables use of the terminal's default color palette. */
+	static void DisablePalette();
 	/** Sets the offsets for colors and color pairs generated on-demand. */
 	static void SetOffsets(int colorOffset, int pairOffset);
+	/** Sets the default foreground and background colors. */
+	static void SetDefaultColors(int fore, int back);
+	/** Gets default foreground color as an integer RGB */
+	static int GetDefaultFore();
+	/** Gets default background color as an integer RGB */
+	static int GetDefaultBack();
 };
 
 inline WINDOW *_WINDOW(WindowID wid) { return reinterpret_cast<WINDOW *>(wid); }

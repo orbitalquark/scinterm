@@ -117,10 +117,29 @@ void scintilla_update_cursor(void *sci);
 void scintilla_delete(void *sci);
 
 /**
+ * Disables use of the terminal's default color palette for all Scintilla windows.
+ * This only needs to be called once, after calling `start_color()`
+ * and ideally before any calls to `scintilla_new()`.
+ */
+void scintilla_disable_color_palette(void);
+
+/**
  * Sets the offsets for colors and color pairs generated on-demand.
  * Applications that define their own colors and color pairs can tell Scinterm where to start from.
+ * This should be called after `start_color()`.
  */
 void scintilla_set_color_offsets(int color_offset, int pair_offset);
+
+/**
+ * Configure colors which will be mapped to the terminal's default colors
+ * when used as the given foreground or background color.
+ * Default colors might depend on the emulator's color scheme.
+ * This might not be supported in all curses implementations.
+ * Use -1 to disable a default foreground or background color.
+ * You must still call first `start_color()`, then `use_default_colors()`
+ * or `assume_default_colors()` for this to work.
+ */
+void scintilla_set_default_colors(int fg, int bg);
 
 #define IMAGE_MAX 31
 
