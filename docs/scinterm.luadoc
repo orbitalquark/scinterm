@@ -98,3 +98,13 @@
 -- @param color_offset The offset for Scinterm's calls to `init_color()`.
 -- @param pair_offset The offset for Scinterm's calls to `init_pair()`.
 -- @function scintilla_set_color_offsets
+
+--- Configure colors which will be mapped to the terminal's default colors
+-- when used as the given foreground or background color.
+-- Default colors might depend on the emulator's color scheme.
+-- This might not be supported in all curses implementations.
+-- You must still call first `start_color()`, then `use_default_colors()`
+-- or `assume_default_colors()` for this to work.
+-- @param fg Foreground color in Scintilla's "0xBBGGRR" format or -1 to disable.
+-- @param bg Background color in Scintilla's "0xBBGGRR" format or -1 to disable.
+-- @function scintilla_set_default_colors

@@ -130,6 +130,17 @@ void scintilla_disable_color_palette(void);
  */
 void scintilla_set_color_offsets(int color_offset, int pair_offset);
 
+/**
+ * Configure colors which will be mapped to the terminal's default colors
+ * when used as the given foreground or background color.
+ * Default colors might depend on the emulator's color scheme.
+ * This might not be supported in all curses implementations.
+ * Use -1 to disable a default foreground or background color.
+ * You must still call first `start_color()`, then `use_default_colors()`
+ * or `assume_default_colors()` for this to work.
+ */
+void scintilla_set_default_colors(int fg, int bg);
+
 #define IMAGE_MAX 31
 
 #define SCM_PRESS 1
